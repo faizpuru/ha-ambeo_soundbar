@@ -1,0 +1,5 @@
+{
+    "name": "Ambeo Soundbar",
+    "domains": ["media_player", "switch", "light"],
+    "render_readme": true
+  }

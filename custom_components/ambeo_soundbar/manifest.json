@@ -1,0 +1,12 @@
+{
+    "domain": "ambeo_soundbar",
+    "name": "Ambeo Soundbar",
+    "documentation": "https://github.com/faizpuru/ha-ambeo_soundbar",
+    "dependencies": ["http"],
+    "version": "1.0.0",
+    "config_flow": true,
+    "codeowners": [
+      "@faizpuru"
+    ],
+    "requirements": []
+  }
