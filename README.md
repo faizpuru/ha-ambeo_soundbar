@@ -1,7 +1,11 @@
 Ambeo Soundbar
 ============
 Control your ambeo soundbar from homeassistant.
-Warning: It's still a work in progress.
+
+Warning
+============
+It's still a work in progress.
+Only tested on AMBEO Soundbar Plus for the moment
 
 ## Installation using HACS (Recommended)
 1. Navigate to HACS and add a custom repository  
