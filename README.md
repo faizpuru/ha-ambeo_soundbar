@@ -2,8 +2,7 @@ Ambeo Soundbar
 ============
 Control your ambeo soundbar from homeassistant.
 
-Warning
-============
+## Warning
 It's still a work in progress.
 Only tested on AMBEO Soundbar Plus for the moment
 
