@@ -1,4 +1,3 @@
 DOMAIN = "ambeo_soundbar"
 VERSION = "1.0.0"
 DEFAULT_BRIGHTNESS = 50
-BRIGHTNESS_SCALE = (0, 100)
