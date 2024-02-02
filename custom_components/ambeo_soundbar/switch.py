@@ -1,99 +1,204 @@
 import logging
 from .const import DOMAIN
-from .common.entity import AmbeoBaseSwitch
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-class VoiceEnhancementMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        super().__init__(device, api, "Voice Enhancement")
+class VoiceEnhancementMode(SwitchEntity):
+    def __init__(self, device, api, config_entry):
+        self._name = f"{device.name} Voice Enhancement"
+        self.api = api
+        self._is_on = True
+        self._unique_id = f"${device.serial}_voice_enhancement"
+        self.ambeo_device = device
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.ambeo_device.serial)},
+        }
+
+    @property
+    def unique_id(self):
+        """Retourne l'identifiant unique de l'entité."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """If the switch is currently on or off."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """If the switch is currently on or off."""
+        return self._is_on
 
     async def async_turn_on(self):
-        """Turn the voice enhancement on."""
+        """Turn the switch on."""
         await self.api.set_voice_enhancement(True)
         self._is_on = True
 
     async def async_turn_off(self):
-        """Turn the voice enhancement off."""
+        """Turn the switch off."""
         await self.api.set_voice_enhancement(False)
         self._is_on = False
-
+    
     async def async_update(self):
-        """Update the status of the voice enhancement."""
+        _LOGGER.info("Updating")
         try:
+            "Get night mode"
             status = await self.api.get_voice_enhancement()
             self._is_on = status
-        except Exception as e:
-            _LOGGER.error(f"Failed to get voice enhancement status: {e}")
+        except Exception as e: 
+            _LOGGER.error("Failed to get voice enhancement status: %s", e)
 
-class SoundFeedback(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        super().__init__(device, api, "Sound Feedback")
+class SoundFeedback(SwitchEntity):
+    def __init__(self, device, api, config_entry):
+        self._name = f"{device.name} Sound Feedback"
+        self.api = api
+        self._is_on = True
+        self._unique_id = f"${device.serial}_sound_feedback"
+        self.ambeo_device = device
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.ambeo_device.serial)},
+        }
+
+    @property
+    def unique_id(self):
+        """Retourne l'identifiant unique de l'entité."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """If the switch is currently on or off."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """If the switch is currently on or off."""
+        return self._is_on
 
     async def async_turn_on(self):
-        """Turn the sound feedback on."""
+        """Turn the switch on."""
         await self.api.set_sound_feedback(True)
         self._is_on = True
 
     async def async_turn_off(self):
-        """Turn the sound feedback off."""
+        """Turn the switch off."""
         await self.api.set_sound_feedback(False)
         self._is_on = False
-
+    
     async def async_update(self):
-        """Update the status of the sound feedback."""
+        _LOGGER.info("Updating")
         try:
+            "Get night mode"
             status = await self.api.get_sound_feedback()
             self._is_on = status
-        except Exception as e:
-            _LOGGER.error(f"Failed to get sound feedback status: {e}")
+        except Exception as e: 
+            _LOGGER.error("Failed to get voice enhancement status: %s", e)
+
+class AmbeoMode(SwitchEntity):
+    def __init__(self, device, api, config_entry):
+        self._name = f"{device.name} Ambeo Mode"
+        self.api = api
+        self._is_on = True
+        self._unique_id = f"${device.serial}_ambeo_mode"
+        self.ambeo_device = device
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.ambeo_device.serial)},
+        }
 
 
-class AmbeoMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        super().__init__(device, api, "Ambeo Mode")
+    @property
+    def unique_id(self):
+        """Retourne l'identifiant unique de l'entité."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """If the switch is currently on or off."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """If the switch is currently on or off."""
+        return self._is_on
 
     async def async_turn_on(self):
-        """Turn the Ambeo mode on."""
+        """Turn the switch on."""
         await self.api.set_ambeo_mode(True)
         self._is_on = True
 
     async def async_turn_off(self):
-        """Turn the Ambeo mode off."""
+        """Turn the switch off."""
         await self.api.set_ambeo_mode(False)
         self._is_on = False
-
+    
     async def async_update(self):
-        """Update the status of the Ambeo mode."""
+        _LOGGER.info("Updating")
         try:
+            "Get night mode"
             status = await self.api.get_ambeo_mode()
             self._is_on = status
-        except Exception as e:
-            _LOGGER.error(f"Failed to get Ambeo mode status: {e}")
-            
-class NightMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        super().__init__(device, api, "Night Mode")
+        except Exception as e: 
+            _LOGGER.error("Failed to get ambeo status: %s", e)
+
+class NightMode(SwitchEntity):
+    def __init__(self, device, api, config_entry):
+        self._name = f"{device.name} Night Mode"
+        self.api = api
+        self._is_on = True
+        self._unique_id = f"${device.serial}_night_mode"
+        self.ambeo_device = device
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.ambeo_device.serial)},
+        }
+
+
+    @property
+    def unique_id(self):
+        """Retourne l'identifiant unique de l'entité."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """If the switch is currently on or off."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """If the switch is currently on or off."""
+        return self._is_on
 
     async def async_turn_on(self):
-        """Turn the night mode on."""
+        """Turn the switch on."""
         await self.api.set_night_mode(True)
         self._is_on = True
 
     async def async_turn_off(self):
-        """Turn the night mode off."""
+        """Turn the switch off."""
         await self.api.set_night_mode(False)
         self._is_on = False
-
+    
     async def async_update(self):
-        """Update the status of the night mode."""
+        _LOGGER.info("Updating")
         try:
+            "Get night mode"
             status = await self.api.get_night_mode()
             self._is_on = status
-        except Exception as e:
-            _LOGGER.error(f"Failed to get night mode status: {e}")
+        except Exception as e: 
+            _LOGGER.error("Failed to get night mode status: %s", e)
 
 
 async def async_setup_entry(

@@ -1,5 +1,4 @@
 import logging
-from .common.entity import AmbeoBaseEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from .const import DOMAIN
@@ -14,11 +13,12 @@ STATE_DICT= {
     'stopped': STATE_IDLE
 }
 
-class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
-    """Représentation d'un appareil Ambeo comme entité média player."""
+class AmbeoMediaPlayer(MediaPlayerEntity):
+    """Representation of a Ambeo device."""
 
     def __init__(self, device, api, sources, presets):
-        super().__init__(device, api, "Player", "player")
+        self._name = f"{device.name} Player"
+        self.api = api
         self._state = STATE_ON
         self._current_source = None
         self._media_title = ""
@@ -28,10 +28,25 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         self._volume = 0
         self._muted = False
         self._max_volume = 100
+        self._ambeo_device = device
+        self._unique_id = f"${device.serial}_player"
         self._sources = sources
         self._presets = presets
         self._current_preset = None
 
+
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self._ambeo_device.serial)},
+        }
+
+
+    @property
+    def unique_id(self):
+        """Retourne l'identifiant unique de l'entité."""
+        return self._unique_id
 
     @property
     def supported_features(self):
@@ -44,6 +59,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PAUSE
                 | MediaPlayerEntityFeature.NEXT_TRACK
                 | MediaPlayerEntityFeature.PREVIOUS_TRACK)
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
 
     @property
     def media_title(self):

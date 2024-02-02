@@ -1,15 +1,54 @@
 import logging
 import math
-from .const import DOMAIN, DEFAULT_BRIGHTNESS, BRIGHTNESS_SCALE
+from .const import DOMAIN, DEFAULT_BRIGHTNESS
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.util.color import brightness_to_value
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from .common.entity import BaseLight
+from homeassistant.util.color import value_to_brightness, brightness_to_value
+from homeassistant.components.light import LightEntity, COLOR_MODE_BRIGHTNESS, ATTR_BRIGHTNESS
+
+BRIGHTNESS_SCALE = (0, 100)
 
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class BaseLight(LightEntity):
+    def __init__(self, device, api, name_suffix, unique_id_suffix):
+        self._name = f"{device.name} {name_suffix}"
+        self.api = api
+        self._brightness = 0
+        self._unique_id = f"${device.serial}_{unique_id_suffix}"
+        self.ambeo_device = device
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.ambeo_device.serial)},
+        }
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_on(self):
+        return self._brightness > 0
+
+    @property
+    def supported_color_modes(self):
+        return {COLOR_MODE_BRIGHTNESS}
+
+    @property
+    def color_mode(self):
+        return COLOR_MODE_BRIGHTNESS
+
+    @property
+    def brightness(self):
+        return value_to_brightness(BRIGHTNESS_SCALE, self._brightness)
 
 class LEDBar(BaseLight):
     def __init__(self, device, api, config_entry):
