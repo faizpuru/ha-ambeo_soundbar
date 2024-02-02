@@ -1,5 +1,4 @@
 import logging
-import math
 from .const import DOMAIN, DEFAULT_BRIGHTNESS, BRIGHTNESS_SCALE
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
