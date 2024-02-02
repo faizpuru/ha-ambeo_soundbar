@@ -38,35 +38,36 @@ class AmbeoApi:
         except Exception as e:
             _LOGGER.error(f"Exception lors de l'extraction des données : {e}")
             return None
+        
+    def generate_nocache(self):
+        return int(time.time() * 1000) 
+        
+    async def execute_request(self, function, path, role=None, value=None, from_idx=None, to_idx=None):
+        url = f"{function}?path={path}"
+        if role:
+            url += f"&roles={role}"
+        if value is not None:
+            url += f"&value={value}"
+        if from_idx is not None:
+            url += f"&from={from_idx}"
+        if to_idx is not None:
+            url += f"&to={to_idx}"
+        url += f"&_nocache={self.generate_nocache()}"
+        return await self.fetch_data(url)
 
 
     async def get_value(self, path, data_type):
-        url = f"getData?path={path}&roles=@all&_nocache={self.generate_nocache()}"
-        json_data = await self.fetch_data(url)
-        if json_data is not None:
-            return self.extract_data(json_data, ["value", data_type])
+        value = await self.execute_request("getData", path, "@all")
+        if value is not None:
+            return self.extract_data(value, ["value", data_type])
         return None
 
 
     async def set_value(self, path, data_type, value):
-        url = "setData"
-        params = {
-            "path": path,
-            "role": "value",
-            "value": json.dumps({"type": data_type, data_type: value}),
-            "_nocache": self.generate_nocache()
-        }
-        try:
-            with async_timeout.timeout(TIMEOUT):
-                full_url = f"{self.endpoint}/{url}"
-                _LOGGER.debug("Executing URL fetch: %s with params %s", full_url, params)
-                await self.session.get(full_url, params=params)
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la requête HTTP : {e}")
+        await self.execute_request("setData", path, "value", json.dumps({"type": data_type, data_type: value}))
             
 
-    def generate_nocache(self):
-        return int(time.time() * 1000)
+
 
     ## VOLUME
     async def get_volume(self):
@@ -156,41 +157,44 @@ class AmbeoApi:
         return await self.get_value("popcorn:inputChange/selected", "popcornInputId")
 
     async def get_all_sources(self):
-        url = f"getRows?path=ui:/inputs&roles=@all&from=0&to=10&_nocache={self.generate_nocache()}"
-        json_data = await self.fetch_data(url)
-        rows = self.extract_data(json_data, ["rows"])
-        return rows
+        data = await self.execute_request("getRows", "ui:/inputs", "@all", None, 0, 10)
+        if data:
+            rows = self.extract_data(data, ["rows"])
+            return rows
+        return None
 
     async def set_source(self, source_id):
-        await self.fetch_data(f'setData?path=ui:/inputs/{source_id}&role=activate&value={{"type":"bool_","bool_":true}}&_nocache={self.generate_nocache()}')
-
+        await self.execute_request("setData", f"ui:/inputs/{source_id}", "activate", json.dumps({"type": "bool_", "bool_": True}))
+        
     ## PRESETS:
     async def get_current_preset(self):
         return await self.get_value("settings:/popcorn/audio/audioPresets/audioPreset", "popcornAudioPreset")
     async def set_preset(self, preset):
         await self.set_value("settings:/popcorn/audio/audioPresets/audioPreset", "popcornAudioPreset", preset)
+    
     async def get_all_presets(self):
-        url = f"getRows?path=settings:/popcorn/audio/audioPresetValues&roles=@all&from=0&to=10&_nocache={self.generate_nocache()}"
-        json_data = await self.fetch_data(url)
-        rows = self.extract_data(json_data, ["rows"])
-        simplified_list = [{"title": row['title'], "id": row['value']['popcornAudioPreset']} for row in rows]
-        return simplified_list
+        data = await self.execute_request("getRows", "settings:/popcorn/audio/audioPresetValues", "@all", None, 0, 10)
+        if data:
+            rows = self.extract_data(data, ["rows"])
+            simplified_list = [{"title": row['title'], "id": row['value']['popcornAudioPreset']} for row in rows]
+            return simplified_list
+        return None
 
     async def play(self):
-        await self.fetch_data(f'setData?path=popcorn:multiPurposeButtonActivate&role=activate&value={{"type":"bool_","bool_":true}}&_nocache={self.generate_nocache()}')
+        await self.execute_request("setData", "popcorn:multiPurposeButtonActivate", "activate", json.dumps({"type": "bool_", "bool_": True}))
 
     async def pause(self):
-        await self.fetch_data(f'setData?path=popcorn:multiPurposeButtonActivate&role=activate&value={{"type":"bool_","bool_":true}}&_nocache={self.generate_nocache()}')
+        await self.execute_request("setData", "popcorn:multiPurposeButtonActivate", "activate", json.dumps({"type": "bool_", "bool_": True}))
 
     async def next(self):
-        await self.fetch_data(f'setData?path=player:player/control&role=activate&value={{"control":"next"}}&_nocache={self.generate_nocache()}')
+        await self.execute_request("setData", "player:player/control", "activate", json.dumps({"control": "next"}))
 
     async def previous(self):
-        await self.fetch_data(f'setData?path=player:player/control&role=activate&value={{"control":"previous"}}&_nocache={self.generate_nocache()}') 
+        await self.execute_request("setData", "player:player/control", "activate", json.dumps({"control": "previous"}))
+
 
     async def player_data(self):
-        url = f"getData?path=player:player/data/value&roles=@all&_nocache={self.generate_nocache()}"
-        json_data = await self.fetch_data(url)
-        if json_data is not None:
-            return self.extract_data(json_data, ["value", "playLogicData"])
+        data = await self.execute_request("getData", "player:player/data/value", "@all")
+        if data:
+            return self.extract_data(data, ["value", "playLogicData"])
         return None
