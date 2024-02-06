@@ -1,10 +1,12 @@
 import logging
-from .entity import AmbeoBaseEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from .const import DOMAIN
+
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
-from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_IDLE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
+from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ STATE_DICT= {
 }
 
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
-    """Représentation d'un appareil Ambeo comme entité média player."""
+    """Representation of an Ambeo device as a media player entity."""
 
     def __init__(self, device, api, sources, presets):
         super().__init__(device, api, "Player", "player")
@@ -52,7 +54,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def media_image_url(self):
-        """Url for image of current playing media."""
+        """URL for image of current playing media."""
         return self._image_url
 
     @property
@@ -67,12 +69,12 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def media_artist(self):
-        """Return the volume level."""
+        """Return the artist of the current playing media."""
         return self._artist
 
     @property
     def media_album_name(self):
-        """Return the volume level."""
+        """Return the album name of the current playing media."""
         return self._album
 
     async def async_set_volume_level(self, volume):
@@ -82,21 +84,23 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Boolean indicating if volume is currently muted."""
         return self._muted
 
     async def async_mute_volume(self, mute):
-        """Sets volume mute to true."""
+        """Sets volume mute status."""
         await self.api.set_mute(mute)
         self._muted = mute
 
     def find_title_by_id(self, id, search_list):
+        """Find title by ID from a list."""
         for source in search_list:
             if source.get('id') == id:
                 return source.get('title')
         return None
 
     def find_id_by_title(self, title, search_list):
+        """Find ID by title from a list."""
         for source in search_list:
             if source.get('title') == title:
                 return source.get('id')
@@ -109,7 +113,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def source_list(self):
-        """List of available  sources."""
+        """List of available sources."""
         titles = [entry["title"] for entry in self._sources if "title" in entry]
         return sorted(titles)
 
@@ -123,11 +127,12 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def sound_mode(self):
-        """Retourne le preset audio actuel."""
+        """Return the current audio preset."""
         return self._current_preset
 
     @property
     def sound_mode_list(self):
+        """List of available audio presets."""
         titles = [preset["title"] for preset in self._presets if "title" in preset]
         return sorted(titles)
 
@@ -141,27 +146,27 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                 self._current_preset = sound_mode
 
     async def async_media_play(self):
-        """Méthode pour démarrer la lecture."""
+        """Method to start playback."""
         await self.api.play()
         self._state = STATE_PLAYING
 
     async def async_media_pause(self):
-        """Méthode pour mettre en pause la lecture."""
+        """Method to pause playback."""
         await self.api.pause()
         self._state = STATE_PAUSED
 
     async def async_media_next_track(self):
-        """Méthode pour passer au morceau suivant."""
-        _LOGGER.debug("Passage au morceau suivant")
+        """Method to skip to the next track."""
+        _LOGGER.debug("Skipping to the next track")
         await self.api.next()
 
     async def async_media_previous_track(self):
-        """Méthode pour revenir au morceau précédent."""
-        _LOGGER.debug("Retour au morceau précédent")
+        """Method to go back to the previous track."""
+        _LOGGER.debug("Going back to the previous track")
         await self.api.previous()
 
     async def async_update(self):
-        """Update the media player State."""
+        """Update the media player state."""
         _LOGGER.debug("Refreshing state...")
         try:
             "Get Volume"
@@ -180,38 +185,31 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             source_id = await self.api.get_current_source()
             self._current_source = self.find_title_by_id(source_id, self._sources)
         except Exception as e: 
-            _LOGGER.error("Failed to get mute: %s", e)
+            _LOGGER.error("Failed to get source: %s", e)
         try:
-            "Get Sound Mode"
+            "Get preset"
             preset_id = await self.api.get_current_preset()
             self._current_preset = self.find_title_by_id(preset_id, self._presets)
         except Exception as e: 
-            _LOGGER.error("Failed to get mute: %s", e)
+            _LOGGER.error("Failed to get preset: %s", e)
         try:
-            "Get Play Data"
             player_data = await self.api.player_data()
-            state = player_data["state"]
+            state = player_data.get("state", None)
             self._state = STATE_DICT.get(state, STATE_ON)
-            image_url = None
-            title = None
-            album = None
-            artist = None
-            track_roles = player_data.get("trackRoles", None)
-            if track_roles is not None:
-                image_url = track_roles.get("icon", None)
-                title = track_roles.get("title", None)
-                media_data = track_roles.get("mediaData", None)
-                if media_data is not None:
-                    meta_data = media_data.get("metaData", None)
-                    if meta_data is not None:
-                        album = meta_data.get("album", None)
-                        artist = meta_data.get("artist", None)
+
+            track_roles = player_data.get("trackRoles", {})
+            image_url = track_roles.get("icon")
+            title = track_roles.get("title")
+            media_data = track_roles.get("mediaData", {})
+            meta_data = media_data.get("metaData", {})
+
             self._image_url = image_url
             self._media_title = title
-            self._album = album
-            self._artist = artist
-        except Exception as e: 
-            _LOGGER.error("Failed to get mute: %s", e)
+            self._album = meta_data.get("album")
+            self._artist = meta_data.get("artist")
+
+        except Exception as e:
+            _LOGGER.error("Failed to get player data: %s", e)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -219,7 +217,6 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Setup sensors from a config entry created in the integrations UI."""
-    _LOGGER.warning("From media player")
     ambeo_api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     sources = await ambeo_api.get_all_sources()

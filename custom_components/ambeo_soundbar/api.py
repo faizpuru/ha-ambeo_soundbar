@@ -1,6 +1,6 @@
-import logging
-import json
 import async_timeout
+import json
+import logging
 import time
 
 _LOGGER = logging.getLogger(__name__)
@@ -8,6 +8,7 @@ TIMEOUT = 5
 
 class AmbeoApi:
     def __init__(self, ip, port, session, hass):
+        """Initialize the API with the given IP, port, session, and Home Assistant instance."""
         self.session = session
         self.hass = hass
         self.ip = ip
@@ -15,6 +16,7 @@ class AmbeoApi:
         self.endpoint = f"http://{ip}:{port}/api"
 
     async def fetch_data(self, url):
+        """Fetch data from a given URL."""
         full_url = f"{self.endpoint}/{url}"
         try:
             with async_timeout.timeout(TIMEOUT):
@@ -23,26 +25,28 @@ class AmbeoApi:
                 json_data = await response.json()
                 return json_data
         except Exception as e:
-            _LOGGER.error(f"Exception lors de la requête HTTP avec l'url: {full_url}. Exception: {e}")
+            _LOGGER.error(f"HTTP request exception with url: {full_url}. Exception: {e}")
             return None
 
-
     def extract_data(self, json_data, key_path):
+        """Extract data from JSON using a specified key path."""
         try:
             for key in key_path:
                 json_data = json_data[key]
             return json_data
         except KeyError:
-            _LOGGER.error(f"Clé '{key}' manquante dans les données JSON")
+            _LOGGER.error(f"Missing key '{key}' in JSON data")
             return None
         except Exception as e:
-            _LOGGER.error(f"Exception lors de l'extraction des données : {e}")
+            _LOGGER.error(f"Exception extracting data: {e}")
             return None
         
     def generate_nocache(self):
-        return int(time.time() * 1000) 
+        """Generate a nocache parameter to prevent caching."""
+        return int(time.time() * 1000)
         
     async def execute_request(self, function, path, role=None, value=None, from_idx=None, to_idx=None):
+        """Execute a request with the specified parameters."""
         url = f"{function}?path={path}"
         if role:
             url += f"&roles={role}"
@@ -55,19 +59,18 @@ class AmbeoApi:
         url += f"&_nocache={self.generate_nocache()}"
         return await self.fetch_data(url)
 
-
     async def get_value(self, path, data_type):
+        """Get a value of a specified type from a specified path."""
         value = await self.execute_request("getData", path, "@all")
         if value is not None:
             return self.extract_data(value, ["value", data_type])
         return None
 
-
     async def set_value(self, path, data_type, value):
+        """Set a value of a specified type at a specified path."""
         await self.execute_request("setData", path, "value", json.dumps({"type": data_type, data_type: value}))
-            
 
-
+    # Specific functions for interacting with the device features like volume, mute, serial, version, model, night mode, voice enhancement, Ambeo mode, name, Ambeo logo brightness and state, LED bar brightness, codec LED brightness, sound feedback, sources, presets, and player controls follow here, each implemented with appropriate get and set methods as per the device's API.
 
     ## VOLUME
     async def get_volume(self):
