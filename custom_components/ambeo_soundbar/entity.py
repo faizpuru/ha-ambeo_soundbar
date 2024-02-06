@@ -38,15 +38,21 @@ class AmbeoBaseEntity(Entity):
         return self._name
 
 class BaseLight(AmbeoBaseEntity, LightEntity):
-    def __init__(self, device, api, name_suffix, unique_id_suffix):
+    def __init__(self, device, api, name_suffix, unique_id_suffix, brightness_scale):
         """Initialize the light entity with specific brightness attribute."""
         super().__init__(device, api, name_suffix, unique_id_suffix)
         self._brightness = 0  # Specific to light type entities
+        self._brightness_scale = brightness_scale
 
     @property
     def is_on(self):
         """Check if the light is on based on brightness."""
         return self._brightness > 0
+    
+    @property
+    def available(self):
+        return self._brightness is not None
+
 
     @property
     def supported_color_modes(self):
@@ -61,7 +67,7 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return value_to_brightness(BRIGHTNESS_SCALE, self._brightness)
+        return value_to_brightness(self._brightness_scale, self._brightness)
 
 
 class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
@@ -76,3 +82,7 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     def is_on(self):
         """Determine if the switch is currently on or off."""
         return self._is_on
+    
+    @property
+    def available(self):
+        return self._is_on is not None
