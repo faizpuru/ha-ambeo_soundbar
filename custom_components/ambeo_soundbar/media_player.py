@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .entity import AmbeoBaseEntity
+from .util import find_id_by_title, find_title_by_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,20 +93,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         await self.api.set_mute(mute)
         self._muted = mute
 
-    def find_title_by_id(self, id, search_list):
-        """Find title by ID from a list."""
-        for source in search_list:
-            if source.get('id') == id:
-                return source.get('title')
-        return None
-
-    def find_id_by_title(self, title, search_list):
-        """Find ID by title from a list."""
-        for source in search_list:
-            if source.get('title') == title:
-                return source.get('id')
-        return None  
-
     @property
     def source(self):
         """Return the current source."""
@@ -120,7 +107,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_select_source(self, source):
         """Select source."""
         if source is not None:
-            source_id = self.find_id_by_title(source, self._sources)
+            source_id = find_id_by_title(source, self._sources)
             if source_id is not None:
                 await self.api.set_source(source_id)
                 self._current_source = source
@@ -140,7 +127,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode):
         """Switch the sound mode of the entity."""
         if sound_mode is not None:
-            preset_id = self.find_id_by_title(sound_mode, self._presets)
+            preset_id = find_id_by_title(sound_mode, self._presets)
             if preset_id is not None:
                 await self.api.set_preset(preset_id)
                 self._current_preset = sound_mode
@@ -183,13 +170,13 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         try:
             "Get Source"
             source_id = await self.api.get_current_source()
-            self._current_source = self.find_title_by_id(source_id, self._sources)
+            self._current_source = find_title_by_id(source_id, self._sources)
         except Exception as e: 
             _LOGGER.error("Failed to get source: %s", e)
         try:
             "Get preset"
             preset_id = await self.api.get_current_preset()
-            self._current_preset = self.find_title_by_id(preset_id, self._presets)
+            self._current_preset = find_title_by_id(preset_id, self._presets)
         except Exception as e: 
             _LOGGER.error("Failed to get preset: %s", e)
         try:
