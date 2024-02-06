@@ -1,11 +1,13 @@
 import logging
 import aiohttp
-from .const import DOMAIN
-from .api import AmbeoApi
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
+from .api import AmbeoApi
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     manufacturer= "Sennheiser"
     device = AmbeoDevice(serial, name, manufacturer, model, version, host, port)
     hass.data.setdefault(DOMAIN, {})
-    _LOGGER.warning("Data initialized")
+    _LOGGER.debug("Data initialized")
     hass.data[DOMAIN][entry.entry_id] = {
         "api": ambeo_api,
         "device": device
