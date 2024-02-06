@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Information sur l'Ambeo Soundbar",
+        "data": {
+          "host": "Adresse IP"
+        }
+      }
+    }
+  }
+}

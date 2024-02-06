@@ -110,8 +110,7 @@ async def async_setup_entry(
     """Set up the switch entities from a config entry created in the integrations UI."""
     ambeo_api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    night_mode = NightMode(ambeo_device, ambeo_api)
-    voice_enhancement_mode = VoiceEnhancementMode(ambeo_device, ambeo_api)
-    ambeo_mode = AmbeoMode(ambeo_device, ambeo_api)
-    sound_feedback = SoundFeedback(ambeo_device, ambeo_api)
-    async_add_entities([night_mode, voice_enhancement_mode, ambeo_mode, sound_feedback], update_before_add=True)
+    entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
+    if not ambeo_device.max_compat:
+        entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
+    async_add_entities(entities, update_before_add=True)
