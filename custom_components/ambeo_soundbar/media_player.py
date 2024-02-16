@@ -2,7 +2,7 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -14,7 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 STATE_DICT= {
     'playing': STATE_PLAYING,
     'paused': STATE_PAUSED,
-    'stopped': STATE_IDLE
+    'stopped': STATE_IDLE,
+    'online': STATE_ON
 }
 
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
@@ -22,7 +23,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     def __init__(self, device, api, sources, presets):
         super().__init__(device, api, "Player", "player")
-        self._state = STATE_ON
+        self._power_state = STATE_ON
+        self._playing_state = STATE_IDLE
         self._current_source = None
         self._media_title = ""
         self._artist = None
@@ -34,12 +36,16 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         self._sources = sources
         self._presets = presets
         self._current_preset = None
+        if(device.max_compat):
+            STATE_DICT['networkStandby'] = STATE_STANDBY
+        else:
+            STATE_DICT['networkStandby'] = STATE_IDLE
 
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return (MediaPlayerEntityFeature.VOLUME_SET
+        features = (MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_MUTE
                 | MediaPlayerEntityFeature.SELECT_SOURCE
                 | MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -47,6 +53,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PAUSE
                 | MediaPlayerEntityFeature.NEXT_TRACK
                 | MediaPlayerEntityFeature.PREVIOUS_TRACK)
+        
+        if self.ambeo_device.max_compat:
+            features |= (MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF)
+        return features
 
     @property
     def media_title(self):
@@ -61,7 +71,9 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        if  self._power_state == STATE_ON:
+            return self._playing_state
+        return self._power_state
 
     @property
     def volume_level(self):
@@ -92,6 +104,16 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         """Sets volume mute status."""
         await self.api.set_mute(mute)
         self._muted = mute
+        
+    async def async_turn_on(self):
+        """Turn the media player on."""
+        await self.api.wake()
+        self._power_state = STATE_ON
+        
+    async def async_turn_off(self):
+        """Turn the media player off."""
+        await self.api.stand_by()
+        self._power_state = STATE_STANDBY
 
     @property
     def source(self):
@@ -123,6 +145,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         titles = [preset["title"] for preset in self._presets if "title" in preset]
         return sorted(titles)
 
+    @property
+    def available(self):
+        return self._volume is not None
+
 
     async def async_select_sound_mode(self, sound_mode):
         """Switch the sound mode of the entity."""
@@ -135,12 +161,12 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_media_play(self):
         """Method to start playback."""
         await self.api.play()
-        self._state = STATE_PLAYING
+        self._playing_state = STATE_PLAYING
 
     async def async_media_pause(self):
         """Method to pause playback."""
         await self.api.pause()
-        self._state = STATE_PAUSED
+        self._playing_state = STATE_PAUSED
 
     async def async_media_next_track(self):
         """Method to skip to the next track."""
@@ -180,10 +206,15 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         except Exception as e: 
             _LOGGER.error("Failed to get preset: %s", e)
         try:
+            state = await self.api.get_state()
+            self._power_state = STATE_DICT.get(state, state)
+        except Exception as e:
+            _LOGGER.error("Failed to get state: %s", e)
+        try:
             player_data = await self.api.player_data()
             state = player_data.get("state", None)
-            self._state = STATE_DICT.get(state, STATE_ON)
-
+            if state is not None:
+                self._playing_state = STATE_DICT.get(state, STATE_IDLE)
             track_roles = player_data.get("trackRoles", {})
             image_url = track_roles.get("icon")
             title = track_roles.get("title")
