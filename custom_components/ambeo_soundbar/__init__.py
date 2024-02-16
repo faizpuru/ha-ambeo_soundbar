@@ -3,7 +3,7 @@ import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -26,17 +26,10 @@ class AmbeoDevice:
     @property
     def serial(self):
         return self._serial
-
+    
     @property
-    def device_info(self):
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.serial)
-            },
-            name=self.name,
-            manufacturer=self.manufacturer,
-            model=self.model,
-            sw_version=self.version),
+    def max_compat(self):
+        return self.model == "AMBEO Soundbar Max"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):    
@@ -46,11 +39,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     port = 80
     ambeo_api = AmbeoApi(host, port, aiohttp.ClientSession(), hass)
     serial= await ambeo_api.get_serial()
+    if serial is None:
+        raise ConfigEntryNotReady(f"Can't connect to host : {host}") 
     model= await ambeo_api.get_model()
     name= await ambeo_api.get_name()
     version= await ambeo_api.get_version()
     manufacturer= "Sennheiser"
     device = AmbeoDevice(serial, name, manufacturer, model, version, host, port)
+    ambeo_api._ambeo_max_compat = device.max_compat
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug("Data initialized")
     hass.data[DOMAIN][entry.entry_id] = {
@@ -69,5 +65,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "media_player"))
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "switch"))
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "light"))
-
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "button"))
     return True
