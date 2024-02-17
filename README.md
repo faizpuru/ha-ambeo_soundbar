@@ -2,10 +2,10 @@ Ambeo Soundbar
 ============
 Control your ambeo soundbar from homeassistant.
 
-## Warning
+## Compatibility 
 This integration has been tested on: 
-    - AMBEO Soundbar Plus
-    - AMBEO Soundbar Max 
+- AMBEO Soundbar Plus
+- AMBEO Soundbar Max 
 
 ## Installation using HACS (Recommended)
 1. Navigate to HACS and add a custom repository  
@@ -15,7 +15,7 @@ This integration has been tested on:
 3. Restart Home Assistant
 
 ## Configuration
-Put your ambeo_soundbar ip adress in the config ui
+Enter the IP address of the soundbar in the graphical configuration interface
 
 ## Disclaimer
 This project and his owner are not related to sennheiser.
