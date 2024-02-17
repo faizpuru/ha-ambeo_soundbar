@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, AMBEO_VOLUME_STEP
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 
@@ -47,6 +47,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         features = (MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_STEP
                 | MediaPlayerEntityFeature.SELECT_SOURCE
                 | MediaPlayerEntityFeature.SELECT_SOUND_MODE
                 | MediaPlayerEntityFeature.PLAY
@@ -79,6 +80,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     def volume_level(self):
         """Return the volume level."""
         return self._volume
+    
+    @property
+    def volume_step(self):
+        """Return the volume level."""
+        return AMBEO_VOLUME_STEP
 
     @property
     def media_artist(self):
