@@ -1,6 +1,8 @@
 {
     "domain": "ambeo_soundbar",
     "name": "Ambeo Soundbar",
+    "iot_class": "local_polling",
+    "integration_type": "device",
     "documentation": "https://github.com/faizpuru/ha-ambeo_soundbar",
     "dependencies": ["http"],
     "version": "1.0.0",
