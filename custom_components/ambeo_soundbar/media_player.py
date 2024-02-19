@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, AMBEO_VOLUME_STEP
+from .const import DOMAIN, AMBEO_PLUS_VOLUME_STEP, AMBEO_MAX_VOLUME_STEP
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 
@@ -37,8 +37,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         self._presets = presets
         self._current_preset = None
         if(device.max_compat):
+            self._volume_step = AMBEO_MAX_VOLUME_STEP
             STATE_DICT['networkStandby'] = STATE_STANDBY
         else:
+            self._volume_step = AMBEO_PLUS_VOLUME_STEP
             STATE_DICT['networkStandby'] = STATE_IDLE
 
 
@@ -84,7 +86,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def volume_step(self):
         """Return the volume level."""
-        return AMBEO_VOLUME_STEP
+        return self._volume_step
 
     @property
     def media_artist(self):
