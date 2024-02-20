@@ -2,6 +2,8 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import  EntityCategory
+
 
 from .const import DOMAIN
 from .entity import AmbeoBaseSwitch
@@ -100,7 +102,36 @@ class NightMode(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update night mode status: {e}")
+            
+class AmbeoBluetoothPairing(AmbeoBaseSwitch):
+    """The class remains largely unchanged."""
+    def __init__(self, device, api):
+        """Initialize the switch entity."""
+        super().__init__(device, api, "Ambeo Bluetooth Pairing")
+        
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Return the entity category."""
+        return EntityCategory.CONFIG
 
+    async def async_turn_on(self):
+        """Turn the bluetooth pairing feature on."""
+        await self.api.set_bluetooth_pairing_state(True)
+        self._is_on = True
+
+    async def async_turn_off(self):
+        """Turn the bluetooth pairing feature off."""
+        await self.api.set_bluetooth_pairing_state(False)
+        self._is_on = False
+
+    async def async_update(self):
+        """Update the current status of the bluetooth pairing feature."""
+        try:
+            status = await self.api.get_bluetooth_pairing_state()
+            self._is_on = status
+        except Exception as e:
+            _LOGGER.error(f"Failed to update bluetooth pairing status: {e}")
+            
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -113,4 +144,5 @@ async def async_setup_entry(
     entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
     if not ambeo_device.max_compat:
         entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
+        entities.append(AmbeoBluetoothPairing(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)
