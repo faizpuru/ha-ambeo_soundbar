@@ -3,7 +3,8 @@ import logging
 from homeassistant.components.light import LightEntity, COLOR_MODE_BRIGHTNESS
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.util.color import value_to_brightness
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityCategory
+
 
 from .const import DOMAIN, BRIGHTNESS_SCALE
 
@@ -68,6 +69,11 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     def brightness(self):
         """Return the brightness of the light."""
         return value_to_brightness(self._brightness_scale, self._brightness)
+    
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Return the entity category."""
+        return EntityCategory.CONFIG
 
 
 class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
@@ -86,3 +92,4 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     @property
     def available(self):
         return self._is_on is not None
+

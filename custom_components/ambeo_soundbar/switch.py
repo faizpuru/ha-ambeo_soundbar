@@ -55,6 +55,11 @@ class SoundFeedback(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update sound feedback status: {e}")
+            
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Return the entity category."""
+        return EntityCategory.CONFIG
 
 
 class AmbeoMode(AmbeoBaseSwitch):
