@@ -311,6 +311,13 @@ class AmbeoApi:
             return power_target["target"]
         return None
     
-    async def start_bluetooth_pairing(self):
+    async def get_bluetooth_pairing_state(self):
         if not self._ambeo_max_compat:
-            await self.execute_request("setData", "bluetooth:deviceList/discoverable", "activate", json.dumps({"type": "bool_", "bool_": True}))
+            bluetooth_pairing_state = await self.get_value("bluetooth:state", "bluetoothState")
+            if bluetooth_pairing_state:
+                return bluetooth_pairing_state["pairable"]
+            return None
+    
+    async def set_bluetooth_pairing_state(self, state):
+        if not self._ambeo_max_compat:
+            await self.execute_request("setData", "bluetooth:deviceList/discoverable", "activate", json.dumps({"type": "bool_", "bool_": state}))
