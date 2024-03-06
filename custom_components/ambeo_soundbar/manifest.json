@@ -1,14 +1,13 @@
 {
-    "domain": "ambeo_soundbar",
-    "name": "Ambeo Soundbar",
-    "iot_class": "local_polling",
-    "integration_type": "device",
-    "documentation": "https://github.com/faizpuru/ha-ambeo_soundbar",
-    "dependencies": ["http"],
-    "version": "1.0.0",
-    "config_flow": true,
-    "codeowners": [
-      "@faizpuru"
-    ],
-    "requirements": []
-  }
+  "domain": "ambeo_soundbar",
+  "name": "Ambeo Soundbar",
+  "codeowners": ["@faizpuru"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://github.com/faizpuru/ha-ambeo_soundbar",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/faizpuru/ha-ambeo_soundbar",
+  "requirements": [],
+  "version": "1.0.0"
+}

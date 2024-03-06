@@ -1,6 +1,4 @@
 {
     "name": "Ambeo Soundbar",
-    "description": "Work in progress - Ambeo soundbar integration",
-    "domains": ["media_player", "switch", "light"],
     "render_readme": true
   }
