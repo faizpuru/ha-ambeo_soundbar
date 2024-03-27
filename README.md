@@ -19,5 +19,3 @@ Enter the IP address of the soundbar in the graphical configuration interface
 
 ## Disclaimer
 This project and his owner are not related to sennheiser.
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/faizpuru)
