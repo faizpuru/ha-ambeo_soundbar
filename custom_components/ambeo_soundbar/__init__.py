@@ -62,8 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
          model=model,
          sw_version=version)
 
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "media_player"))
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "switch"))
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "light"))
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "button"))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(
+            entry, ["media_player", "switch", "light", "button"]
+        )
+    )
     return True
