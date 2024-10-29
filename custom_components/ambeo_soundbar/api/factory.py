@@ -9,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AmbeoAPIFactory:
-    """Fabrique pour créer une instance de l'API Ambeo en fonction du modèle."""
+    """Factory to get the correct API depending on model"""
 
     @staticmethod
     async def create_api(ip, port, session, hass) -> AmbeoApi:
