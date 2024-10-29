@@ -146,7 +146,8 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the switch entities from a config entry created in the integrations UI."""
-    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["coordinator"].get_api(
+    )
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(
         ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]

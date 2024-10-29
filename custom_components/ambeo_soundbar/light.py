@@ -202,7 +202,7 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up lights from a config entry created in the integrations UI."""
-    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["coordinator"].get_api()
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     entities = []
     if (ambeo_api.has_capability(Capability.AMBEO_LOGO)):
