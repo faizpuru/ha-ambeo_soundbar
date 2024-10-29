@@ -5,7 +5,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.util.color import value_to_brightness
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, BRIGHTNESS_SCALE
+from .const import DOMAIN
+from .api.impl.generic_api import AmbeoApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,11 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 class AmbeoBaseEntity(Entity):
     """Base class for Ambeo entities."""
 
-    def __init__(self, device, api, name_suffix, unique_id_suffix):
+    def __init__(self, device, api: AmbeoApi, name_suffix, unique_id_suffix):
         """Initialize the base entity."""
         self._name = f"{device.name} {name_suffix}"
         self.api = api
-        self._unique_id = f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
+        self._unique_id = f"{device.serial}_{
+            unique_id_suffix.lower().replace(' ', '_')}"
         self.ambeo_device = device
 
     @property
@@ -37,6 +39,7 @@ class AmbeoBaseEntity(Entity):
         """Return the name of the entity."""
         return self._name
 
+
 class BaseLight(AmbeoBaseEntity, LightEntity):
     def __init__(self, device, api, name_suffix, unique_id_suffix, brightness_scale):
         """Initialize the light entity with specific brightness attribute."""
@@ -48,11 +51,10 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     def is_on(self):
         """Check if the light is on based on brightness."""
         return self._brightness > 0
-    
+
     @property
     def available(self):
         return self._brightness is not None
-
 
     @property
     def supported_color_modes(self):
@@ -76,13 +78,13 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     def __init__(self, device, api, feature_name):
         """Initialize the switch entity."""
         super().__init__(device, api, feature_name, feature_name)
-        self._is_on = True 
+        self._is_on = True
 
     @property
     def is_on(self):
         """Determine if the switch is currently on or off."""
         return self._is_on
-    
+
     @property
     def available(self):
         return self._is_on is not None
