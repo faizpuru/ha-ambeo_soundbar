@@ -2,13 +2,16 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import  EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 
 
-from .const import DOMAIN
+from .const import DOMAIN, Capability
 from .entity import AmbeoBaseSwitch
+from .api.impl.generic_api import AmbeoApi
+
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class VoiceEnhancementMode(AmbeoBaseSwitch):
     def __init__(self, device, api):
@@ -32,6 +35,7 @@ class VoiceEnhancementMode(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update voice enhancement status: {e}")
+
 
 class SoundFeedback(AmbeoBaseSwitch):
     def __init__(self, device, api):
@@ -79,7 +83,8 @@ class AmbeoMode(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update Ambeo mode status: {e}")
-            
+
+
 class NightMode(AmbeoBaseSwitch):
     def __init__(self, device, api):
         """Initialize the Night Mode switch."""
@@ -102,13 +107,15 @@ class NightMode(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update night mode status: {e}")
-            
+
+
 class AmbeoBluetoothPairing(AmbeoBaseSwitch):
     """The class remains largely unchanged."""
+
     def __init__(self, device, api):
         """Initialize the switch entity."""
         super().__init__(device, api, "Ambeo Bluetooth Pairing")
-        
+
     @property
     def entity_category(self) -> EntityCategory:
         """Return the entity category."""
@@ -131,7 +138,7 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
             self._is_on = status
         except Exception as e:
             _LOGGER.error(f"Failed to update bluetooth pairing status: {e}")
-            
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -139,10 +146,12 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the switch entities from a config entry created in the integrations UI."""
-    ambeo_api = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
-    if not ambeo_device.max_compat:
+    entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(
+        ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
+    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT):
         entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.BLUETOOTH_PAIRING):
         entities.append(AmbeoBluetoothPairing(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)

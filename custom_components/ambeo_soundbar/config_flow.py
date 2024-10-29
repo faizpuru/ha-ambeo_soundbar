@@ -1,8 +1,12 @@
+
+import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DOMAIN, VERSION
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -24,7 +28,7 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Display the form to the user.
         return self.async_show_form(
-            step_id="user", 
-            data_schema=data_schema, 
+            step_id="user",
+            data_schema=data_schema,
             errors=errors
         )
