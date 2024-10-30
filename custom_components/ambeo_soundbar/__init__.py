@@ -3,47 +3,46 @@ import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER, MAX_SOUNDBAR
-from .api.factory import AmbeoAPIFactory
+from .coordinator import AmbeoCoordinator
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AmbeoDevice:
-    def __init__(self, serial, name, manufacturer, model, version, host, port):
+    def __init__(self, serial, name):
         self._serial = serial
-        self.name = name
-        self.manufacturer = manufacturer
-        self.model = model
-        self.version = version
-        self.host = host
-        self.port = port
+        self._name = name
 
     @property
     def serial(self):
         return self._serial
+
+    @property
+    def name(self):
+        return self._name
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Démarrage de la configuration du composant ambeo")
     config = entry.data
     host = config.get("host")
-    ambeo_api = await AmbeoAPIFactory.create_api(
-        host, DEFAULT_PORT, aiohttp.ClientSession(), hass)
-    serial = await ambeo_api.get_serial()
-    model = await ambeo_api.get_model()
-    name = await ambeo_api.get_name()
-    version = await ambeo_api.get_version()
-    device = AmbeoDevice(serial, name, MANUFACTURER,
-                         model, version, host, DEFAULT_PORT)
+    coordinator = AmbeoCoordinator(
+        hass, host, DEFAULT_PORT, aiohttp.ClientSession(), 10)
+    await coordinator._async_setup()
+    ambeo_api = coordinator.get_api()
+    serial = coordinator.get_serial()
+    model = coordinator.get_model()
+    name = coordinator.get_name()
+    version = coordinator.get_version()
+    device = AmbeoDevice(serial, name)
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug("Data initialized")
     hass.data[DOMAIN][entry.entry_id] = {
-        "api": ambeo_api,
+        "coordinator": coordinator,
         "device": device
     }
     device_registry = dr.async_get(hass)
