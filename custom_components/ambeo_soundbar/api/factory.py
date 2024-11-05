@@ -1,4 +1,6 @@
 import logging
+
+from aiohttp import ClientSession
 from .impl.max_api import AmbeoApiMax
 from .impl.plus_api import AmbeoApiPlus
 from .impl.generic_api import AmbeoApi
@@ -12,7 +14,7 @@ class AmbeoAPIFactory:
     """Factory to get the correct API depending on model"""
 
     @staticmethod
-    async def create_api(ip, port, session, hass) -> AmbeoApi:
+    async def create_api(ip: str, port, session: ClientSession, hass) -> AmbeoApi:
         ambeo_api = AmbeoApi(ip, port, session, hass)
         serial = await ambeo_api.get_serial()
         if serial is None:

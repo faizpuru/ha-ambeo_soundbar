@@ -1,7 +1,10 @@
-import async_timeout
+import aiohttp
+import asyncio
 import json
 import logging
 import time
+
+from homeassistant.core import HomeAssistant
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -12,7 +15,7 @@ class AmbeoApi:
 
     capabilities = []
 
-    def __init__(self, ip, port, session, hass):
+    def __init__(self, ip, port, session: aiohttp.ClientSession, hass: HomeAssistant):
         """Initialize the API with the given IP, port, session, and Home Assistant instance."""
         self.session = session
         self.hass = hass
@@ -24,15 +27,31 @@ class AmbeoApi:
         """Fetch data from a given URL."""
         full_url = f"{self.endpoint}/{url}"
         try:
-            with async_timeout.timeout(TIMEOUT):
-                _LOGGER.debug("Executing URL fetch: %s", full_url)
-                response = await self.session.get(full_url)
+            timeout = aiohttp.ClientTimeout(total=TIMEOUT)
+            _LOGGER.debug("Executing URL fetch: %s", full_url)
+            async with self.session.get(full_url, timeout=timeout) as response:
+                if response.status != 200:
+                    _LOGGER.error(
+                        "HTTP request failed with status: %s for url: %s",
+                        response.status,
+                        full_url,
+                    )
+                    return None
+
                 json_data = await response.json()
                 return json_data
+
+        except aiohttp.ClientError as e:
+            _LOGGER.error(
+                "Client error during HTTP request for url: %s. Exception: %s", full_url, e)
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Timeout error while fetching data from url: %s", full_url)
         except Exception as e:
-            _LOGGER.error(f"HTTP request exception with url: {
-                          full_url}. Exception: {e}")
-            return None
+            _LOGGER.error(
+                "Unexpected exception with url: %s. Exception: %s", full_url, e)
+
+        return None
 
     def extract_data(self, json_data, key_path):
         """Extract data from JSON using a specified key path."""
