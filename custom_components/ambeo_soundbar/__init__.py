@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER, MAX_SOUNDBAR
+from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER
 from .api.factory import AmbeoAPIFactory
 
 
