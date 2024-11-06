@@ -1,4 +1,6 @@
 {
     "name": "Ambeo Soundbar",
-    "render_readme": true
+    "render_readme": true,
+    "zip_release": true,
+    "filename": "ambeo_soundbar.zip"
   }
