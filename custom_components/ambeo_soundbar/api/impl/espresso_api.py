@@ -2,7 +2,7 @@ from .generic_api import AmbeoApi
 from ...const import EXCLUDE_SOURCES_MAX, AMBEO_MAX_VOLUME_STEP, Capability
 
 
-class AmbeoApiMax(AmbeoApi):
+class AmbeoEspressoApi(AmbeoApi):
 
     capabilities = [Capability.STANDBY,
                     Capability.MAX_LOGO,
