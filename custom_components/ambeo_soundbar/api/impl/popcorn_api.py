@@ -1,9 +1,9 @@
 from .generic_api import AmbeoApi
 import json
-from ...const import AMBEO_PLUS_VOLUME_STEP, Capability
+from ...const import AMBEO_POPCORN_VOLUME_STEP, Capability
 
 
-class AmbeoApiPlus(AmbeoApi):
+class AmbeoPopcornApi(AmbeoApi):
 
     capabilities = [Capability.AMBEO_LOGO,
                     Capability.LED_BAR,
@@ -15,7 +15,7 @@ class AmbeoApiPlus(AmbeoApi):
         return capa in self.capabilities
 
     def get_volume_step(self):
-        return AMBEO_PLUS_VOLUME_STEP
+        return AMBEO_POPCORN_VOLUME_STEP
 
     async def get_bluetooth_pairing_state(self):
         bluetooth_pairing_state = await self.get_value("bluetooth:state", "bluetoothState")
