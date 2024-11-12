@@ -147,6 +147,22 @@ class AmbeoApi:
     async def set_voice_enhancement(self, voice_enhancement_mode):
         pass
 
+    # SUB_WOOFER
+    async def has_subwoofer(self):
+        pass
+
+    async def get_subwoofer_status(self):
+        pass
+
+    async def set_subwoofer_status(self):
+        pass
+
+    async def get_subwoofer_volume(self):
+        pass
+
+    async def set_subwoofer_volume(self):
+        pass
+
     # AMBEO MODE
     async def get_ambeo_mode(self):
         pass
