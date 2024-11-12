@@ -29,6 +29,7 @@ class Capability:
     CODEC_LED = "CodecLED"
     VOICE_ENHANCEMENT = "VoiceEnhancementMode"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
+    SUBWOOFER = "SubWoofer"
     STANDBY = "standby"
     MAX_LOGO = "AmbeoMaxLogo"
     MAX_DISPLAY = "AmbeoMaxDisplay"

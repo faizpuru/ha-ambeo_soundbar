@@ -2,6 +2,7 @@ import logging
 
 from homeassistant.components.light import LightEntity, COLOR_MODE_BRIGHTNESS
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.number import NumberEntity
 from homeassistant.util.color import value_to_brightness
 from homeassistant.helpers.entity import Entity
 
@@ -88,3 +89,17 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     @property
     def available(self):
         return self._is_on is not None
+
+
+class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
+    """Generic ambeo number."""
+
+    def __init__(self, device, api, feature_name):
+        """Initialize the number entity."""
+        super().__init__(device, api, feature_name, feature_name)
+        self._current_value = None
+
+    @property
+    def native_value(self):
+        """Get current value"""
+        return self._current_value

@@ -5,11 +5,14 @@ from ...const import AMBEO_POPCORN_VOLUME_STEP, Capability
 
 class AmbeoPopcornApi(AmbeoApi):
 
+    _has_subwoofer = None
+
     capabilities = [Capability.AMBEO_LOGO,
                     Capability.LED_BAR,
                     Capability.CODEC_LED,
                     Capability.VOICE_ENHANCEMENT,
-                    Capability.BLUETOOTH_PAIRING]
+                    Capability.BLUETOOTH_PAIRING,
+                    Capability.SUBWOOFER]
 
     def has_capability(self, capa):
         return capa in self.capabilities
@@ -101,3 +104,22 @@ class AmbeoPopcornApi(AmbeoApi):
 
     async def set_led_bar_brightness(self, brightness):
         await self.set_value("ui:/settings/interface/ledBrightness", "i32_", brightness)
+
+    async def has_subwoofer(self):
+        if self._has_subwoofer is None:
+            list = await self.get_value("settings: /popcorn/subwoofer/list", "popcornSubwooferList")
+            if list is not None:
+                self._has_subwoofer = len(list) > 0
+        return self._has_subwoofer
+
+    async def get_subwoofer_status(self):
+        return await self.get_value("ui:/settings/subwoofer/enabled", "bool_")
+
+    async def set_subwoofer_status(self, status):
+        await self.set_value("ui:/settings/subwoofer/enabled", "bool_", status)
+
+    async def get_subwoofer_volume(self):
+        return await self.get_value("ui:/settings/subwoofer/volume", "double_")
+
+    async def set_subwoofer_volume(self, volume):
+        await self.set_value("ui:/settings/subwoofer/volume", "double_", volume)
