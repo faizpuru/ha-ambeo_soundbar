@@ -1,5 +1,6 @@
-from .generic_api import AmbeoApi
 import json
+
+from .generic_api import AmbeoApi
 from ...const import AMBEO_POPCORN_VOLUME_STEP, Capability
 
 
@@ -107,7 +108,7 @@ class AmbeoPopcornApi(AmbeoApi):
 
     async def has_subwoofer(self):
         if self._has_subwoofer is None:
-            list = await self.get_value("settings: /popcorn/subwoofer/list", "popcornSubwooferList")
+            list = await self.get_value("settings:/popcorn/subwoofer/list", "popcornSubwooferList")
             if list is not None:
                 self._has_subwoofer = len(list) > 0
         return self._has_subwoofer
