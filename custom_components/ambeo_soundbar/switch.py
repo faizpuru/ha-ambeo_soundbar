@@ -13,6 +13,30 @@ from .api.impl.generic_api import AmbeoApi
 _LOGGER = logging.getLogger(__name__)
 
 
+class SubWooferStatus(AmbeoBaseSwitch):
+    def __init__(self, device, api):
+        """Initialize the Subwoofer  switch."""
+        super().__init__(device, api, "Subwoofer Status")
+
+    async def async_turn_on(self):
+        """Turn the Subwoofer on."""
+        await self.api.set_subwoofer_status(True)
+        self._is_on = True
+
+    async def async_turn_off(self):
+        """Turn the Subwoofer off."""
+        await self.api.set_subwoofer_status(False)
+        self._is_on = False
+
+    async def async_update(self):
+        """Update the current status of the subwoofer."""
+        try:
+            status = await self.api.get_subwoofer_status()
+            self._is_on = status
+        except Exception as e:
+            _LOGGER.error(f"Failed to update subwoofer status: {e}")
+
+
 class VoiceEnhancementMode(AmbeoBaseSwitch):
     def __init__(self, device, api):
         """Initialize the Voice Enhancement switch."""
@@ -154,4 +178,6 @@ async def async_setup_entry(
         entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
     if ambeo_api.has_capability(Capability.BLUETOOTH_PAIRING):
         entities.append(AmbeoBluetoothPairing(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.SUBWOOFER) and await ambeo_api.has_subwoofer():
+        entities.append(SubWooferStatus(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)
