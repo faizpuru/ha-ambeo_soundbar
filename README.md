@@ -14,27 +14,48 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 - AMBEO Soundbar Plus
 
 ## Features
-🎮 Media Player:
-  - 🔊 Volume:
-      - Set/adjust volume level
-      - Mute/unmute
-      - Volume step up/down
-  - ⏯️ Playback:
-      - Play/Pause
-      - Next/Previous track
-  - 📱 Source: Select input source
-  - 🎵 Sound: Select sound mode
-  - ⚡ Power: Turn on/off*
+### Audio Features
 
-🛠️ Advanced Controls:
-  - 💡 LED Control
-  - 🌙 Night Mode
-  - 🗣️ Voice Enhancement*
-  - 🎭 AMBEO Mode
-  - 📶 Bluetooth Pairing
-  - 🔄 Device Restart
+| Feature | Max | Plus | Mini | Description |
+|---------|----------|---------|---------|-------------|
+| Night Mode | ✅ | ✅ | ✅ | Reduces dynamic range and bass intensity for quiet listening environments |
+| Ambeo Mode | ✅ | ✅ | ✅ | Enables 3D virtualization technology for immersive sound experience |
+| Voice Enhancement | ❌ | ✅ | ✅ | Emphasizes dialogue frequencies for clearer speech in media content |
+| Sound Feedback | ✅ | ✅ | ✅ | Enables/disables audio confirmation for user actions |
+| Subwoofer Support | ❌ | ✅ | ✅ | Controls for external subwoofer connection, volume and power status |
 
-\* Available on supported models only
+### Sources Management
+
+| Feature | Max | Plus | Mini | Description |
+|---------|----------|---------|---------|-------------|
+| Source Selection | ✅ | ✅ | ✅ | Controls input source selection (HDMI, Optical, Bluetooth, etc.) |
+| Audio Presets | ✅ | ✅ | ✅ | Sound profiles optimized for different content types |
+
+### Display Controls
+
+| Feature | Max | Plus | Mini | Description |
+|---------|----------|---------|---------|-------------|
+| Ambeo Logo | ✅ | ✅ | ✅ | Controls the illuminated Ambeo logo brightness on device |
+| LED Bar | ❌ | ✅ | ✅ | Controls front LED display bar brightness for visual feedback |
+| Main Display | ✅ | ❌ | ❌ | Controls device's screen brightness and display settings |
+| Codec LED | ❌ | ✅ | ✅ | Controls LED indicator showing active audio codec |
+
+### Media Player Controls
+
+| Feature | Max | Plus | Mini | Description |
+|---------|----------|---------|---------|-------------|
+| Play/Pause | ✅ | ✅ | ✅ | Controls media playback state |
+| Next/Previous | ✅ | ✅ | ✅ | Skip to next or previous track |
+| Volume | ✅ | ✅ | ✅ | Adjusts audio volume level |
+| Mute | ✅ | ✅ | ✅ | Toggles audio mute state |
+
+### Additional Features
+
+| Feature | Max | Plus | Mini | Description |
+|---------|----------|---------|---------|-------------|
+| Bluetooth Pairing | ❌ | ✅ | ✅ | Manages Bluetooth device pairing mode and connected devices |
+| Standby Control | ✅ | ❌ | ❌ | Controls device power state between active and standby mode |
+| Restart | ✅ | ✅ | ✅ | Reboots the device |
 
 ## 🚀 Quick Start
 
