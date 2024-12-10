@@ -8,6 +8,11 @@ class AmbeoPopcornApi(AmbeoApi):
 
     _has_subwoofer = None
 
+    additional_inputs = [
+        {"id": "googlecast", "title": "Google Cast"},
+        {"id": "airplay", "title": "AirPlay"}
+    ]
+
     capabilities = [Capability.AMBEO_LOGO,
                     Capability.LED_BAR,
                     Capability.CODEC_LED,
@@ -61,6 +66,7 @@ class AmbeoPopcornApi(AmbeoApi):
         data = await self.execute_request("getRows", "ui:/inputs", "@all", None, 0, 10)
         if data:
             rows = self.extract_data(data, ["rows"])
+            rows.extend(self.additional_inputs)
             return rows
         return None
 
