@@ -62,11 +62,8 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 ### 📦 Using HACS (Recommended)
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=faizpuru&repository=ha-ambeo_soundbar&category=integration)
 
-1. Add this repository to HACS:
-   - Manually: `https://github.com/faizpuru/ha-ambeo_soundbar` (category: `integration`)
-   - Or use the button above
-2. Search for "Ambeo Soundbar" in HACS and install
-3. Restart Home Assistant
+1. Use the button above or search for "Ambeo Soundbar" in HACS
+2. Download the integration and restart Home Assistant
 
 ### ⚙️ Manual Installation
 1. Download the `custom_components/ambeo_soundbar` directory to your Home Assistant configuration directory
