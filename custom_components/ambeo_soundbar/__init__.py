@@ -29,7 +29,7 @@ class AmbeoDevice:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    _LOGGER.debug("Démarrage de la configuration du composant ambeo")
+    _LOGGER.debug("Starting configuration of ambeo entry")
     config = entry.data
     host = config.get("host")
     ambeo_api = await AmbeoAPIFactory.create_api(
