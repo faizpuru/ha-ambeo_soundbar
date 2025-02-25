@@ -1,6 +1,6 @@
 import logging
 
-from homeassistant.components.light import LightEntity, COLOR_MODE_BRIGHTNESS
+from homeassistant.components.light import LightEntity, ColorMode
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.number import NumberEntity
 from homeassistant.util.color import value_to_brightness
@@ -60,12 +60,12 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     @property
     def supported_color_modes(self):
         """Supported color modes."""
-        return {COLOR_MODE_BRIGHTNESS}
+        return {ColorMode.BRIGHTNESS}
 
     @property
     def color_mode(self):
         """Current color mode."""
-        return COLOR_MODE_BRIGHTNESS
+        return ColorMode.BRIGHTNESS
 
     @property
     def brightness(self):
