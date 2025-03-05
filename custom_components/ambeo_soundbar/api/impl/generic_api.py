@@ -5,6 +5,7 @@ import logging
 import time
 
 from homeassistant.core import HomeAssistant
+from ..exceptions import AmbeoConnectionError
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,16 +43,14 @@ class AmbeoApi:
                 return json_data
 
         except aiohttp.ClientError as e:
-            _LOGGER.error(
-                "Client error during HTTP request for url: %s. Exception: %s", full_url, e)
+            raise AmbeoConnectionError(
+                f"Client error during HTTP request for url: {full_url}. Exception: {e}")
         except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Timeout error while fetching data from url: %s", full_url)
+            raise AmbeoConnectionError(
+                f"Timeout error while fetching data from url: {full_url}")
         except Exception as e:
-            _LOGGER.error(
-                "Unexpected exception with url: %s. Exception: %s", full_url, e)
-
-        return None
+            raise AmbeoConnectionError(
+                f"Unexpected exception with url: {full_url}. Exception: {e}")
 
     def extract_data(self, json_data, key_path):
         """Extract data from JSON using a specified key path."""

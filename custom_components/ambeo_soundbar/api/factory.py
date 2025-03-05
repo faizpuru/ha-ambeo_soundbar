@@ -4,7 +4,6 @@ from aiohttp import ClientSession
 from .impl.espresso_api import AmbeoEspressoApi
 from .impl.popcorn_api import AmbeoPopcornApi
 from .impl.generic_api import AmbeoApi
-from homeassistant.exceptions import ConfigEntryNotReady
 from ..const import POPCORN_API_MODELS, ESPRESSO_API_MODELS
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,9 +15,6 @@ class AmbeoAPIFactory:
     @staticmethod
     async def create_api(ip: str, port, session: ClientSession, hass) -> AmbeoApi:
         ambeo_api = AmbeoApi(ip, port, session, hass)
-        serial = await ambeo_api.get_serial()
-        if serial is None:
-            raise ConfigEntryNotReady(f"Can't connect to host : {ip}")
         model = await ambeo_api.get_model()
         _LOGGER.debug("Setting up the API for " + model)
         if model in POPCORN_API_MODELS:
