@@ -2,11 +2,36 @@
   "config": {
     "step": {
       "user": {
-        "title": "Information sur l'Ambeo Soundbar",
+        "title": "Connexion à la barre de son Ambeo",
         "data": {
-          "host": "Adresse IP"
+          "host": "Hôte"
+        },
+        "data_description": {
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
+    },
+    "abort": {
+      "already_configured": "Cet appareil est déjà configuré"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Paramètres de la barre de son Ambeo",
+        "data": {
+          "host": "Hôte"
+        },
+        "data_description": {
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
     }
   }
 }

@@ -1,0 +1,2 @@
+class AmbeoConnectionError(Exception):
+    pass
