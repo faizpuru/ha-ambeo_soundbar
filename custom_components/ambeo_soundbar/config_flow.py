@@ -26,46 +26,26 @@ async def validate_connection(hass, host, port=DEFAULT_PORT):
 class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options configuration for Ambeo Soundbar integration."""
 
-    def __init__(self, config_entry):
-        """Initialize options handler with existing configuration."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None):
-        """Handle options flow."""
         errors = {}
-
+        host_default = self.config_entry.options.get(
+            "host", self.config_entry.data.get("host"))
         if user_input is not None:
-            if "host" in user_input and user_input["host"] != self.config_entry.data.get("host"):
-                name, error = await validate_connection(self.hass, user_input["host"])
-
-                if error:
-                    errors["base"] = error
-                else:
-                    # Update configuration with new host
-                    new_data = dict(self.config_entry.data)
-                    new_data["host"] = user_input["host"]
-
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry,
-                        data=new_data,
-                        title=name
-                    )
-
-                    # Reload entry to apply changes
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self.config_entry.entry_id)
-                    )
-
-                    return self.async_create_entry(title="", data={})
+            name, error = await validate_connection(self.hass, user_input["host"])
+            if error is not None:
+                errors["base"] = error
+                return self.display_form(errors, host_default)
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(data=user_input)
 
-        host_default = self.config_entry.data.get("host")
+        return self.display_form(errors, host_default)
+
+    def display_form(self, errors, host_default):
         options_schema = vol.Schema({
             vol.Optional("host", default=host_default): str,
+            vol.Optional("experimental", default=self.config_entry.options.get("experimental", False)): bool,
+            vol.Optional("cooldown", default=self.config_entry.options.get("cooldown", 90)): int,
         })
-
         return self.async_show_form(
             step_id="init",
             data_schema=options_schema,
@@ -104,4 +84,4 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return AmbeoOptionsFlowHandler(config_entry)
+        return AmbeoOptionsFlowHandler()

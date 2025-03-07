@@ -20,9 +20,12 @@ class AmbeoApi:
         """Initialize the API with the given IP, port, session, and Home Assistant instance."""
         self.session = session
         self.hass = hass
-        self.ip = ip
         self.port = port
-        self.endpoint = f"http://{ip}:{port}/api"
+        self.set_endpoint(ip)
+
+    def set_endpoint(self, host):
+        self.ip = host
+        self.endpoint = f"http://{host}:{self.port}/api"
 
     async def fetch_data(self, url):
         """Fetch data from a given URL."""

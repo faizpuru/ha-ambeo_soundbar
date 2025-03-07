@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
@@ -24,8 +25,27 @@ STATE_DICT = {
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
-    def __init__(self, device, api, sources, presets):
+    async def _async_entry_updated(self, hass, config_entry) -> None:
+        self.update_experimental(config_entry)
+
+    def update_experimental(self, config_entry):
+        self._experimental = config_entry.options.get("experimental")
+        self._cooldown = config_entry.options.get("experimental")
+        if self._experimental:
+            _LOGGER.debug("experimental mode activated")
+            self._debounce_task = None
+            self._debounce_start = None
+            self._update_lock = asyncio.Lock()
+        else:
+            _LOGGER.debug("experimental mode desactivated")
+
+    def __init__(self, device, api, sources, presets, config_entry):
         super().__init__(device, api, "Player", "player")
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(self._async_entry_updated))
+
+        self.update_experimental(config_entry)
+
         self._power_state = STATE_ON
         self._playing_state = STATE_IDLE
         self._current_source = None
@@ -192,35 +212,17 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_update(self):
         """Update the media player state."""
         _LOGGER.debug("Refreshing state...")
-        try:
-            "Get Volume"
-            volume = await self.api.get_volume()
-            self._volume = volume / self._max_volume
-        except Exception as e:
-            _LOGGER.error("Failed to get volume: %s", e)
-        try:
-            "Get Muted"
-            muted = await self.api.is_mute()
-            self._muted = muted
-        except Exception as e:
-            _LOGGER.error("Failed to get mute: %s", e)
-        try:
-            "Get Source"
-            source_id = await self.api.get_current_source()
-            self._current_source = find_title_by_id(source_id, self._sources)
-        except Exception as e:
-            _LOGGER.error("Failed to get source: %s", e)
-        try:
-            "Get preset"
-            preset_id = await self.api.get_current_preset()
-            self._current_preset = find_title_by_id(preset_id, self._presets)
-        except Exception as e:
-            _LOGGER.error("Failed to get preset: %s", e)
-        try:
-            state = await self.api.get_state()
-            self._power_state = STATE_DICT.get(state, state)
-        except Exception as e:
-            _LOGGER.error("Failed to get state: %s", e)
+        tasks = [
+            self.update_volume(),
+            self.update_mute(),
+            self.update_source(),
+            self.update_preset(),
+            self.update_state(),
+            self.update_player_data(),
+        ]
+        await asyncio.gather(*tasks)
+
+    async def update_player_data(self):
         try:
             player_data = await self.api.player_data()
             state = player_data.get("state", None)
@@ -231,14 +233,51 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             title = track_roles.get("title")
             media_data = track_roles.get("mediaData", {})
             meta_data = media_data.get("metaData", {})
-
             self._image_url = image_url
             self._media_title = title
             self._album = meta_data.get("album")
             self._artist = meta_data.get("artist")
-
         except Exception as e:
             _LOGGER.error("Failed to get player data: %s", e)
+
+    async def update_state(self):
+        try:
+            state = await self.api.get_state()
+            self._power_state = STATE_DICT.get(state, state)
+        except Exception as e:
+            _LOGGER.error("Failed to get state: %s", e)
+
+    async def update_preset(self):
+        try:
+            "Get preset"
+            preset_id = await self.api.get_current_preset()
+            self._current_preset = find_title_by_id(preset_id, self._presets)
+        except Exception as e:
+            _LOGGER.error("Failed to get preset: %s", e)
+
+    async def update_source(self):
+        try:
+            "Get Source"
+            source_id = await self.api.get_current_source()
+            self._current_source = find_title_by_id(source_id, self._sources)
+        except Exception as e:
+            _LOGGER.error("Failed to get source: %s", e)
+
+    async def update_mute(self):
+        try:
+            "Get Muted"
+            muted = await self.api.is_mute()
+            self._muted = muted
+        except Exception as e:
+            _LOGGER.error("Failed to get mute: %s", e)
+
+    async def update_volume(self):
+        try:
+            "Get Volume"
+            volume = await self.api.get_volume()
+            self._volume = volume / self._max_volume
+        except Exception as e:
+            _LOGGER.error("Failed to get volume: %s", e)
 
 
 async def async_setup_entry(
@@ -247,9 +286,11 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Setup sensors from a config entry created in the integrations UI."""
+
     ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     sources = await ambeo_api.get_all_sources()
     presets = await ambeo_api.get_all_presets()
-    ambeo_player = AmbeoMediaPlayer(ambeo_device, ambeo_api, sources, presets)
+    ambeo_player = AmbeoMediaPlayer(
+        ambeo_device, ambeo_api, sources, presets, config_entry)
     async_add_entities([ambeo_player], update_before_add=True)
