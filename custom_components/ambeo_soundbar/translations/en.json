@@ -23,10 +23,14 @@
       "init": {
         "title": "Ambeo Soundbar Settings",
         "data": {
-          "host": "Host"
+          "host": "Host",
+          "experimental": "Experimental mode",
+          "cooldown": "Smoothing delay"
         },
         "data_description": {
-          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)"
+          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
+          "experimental": "Experimental mode uses a debounce mechanism to delay state updates, smoothing out the rapid idle/playing toggling caused by intermittent audio signal detection over HDMI ARC.",
+          "cooldown": "Smoothing delay (used if experimental mode is activated)"
         }
       }
     },
