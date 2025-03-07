@@ -4,10 +4,14 @@
       "user": {
         "title": "Connexion à la barre de son Ambeo",
         "data": {
-          "host": "Hôte"
+          "host": "Hôte",
+          "experimental": "Mode experimental",
+          "cooldown": "Délai de lissage"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)"
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)",
+          "experimental": "Le mode expérimental utilise un mécanisme de stabilisation pour retarder les mises à jour d'état, lissant ainsi la commutation rapide entre les états idle et playing causée par la détection intermittente du signal audio via HDMI ARC.",
+          "cooldown": "Délai de lissage (utilisé si le mode expérimental est activé)"
         }
       }
     },
