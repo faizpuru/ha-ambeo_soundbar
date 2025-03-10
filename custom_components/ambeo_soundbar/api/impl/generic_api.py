@@ -5,11 +5,12 @@ import logging
 import time
 
 from homeassistant.core import HomeAssistant
+
 from ..exceptions import AmbeoConnectionError
+from ...const import TIMEOUT
 
 
 _LOGGER = logging.getLogger(__name__)
-TIMEOUT = 5
 
 
 class AmbeoApi:
@@ -20,9 +21,12 @@ class AmbeoApi:
         """Initialize the API with the given IP, port, session, and Home Assistant instance."""
         self.session = session
         self.hass = hass
-        self.ip = ip
         self.port = port
-        self.endpoint = f"http://{ip}:{port}/api"
+        self.set_endpoint(ip)
+
+    def set_endpoint(self, host):
+        self.ip = host
+        self.endpoint = f"http://{host}:{self.port}/api"
 
     async def fetch_data(self, url):
         """Fetch data from a given URL."""
@@ -98,6 +102,12 @@ class AmbeoApi:
 
     def has_capability(self, capa):
         return capa in self.capabilities
+
+    def support_experimental(self):
+        return False
+
+    def do_need_experimental_mode(self, source_id):
+        return False
 
     def get_volume_step(self):
         return 0.01

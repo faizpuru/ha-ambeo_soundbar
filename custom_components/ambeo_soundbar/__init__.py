@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER
+from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER, CONFIG_HOST
 from .api.factory import AmbeoAPIFactory
 
 
@@ -28,10 +28,19 @@ class AmbeoDevice:
         return self._serial
 
 
+async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle entry updates."""
+    host = config_entry.options.get(CONFIG_HOST)
+    hass.data[DOMAIN][config_entry.entry_id]["api"].set_endpoint(host)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Starting configuration of ambeo entry")
-    config = entry.data
-    host = config.get("host")
+    entry.async_on_unload(
+        entry.add_update_listener(_async_entry_updated))
+
+    host = entry.options.get(CONFIG_HOST, entry.data.get(CONFIG_HOST))
     ambeo_api = await AmbeoAPIFactory.create_api(
         host, DEFAULT_PORT, aiohttp.ClientSession(), hass)
     serial = await ambeo_api.get_serial()

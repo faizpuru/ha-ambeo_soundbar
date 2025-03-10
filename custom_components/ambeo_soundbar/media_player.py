@@ -1,11 +1,14 @@
+import asyncio
 import logging
+import time
+import copy
 
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, Capability
+from .const import CONFIG_COOLDOWN, CONFIG_EXPERIMENTAL, DOMAIN, Capability, EXPERIMENTAL_MODE_SOURCES
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 from .api.impl.generic_api import AmbeoApi
@@ -24,8 +27,27 @@ STATE_DICT = {
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
-    def __init__(self, device, api, sources, presets):
+    async def _async_entry_updated(self, hass, config_entry) -> None:
+        self.update_experimental(config_entry)
+
+    def update_experimental(self, config_entry):
+        self._experimental = config_entry.options.get(CONFIG_EXPERIMENTAL)
+        self._cooldown = config_entry.options.get(CONFIG_COOLDOWN)
+        if self._experimental:
+            _LOGGER.debug("experimental mode activated")
+            self._debounce_task = None
+            self._debounce_start = None
+            self._update_lock = asyncio.Lock()
+        else:
+            _LOGGER.debug("experimental mode desactivated")
+
+    def __init__(self, device, api, sources, presets, config_entry):
         super().__init__(device, api, "Player", "player")
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(self._async_entry_updated))
+
+        self.update_experimental(config_entry)
+
         self._power_state = STATE_ON
         self._playing_state = STATE_IDLE
         self._current_source = None
@@ -44,6 +66,15 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             STATE_DICT['networkStandby'] = STATE_STANDBY
         else:
             STATE_DICT['networkStandby'] = STATE_IDLE
+
+    async def experimental_mode(self):
+        if self.api.support_experimental():
+            return False
+        experimental = self._experimental and self.api.do_need_experimental_mode(
+            self.source_id)
+        if not experimental:
+            await self._cancel_existing_debounce()
+        return experimental
 
     @property
     def supported_features(self):
@@ -131,6 +162,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         return self._current_source
 
     @property
+    def source_id(self):
+        return find_id_by_title(
+            self.source, self._sources)
+
+    @property
     def source_list(self):
         """List of available sources."""
         titles = [entry["title"]
@@ -192,53 +228,140 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_update(self):
         """Update the media player state."""
         _LOGGER.debug("Refreshing state...")
+        tasks = [
+            self.update_volume(),
+            self.update_mute(),
+            self.update_source(),
+            self.update_preset(),
+            self.update_state(),
+            self.update_player_data(),
+        ]
+        await asyncio.gather(*tasks)
+
+    async def _update_attr(self, api_method, transform, setter, error_msg):
+        """Exécute une méthode API, transforme le résultat et met à jour l'attribut correspondant."""
         try:
-            "Get Volume"
-            volume = await self.api.get_volume()
-            self._volume = volume / self._max_volume
+            result = await api_method()
+            setter(transform(result))
         except Exception as e:
-            _LOGGER.error("Failed to get volume: %s", e)
-        try:
-            "Get Muted"
-            muted = await self.api.is_mute()
-            self._muted = muted
-        except Exception as e:
-            _LOGGER.error("Failed to get mute: %s", e)
-        try:
-            "Get Source"
-            source_id = await self.api.get_current_source()
-            self._current_source = find_title_by_id(source_id, self._sources)
-        except Exception as e:
-            _LOGGER.error("Failed to get source: %s", e)
-        try:
-            "Get preset"
-            preset_id = await self.api.get_current_preset()
-            self._current_preset = find_title_by_id(preset_id, self._presets)
-        except Exception as e:
-            _LOGGER.error("Failed to get preset: %s", e)
-        try:
-            state = await self.api.get_state()
-            self._power_state = STATE_DICT.get(state, state)
-        except Exception as e:
-            _LOGGER.error("Failed to get state: %s", e)
+            _LOGGER.error(error_msg, e)
+
+    async def update_state(self):
+        await self._update_attr(
+            self.api.get_state,
+            lambda state: STATE_DICT.get(state, state),
+            lambda value: setattr(self, "_power_state", value),
+            "Failed to get state: %s"
+        )
+
+    async def update_preset(self):
+        await self._update_attr(
+            self.api.get_current_preset,
+            lambda preset_id: find_title_by_id(preset_id, self._presets),
+            lambda value: setattr(self, "_current_preset", value),
+            "Failed to get preset: %s"
+        )
+
+    async def update_source(self):
+        await self._update_attr(
+            self.api.get_current_source,
+            lambda source_id: find_title_by_id(source_id, self._sources),
+            lambda value: setattr(self, "_current_source", value),
+            "Failed to get source: %s"
+        )
+
+    async def update_mute(self):
+        await self._update_attr(
+            self.api.is_mute,
+            lambda muted: muted,
+            lambda value: setattr(self, "_muted", value),
+            "Failed to get mute: %s"
+        )
+
+    async def update_volume(self):
+        await self._update_attr(
+            self.api.get_volume,
+            lambda volume: volume / self._max_volume,
+            lambda value: setattr(self, "_volume", value),
+            "Failed to get volume: %s"
+        )
+
+    def _should_debounce(self, player_data):
+        """Determine if the update should be debounced."""
+        current_state = player_data.get("state")
+        return (current_state == 'stopped' and
+                self._power_state != STATE_STANDBY and
+                self._playing_state != STATE_IDLE)
+
+    async def _cancel_existing_debounce(self):
+        """Cancel the existing debounce task, if any."""
+        if self._debounce_task is not None and not self._debounce_task.done():
+            _LOGGER.debug("[IMMEDIATE] Cancelling existing debounce task.")
+            self._debounce_task.cancel()
+            try:
+                await self._debounce_task
+            except asyncio.CancelledError:
+                _LOGGER.debug("[IMMEDIATE] Debounce task fully cancelled.")
+            self._debounce_task = None
+
+    async def update_player_data(self):
         try:
             player_data = await self.api.player_data()
-            state = player_data.get("state", None)
-            if state is not None:
-                self._playing_state = STATE_DICT.get(state, STATE_IDLE)
-            track_roles = player_data.get("trackRoles", {})
-            image_url = track_roles.get("icon")
-            title = track_roles.get("title")
-            media_data = track_roles.get("mediaData", {})
-            meta_data = media_data.get("metaData", {})
-
-            self._image_url = image_url
-            self._media_title = title
-            self._album = meta_data.get("album")
-            self._artist = meta_data.get("artist")
-
+            if await self.experimental_mode():
+                async with self._update_lock:
+                    if self._should_debounce(player_data):
+                        _LOGGER.debug(
+                            "[TASK] Debounced update requested, state: '%s'", player_data.get("state"))
+                        if self._debounce_task is None:
+                            self._debounce_start = time.time()
+                            self._debounce_task = asyncio.create_task(
+                                self._debounced_update(player_data)
+                            )
+                        else:
+                            elapsed = time.time() - self._debounce_start
+                            remaining = max(0, self._cooldown - elapsed)
+                            _LOGGER.debug(
+                                "[TASK] Debounce task already running... %s seconds remaining.", round(remaining, 1))
+                    else:
+                        _LOGGER.debug(
+                            "[IMMEDIATE] Immediate update requested, state: '%s'", player_data.get("state"))
+                        await self._cancel_existing_debounce()
+                        self._process_player_data(player_data)
+            else:
+                self._process_player_data(player_data)
         except Exception as e:
             _LOGGER.error("Failed to get player data: %s", e)
+
+    async def _debounced_update(self, player_data):
+        """Handle the debounced update after the cooldown delay."""
+        player_data_copy = copy.deepcopy(player_data)
+        try:
+            await asyncio.sleep(self._cooldown)
+            # Check if the debounce task was cancelled before proceeding.
+            if self._debounce_task.cancelled():
+                _LOGGER.debug("Debounce update cancelled after cooldown.")
+                return
+
+            _LOGGER.debug("Cooldown passed, applying debounced update.")
+            self._process_player_data(player_data_copy)
+        except asyncio.CancelledError:
+            _LOGGER.debug("Debounce update cancelled within cooldown window.")
+        finally:
+            self._debounce_task = None
+
+    def _process_player_data(self, player_data):
+        """Update entity state from player data"""
+        state = player_data.get("state", None)
+        if state is not None:
+            self._playing_state = STATE_DICT.get(state, STATE_IDLE)
+
+        track_roles = player_data.get("trackRoles", {})
+        self._media_title = track_roles.get("title")
+        self._image_url = track_roles.get("icon")
+        media_data = track_roles.get("mediaData", {})
+        meta_data = media_data.get("metaData", {})
+        self._artist = meta_data.get("artist")
+        self._album = meta_data.get("album")
 
 
 async def async_setup_entry(
@@ -247,9 +370,11 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Setup sensors from a config entry created in the integrations UI."""
+
     ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     sources = await ambeo_api.get_all_sources()
     presets = await ambeo_api.get_all_presets()
-    ambeo_player = AmbeoMediaPlayer(ambeo_device, ambeo_api, sources, presets)
+    ambeo_player = AmbeoMediaPlayer(
+        ambeo_device, ambeo_api, sources, presets, config_entry)
     async_add_entities([ambeo_player], update_before_add=True)
