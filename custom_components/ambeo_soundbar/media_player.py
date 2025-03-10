@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_COOLDOWN, CONFIG_EXPERIMENTAL, DOMAIN, Capability, EXPERIMENTAL_MODE_SOURCES
+from .const import CONFIG_COOLDOWN, CONFIG_EXPERIMENTAL, DOMAIN, Capability
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 from .api.impl.generic_api import AmbeoApi
