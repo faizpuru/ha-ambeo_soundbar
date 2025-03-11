@@ -68,10 +68,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             STATE_DICT['networkStandby'] = STATE_IDLE
 
     async def experimental_mode(self):
-        if self.api.support_experimental():
+        if not self.api.support_experimental():
             return False
         experimental = self._experimental and self.api.do_need_experimental_mode(
-            self.source_id)
+            self.source)
         if not experimental:
             await self._cancel_existing_debounce()
         return experimental

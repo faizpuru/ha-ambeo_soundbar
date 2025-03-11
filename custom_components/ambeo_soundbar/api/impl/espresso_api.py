@@ -11,8 +11,9 @@ class AmbeoEspressoApi(AmbeoApi):
     def support_experimental(self):
         return True
 
-    def do_need_experimental_mode(self, source_id):
-        return source_id == "hdmiarc"
+    def do_need_experimental_mode(self, source):
+        # return source_id == "hdmiarc"
+        return True
 
     def has_capability(self, capa):
         return capa in self.capabilities

@@ -26,7 +26,7 @@ class AmbeoPopcornApi(AmbeoApi):
     def support_experimental(self):
         return False
 
-    def do_need_experimental_mode(self, source_id):
+    def do_need_experimental_mode(self, source):
         return False
 
     def get_volume_step(self):
