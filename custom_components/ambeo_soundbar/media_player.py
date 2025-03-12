@@ -39,7 +39,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             self._debounce_start = None
             self._update_lock = asyncio.Lock()
         else:
-            _LOGGER.debug("Debounce mode desactivated")
+            _LOGGER.debug("Debounce mode deactivated")
 
     def __init__(self, device, api, sources, presets, config_entry):
         super().__init__(device, api, "Player", "player")
@@ -308,7 +308,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                 return
             if self.debounce_mode_activated:
                 async with self._update_lock:
-                    if self._should_debounce(player_data):
+                    if self._should_debounce(player_state):
                         _LOGGER.debug(
                             "[TASK] Debounced update requested, state: '%s'", player_state)
                         if self._debounce_task is None:
@@ -369,7 +369,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities,
 ):
-    """Setup sensors from a config entry created in the integrations UI."""
+    """Setup media player from a config entry created in the integrations UI."""
 
     ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
