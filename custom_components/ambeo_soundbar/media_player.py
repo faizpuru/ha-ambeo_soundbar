@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_COOLDOWN, CONFIG_EXPERIMENTAL, DOMAIN, Capability
+from .const import CONFIG_DEBOUNCE_COOLDOWN, DOMAIN, Capability
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 from .api.impl.generic_api import AmbeoApi
@@ -28,25 +28,25 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
     async def _async_entry_updated(self, hass, config_entry) -> None:
-        self.update_experimental(config_entry)
+        self.update_debounce_mode(config_entry)
 
-    def update_experimental(self, config_entry):
-        self._experimental = config_entry.options.get(CONFIG_EXPERIMENTAL)
-        self._cooldown = config_entry.options.get(CONFIG_COOLDOWN)
-        if self._experimental:
-            _LOGGER.debug("experimental mode activated")
+    def update_debounce_mode(self, config_entry):
+        self._debounce_cooldown = config_entry.options.get(
+            CONFIG_DEBOUNCE_COOLDOWN)
+        if self._debounce_cooldown > 0:
+            _LOGGER.debug("Debounce mode activated")
             self._debounce_task = None
             self._debounce_start = None
             self._update_lock = asyncio.Lock()
         else:
-            _LOGGER.debug("experimental mode desactivated")
+            _LOGGER.debug("Debounce mode desactivated")
 
     def __init__(self, device, api, sources, presets, config_entry):
         super().__init__(device, api, "Player", "player")
         config_entry.async_on_unload(
             config_entry.add_update_listener(self._async_entry_updated))
 
-        self.update_experimental(config_entry)
+        self.update_debounce_mode(config_entry)
 
         self._power_state = STATE_ON
         self._playing_state = STATE_IDLE
@@ -67,14 +67,9 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         else:
             STATE_DICT['networkStandby'] = STATE_IDLE
 
-    async def experimental_mode(self):
-        if not self.api.support_experimental():
-            return False
-        experimental = self._experimental and self.api.do_need_experimental_mode(
-            self.source)
-        if not experimental:
-            await self._cancel_existing_debounce()
-        return experimental
+    @property
+    def debounce_mode_activated(self):
+        return self.api.support_debounce_mode() and self._debounce_cooldown > 0
 
     @property
     def supported_features(self):
@@ -286,10 +281,9 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             "Failed to get volume: %s"
         )
 
-    def _should_debounce(self, player_data):
+    def _should_debounce(self, player_state):
         """Determine if the update should be debounced."""
-        current_state = player_data.get("state")
-        return (current_state == 'stopped' and
+        return (player_state == 'stopped' and
                 self._power_state != STATE_STANDBY and
                 self._playing_state != STATE_IDLE)
 
@@ -307,11 +301,16 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def update_player_data(self):
         try:
             player_data = await self.api.player_data()
-            if await self.experimental_mode():
+            player_state = player_data.get("state")
+            if player_state == 'transitioning':
+                _LOGGER.debug(
+                    "[IMMEDIATE] Immediate update requested, state: '%s' will not be processed.", player_state)
+                return
+            if self.debounce_mode_activated:
                 async with self._update_lock:
                     if self._should_debounce(player_data):
                         _LOGGER.debug(
-                            "[TASK] Debounced update requested, state: '%s'", player_data.get("state"))
+                            "[TASK] Debounced update requested, state: '%s'", player_state)
                         if self._debounce_task is None:
                             self._debounce_start = time.time()
                             self._debounce_task = asyncio.create_task(
@@ -319,12 +318,13 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                             )
                         else:
                             elapsed = time.time() - self._debounce_start
-                            remaining = max(0, self._cooldown - elapsed)
+                            remaining = max(
+                                0, self._debounce_cooldown - elapsed)
                             _LOGGER.debug(
                                 "[TASK] Debounce task already running... %s seconds remaining.", round(remaining, 1))
                     else:
                         _LOGGER.debug(
-                            "[IMMEDIATE] Immediate update requested, state: '%s'", player_data.get("state"))
+                            "[IMMEDIATE] Immediate update requested, state: '%s'", player_state)
                         await self._cancel_existing_debounce()
                         self._process_player_data(player_data)
             else:
@@ -336,7 +336,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         """Handle the debounced update after the cooldown delay."""
         player_data_copy = copy.deepcopy(player_data)
         try:
-            await asyncio.sleep(self._cooldown)
+            await asyncio.sleep(self._debounce_cooldown)
             # Check if the debounce task was cancelled before proceeding.
             if self._debounce_task.cancelled():
                 _LOGGER.debug("Debounce update cancelled after cooldown.")

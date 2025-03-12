@@ -2,24 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connexion à la barre de son Ambeo",
+        "title": "Se connecter à la barre de son Ambeo",
         "data": {
-          "host": "Hôte",
-          "experimental": "Mode experimental",
-          "cooldown": "Délai de lissage"
+          "host": "Hôte"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)",
-          "experimental": "Le mode expérimental utilise un mécanisme de stabilisation pour retarder les mises à jour d'état, lissant ainsi la commutation rapide entre les états idle et playing causée par la détection intermittente du signal audio via HDMI ARC.",
-          "cooldown": "Délai de lissage (utilisé si le mode expérimental est activé)"
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Impossible de se connecter à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
+      "cannot_connect": "Échec de la connexion à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
     },
     "abort": {
-      "already_configured": "Cet appareil est déjà configuré"
+      "already_configured": "L'appareil est déjà configuré"
     }
   },
   "options": {
@@ -27,15 +23,18 @@
       "init": {
         "title": "Paramètres de la barre de son Ambeo",
         "data": {
-          "host": "Hôte"
+          "host": "Hôte",
+          "debounce_cooldown": "⚠️ Expérimental: Délai avant passage à l'état inactif"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex: ambeo.local ou 192.168.1.x)"
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
+          "debounce_cooldown": "Si vous rencontrez des comportements inhabituels des états du lecteur changeant sans arret entre 'Playing' et 'Idle', vous pouvez envisager d'utiliser ce réglage. \nDéfinit un délai (en secondes) utilisé avant de passer à l'état 'Idle' lorsqu'un changement irrégulier depuis 'Playing' est détecté. \nValeur recommandée : 100 secondes ; par défaut, désactivé (0)."
         }
       }
     },
     "error": {
-      "cannot_connect": "Impossible de se connecter à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
+      "cannot_connect": "Échec de la connexion à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée.",
+      "experimental_feature_activated": "Fonctionnalité expérimentale activée. Veuillez signaler tout problème rencontré."
     }
   }
 }

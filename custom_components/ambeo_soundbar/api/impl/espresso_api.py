@@ -8,11 +8,7 @@ class AmbeoEspressoApi(AmbeoApi):
                     Capability.MAX_LOGO,
                     Capability.MAX_DISPLAY]
 
-    def support_experimental(self):
-        return True
-
-    def do_need_experimental_mode(self, source):
-        # return source_id == "hdmiarc"
+    def support_debounce_mode(self):
         return True
 
     def has_capability(self, capa):

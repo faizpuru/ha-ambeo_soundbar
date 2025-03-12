@@ -103,10 +103,7 @@ class AmbeoApi:
     def has_capability(self, capa):
         return capa in self.capabilities
 
-    def support_experimental(self):
-        return False
-
-    def do_need_experimental_mode(self, source):
+    def support_debounce_mode(self):
         return False
 
     def get_volume_step(self):
