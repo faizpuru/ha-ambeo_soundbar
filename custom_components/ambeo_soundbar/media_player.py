@@ -349,7 +349,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             # Check if the debounce task was cancelled before proceeding.
             if (
                 # ...dangling task when cancelled via config entry reload
-                self._debounce_task is None or
+                not hasattr(self, "_debounce_task") or self._debounce_task is None or
                 # ...dangling task when failed to cancel properly
                 self._debounce_task.cancelled()
             ):
