@@ -3,7 +3,7 @@ import voluptuous as vol
 import aiohttp
 
 from homeassistant import config_entries
-from .const import CONFIG_COOLDOWN_DEFAULT, CONFIG_EXPERIMENTAL_DEFAULT, CONFIG_HOST_DEFAULT, DOMAIN, DEFAULT_PORT, CONFIG_HOST, CONFIG_EXPERIMENTAL, CONFIG_COOLDOWN
+from .const import CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, CONFIG_HOST_DEFAULT, DOMAIN, DEFAULT_PORT, CONFIG_HOST, CONFIG_DEBOUNCE_COOLDOWN
 from .api.factory import AmbeoAPIFactory
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,14 +41,18 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
 
     def display_form(self, errors, host_default):
 
-        support_experimental = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"].support_experimental(
-        )
+        try:
+            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"].support_debounce_mode(
+            )
+        except:
+            support_debounce = False
 
+        if self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, 0) > 0:
+            errors["base"] = "experimental_feature_activated"
         options_schema = vol.Schema({
             vol.Optional(CONFIG_HOST, default=host_default): str,
-            vol.Optional(CONFIG_EXPERIMENTAL, default=self.config_entry.options.get(CONFIG_EXPERIMENTAL, CONFIG_EXPERIMENTAL_DEFAULT)): bool,
-            vol.Optional(CONFIG_COOLDOWN, default=self.config_entry.options.get(CONFIG_COOLDOWN, CONFIG_COOLDOWN_DEFAULT)): int,
-        }) if support_experimental else vol.Schema({
+            vol.Optional(CONFIG_DEBOUNCE_COOLDOWN, default=self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT)): int,
+        }) if support_debounce else vol.Schema({
             vol.Optional(CONFIG_HOST, default=host_default): str})
 
         return self.async_show_form(
