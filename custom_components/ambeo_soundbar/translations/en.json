@@ -24,18 +24,17 @@
         "title": "Ambeo Soundbar Settings",
         "data": {
           "host": "Host",
-          "experimental": "Experimental mode",
-          "cooldown": "Smoothing delay"
+          "debounce_cooldown": "⚠️ Experimental: Delay before transitioning to idle state"
         },
         "data_description": {
           "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
-          "experimental": "Experimental mode uses a debounce mechanism to delay state updates, smoothing out the rapid idle/playing toggling caused by intermittent audio signal detection over HDMI ARC.",
-          "cooldown": "Smoothing delay (used if experimental mode is activated)"
+          "debounce_cooldown": "If you experience unusual activities in player state cycling between 'Playing' and 'Idle', you can consider using this setting. \nSets a delay (in seconds) before transitioning to the 'Idle' state when an irregular shift from 'Playing' is detected. \nRecommended value: 100 seconds; default is disabled (0)."
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on."
+      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on.",
+      "experimental_feature_activated": "Experimental feature activated. Please report any issues encountered."
     }
   }
 }
