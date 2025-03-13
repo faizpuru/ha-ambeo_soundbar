@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_DEBOUNCE_COOLDOWN, DOMAIN, Capability
+from .const import CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, DOMAIN, Capability
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 from .api.impl.generic_api import AmbeoApi
@@ -40,8 +40,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     def update_debounce_mode(self, config_entry):
         self._debounce_cooldown = config_entry.options.get(
-            CONFIG_DEBOUNCE_COOLDOWN)
-        if self._debounce_cooldown > 0:
+            CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT)
+        if self.debounce_mode_activated:
             _LOGGER.debug("Debounce mode activated")
             self._debounce_task = None
             self._debounce_start = None
@@ -55,7 +55,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             config_entry.add_update_listener(self._async_entry_updated))
 
         self.update_debounce_mode(config_entry)
-
         self._power_state = STATE_ON
         self._playing_state = STATE_IDLE
         self._current_source = None
