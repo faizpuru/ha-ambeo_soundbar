@@ -16,10 +16,11 @@ async def validate_connection(hass, host, port=DEFAULT_PORT):
             ambeo_api = await AmbeoAPIFactory.create_api(
                 host, port, client_session, hass)
             name = await ambeo_api.get_name()
-            return name, None
+            serial = await ambeo_api.get_serial()
+            return name, serial, None
         except Exception as error:
             _LOGGER.error("Connection error to %s: %s", host, error)
-            return None, "cannot_connect"
+            return None, None, "cannot_connect"
 
 
 class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
@@ -30,7 +31,7 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         host_default = self.config_entry.options.get(
             CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST))
         if user_input is not None:
-            name, error = await validate_connection(self.hass, user_input[CONFIG_HOST])
+            name, serial, error = await validate_connection(self.hass, user_input[CONFIG_HOST])
             if error is not None:
                 errors["base"] = error
                 return self.display_form(errors, host_default)
@@ -73,11 +74,12 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input.get(CONFIG_HOST)
-            name, error = await validate_connection(self.hass, host)
-
+            name, serial, error = await validate_connection(self.hass, host)
             if error:
                 errors["base"] = error
             else:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=name, data=user_input)
 
         data_schema = vol.Schema({
