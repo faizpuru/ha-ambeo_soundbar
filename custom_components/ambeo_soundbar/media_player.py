@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_DEBOUNCE_COOLDOWN, DOMAIN, Capability
+from .const import CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, DOMAIN, Capability
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
 from .api.impl.generic_api import AmbeoApi
@@ -28,12 +28,20 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
     async def _async_entry_updated(self, hass, config_entry) -> None:
+        # Cancel existing debounce
+        await self._cancel_existing_debounce()
+        if self._update_lock is not None and self._update_lock.locked():
+            _LOGGER.debug("Waiting for lock release during unload")
+            async with self._update_lock:  # Acquire to ensure clean release
+                pass
+        self._update_lock = None
+        # Update debounce configuration
         self.update_debounce_mode(config_entry)
 
     def update_debounce_mode(self, config_entry):
         self._debounce_cooldown = config_entry.options.get(
-            CONFIG_DEBOUNCE_COOLDOWN)
-        if self._debounce_cooldown > 0:
+            CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT)
+        if self.debounce_mode_activated:
             _LOGGER.debug("Debounce mode activated")
             self._debounce_task = None
             self._debounce_start = None
@@ -47,7 +55,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             config_entry.add_update_listener(self._async_entry_updated))
 
         self.update_debounce_mode(config_entry)
-
         self._power_state = STATE_ON
         self._playing_state = STATE_IDLE
         self._current_source = None
@@ -289,7 +296,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def _cancel_existing_debounce(self):
         """Cancel the existing debounce task, if any."""
-        if self._debounce_task is not None and not self._debounce_task.done():
+        if (
+            hasattr(self, "_debounce_task") and
+            self._debounce_task is not None and
+            not self._debounce_task.done()
+        ):
             _LOGGER.debug("[IMMEDIATE] Cancelling existing debounce task.")
             self._debounce_task.cancel()
             try:
@@ -337,8 +348,14 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         player_data_copy = copy.deepcopy(player_data)
         try:
             await asyncio.sleep(self._debounce_cooldown)
+
             # Check if the debounce task was cancelled before proceeding.
-            if self._debounce_task.cancelled():
+            if (
+                # ...dangling task when cancelled via config entry reload
+                not hasattr(self, "_debounce_task") or self._debounce_task is None or
+                # ...dangling task when failed to cancel properly
+                self._debounce_task.cancelled()
+            ):
                 _LOGGER.debug("Debounce update cancelled after cooldown.")
                 return
 
