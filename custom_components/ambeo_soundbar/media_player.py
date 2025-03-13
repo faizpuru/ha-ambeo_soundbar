@@ -93,7 +93,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                     | MediaPlayerEntityFeature.PREVIOUS_TRACK)
 
         if self.api.has_capability(Capability.STANDBY):
-            features |= (MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF)
+            features |= (MediaPlayerEntityFeature.TURN_ON |
+                         MediaPlayerEntityFeature.TURN_OFF)
         return features
 
     @property
@@ -171,7 +172,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available sources."""
-        titles = [entry["title"] for entry in self._sources if "title" in entry]
+        titles = [entry["title"]
+                  for entry in self._sources if "title" in entry]
         return sorted(titles)
 
     async def async_select_source(self, source):
@@ -190,7 +192,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def sound_mode_list(self):
         """List of available audio presets."""
-        titles = [preset["title"] for preset in self._presets if "title" in preset]
+        titles = [preset["title"]
+                  for preset in self._presets if "title" in preset]
         return sorted(titles)
 
     @property
@@ -295,8 +298,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def _cancel_existing_debounce(self):
         """Cancel the existing debounce task, if any."""
         if (
-            hasattr(self, "_debounce_task") and 
-            self._debounce_task is not None and 
+            hasattr(self, "_debounce_task") and
+            self._debounce_task is not None and
             not self._debounce_task.done()
         ):
             _LOGGER.debug("[IMMEDIATE] Cancelling existing debounce task.")
@@ -327,7 +330,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                             )
                         else:
                             elapsed = time.time() - self._debounce_start
-                            remaining = max(0, self._debounce_cooldown - elapsed)
+                            remaining = max(
+                                0, self._debounce_cooldown - elapsed)
                             _LOGGER.debug(
                                 "[TASK] Debounce task already running... %s seconds remaining.", round(remaining, 1))
                     else:

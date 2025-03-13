@@ -28,12 +28,14 @@ class AmbeoDevice:
     def serial(self):
         return self._serial
 
+
 async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle entry updates."""
     host = config_entry.options.get(CONFIG_HOST)
     hass.data[DOMAIN][config_entry.entry_id]["api"].set_endpoint(host)
     await hass.config_entries.async_reload(config_entry.entry_id)
     _LOGGER.info("Successfully updated configuration entries")
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Starting configuration of ambeo entry")
@@ -50,8 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         version = await ambeo_api.get_version()
     except aiohttp.ClientError as ex:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
-    
-    device = AmbeoDevice(serial, name, MANUFACTURER, model, version, host, DEFAULT_PORT)
+
+    device = AmbeoDevice(serial, name, MANUFACTURER,
+                         model, version, host, DEFAULT_PORT)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -74,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle integration unload"""
