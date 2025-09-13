@@ -34,7 +34,7 @@ class SubWooferStatus(AmbeoBaseSwitch):
             status = await self.api.get_subwoofer_status()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update subwoofer status: {e}")
+            _LOGGER.error("Failed to update subwoofer status: %s", e)
 
 
 class VoiceEnhancementMode(AmbeoBaseSwitch):
@@ -58,7 +58,7 @@ class VoiceEnhancementMode(AmbeoBaseSwitch):
             status = await self.api.get_voice_enhancement()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update voice enhancement status: {e}")
+            _LOGGER.error("Failed to update voice enhancement status: %s", e)
 
 
 class SoundFeedback(AmbeoBaseSwitch):
@@ -82,7 +82,7 @@ class SoundFeedback(AmbeoBaseSwitch):
             status = await self.api.get_sound_feedback()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update sound feedback status: {e}")
+            _LOGGER.error("Failed to update sound feedback status: %s", e)
 
 
 class AmbeoMode(AmbeoBaseSwitch):
@@ -106,7 +106,7 @@ class AmbeoMode(AmbeoBaseSwitch):
             status = await self.api.get_ambeo_mode()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update Ambeo mode status: {e}")
+            _LOGGER.error("Failed to update Ambeo mode status: %s", e)
 
 
 class NightMode(AmbeoBaseSwitch):
@@ -130,7 +130,7 @@ class NightMode(AmbeoBaseSwitch):
             status = await self.api.get_night_mode()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update night mode status: {e}")
+            _LOGGER.error("Failed to update night mode status: %s", e)
 
 
 class AmbeoBluetoothPairing(AmbeoBaseSwitch):
@@ -161,7 +161,7 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
             status = await self.api.get_bluetooth_pairing_state()
             self._is_on = status
         except Exception as e:
-            _LOGGER.error(f"Failed to update bluetooth pairing status: {e}")
+            _LOGGER.error("Failed to update bluetooth pairing status: %s", e)
 
 
 async def async_setup_entry(

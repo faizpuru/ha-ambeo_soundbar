@@ -18,7 +18,8 @@ class AmbeoPopcornApi(AmbeoApi):
                     Capability.CODEC_LED,
                     Capability.VOICE_ENHANCEMENT,
                     Capability.BLUETOOTH_PAIRING,
-                    Capability.SUBWOOFER]
+                    Capability.SUBWOOFER,
+                    Capability.ECO_MODE]
 
     def has_capability(self, capa):
         return capa in self.capabilities
@@ -133,3 +134,6 @@ class AmbeoPopcornApi(AmbeoApi):
 
     async def set_subwoofer_volume(self, volume):
         await self.set_value("ui:/settings/subwoofer/volume", "double_", volume)
+
+    async def get_eco_mode(self):
+        return await self.get_value("uipopcorn:ecoModeState", "bool_", "value")
