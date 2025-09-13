@@ -73,7 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=version)
 
     await hass.config_entries.async_forward_entry_setups(
-        entry, ["media_player", "switch", "light", "button", "number"]
+        entry, ["media_player", "switch", "light",
+                "button", "number", "binary_sensor"]
     )
 
     return True
@@ -83,7 +84,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle integration unload"""
     # Unload configuration
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, ["media_player", "switch", "light", "button", "number"]
+        entry, ["media_player", "switch",
+                "light", "button", "number", "binary_sensor"]
     )
     if unload_ok and entry.entry_id in hass.data[DOMAIN]:
         hass.data[DOMAIN].pop(entry.entry_id)
