@@ -37,5 +37,6 @@ class Capability:
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     SUBWOOFER = "SubWoofer"
     STANDBY = "standby"
+    ECO_MODE = "EcoMode"
     MAX_LOGO = "AmbeoMaxLogo"
     MAX_DISPLAY = "AmbeoMaxDisplay"

@@ -31,7 +31,7 @@ class SubWooferVolume(AmbeoBaseNumber):
             volume = await self.api.get_subwoofer_volume()
             self._current_value = volume
         except Exception as e:
-            _LOGGER.error(f"Failed to update subwoofer status: {e}")
+            _LOGGER.error("Failed to update subwoofer status: %s", e)
 
     @property
     def native_step(self):
@@ -56,7 +56,7 @@ class SubWooferVolume(AmbeoBaseNumber):
     @property
     def device_class(self):
         """Device class"""
-        NumberDeviceClass.SOUND_PRESSURE
+        return NumberDeviceClass.SOUND_PRESSURE
 
 
 async def async_setup_entry(
