@@ -59,6 +59,45 @@ class SubWooferVolume(AmbeoBaseNumber):
         return NumberDeviceClass.SOUND_PRESSURE
 
 
+class VoiceEnhancementLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the voice enhancement level."""
+        super().__init__(device, api, "Voice Enhancement Level")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the voice enhancement level."""
+        await self.api.set_voice_enhancement_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current voice enhancement level."""
+        try:
+            level = await self.api.get_voice_enhancement_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update voice enhancement level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return 0
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 3
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "Level"
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -70,4 +109,6 @@ async def async_setup_entry(
     entities = []
     if ambeo_api.has_capability(Capability.SUBWOOFER) and await ambeo_api.has_subwoofer():
         entities.append(SubWooferVolume(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_LEVEL):
+        entities.append(VoiceEnhancementLevel(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)
