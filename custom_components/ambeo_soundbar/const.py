@@ -38,6 +38,7 @@ class Capability:
     CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
     SIDE_FIRING_LEVEL = "SideFiringLevel"
     UP_FIRING_LEVEL = "UpFiringLevel"
+    RESET_EXPERT_SETTINGS = "ResetExpertSettings"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     SUBWOOFER = "SubWoofer"
     STANDBY = "standby"
