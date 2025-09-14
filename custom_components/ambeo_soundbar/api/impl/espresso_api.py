@@ -9,7 +9,8 @@ class AmbeoEspressoApi(AmbeoApi):
                     Capability.MAX_DISPLAY,
                     Capability.VOICE_ENHANCEMENT_LEVEL,
                     Capability.CENTER_SPEAKER_LEVEL,
-                    Capability.SIDE_FIRING_LEVEL]
+                    Capability.SIDE_FIRING_LEVEL,
+                    Capability.UP_FIRING_LEVEL]
 
     def support_debounce_mode(self):
         return True
@@ -129,3 +130,9 @@ class AmbeoEspressoApi(AmbeoApi):
 
     async def set_side_firing_level(self, level):
         await self.set_value("ui:/settings/audio/widthSettings", "i16_", level)
+
+    async def get_up_firing_level(self):
+        return await self.get_value("ui:/settings/audio/heightSettings", "i16_", "value")
+
+    async def set_up_firing_level(self, level):
+        await self.set_value("ui:/settings/audio/heightSettings", "i16_", level)
