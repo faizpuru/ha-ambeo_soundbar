@@ -10,7 +10,8 @@ class AmbeoEspressoApi(AmbeoApi):
                     Capability.VOICE_ENHANCEMENT_LEVEL,
                     Capability.CENTER_SPEAKER_LEVEL,
                     Capability.SIDE_FIRING_LEVEL,
-                    Capability.UP_FIRING_LEVEL]
+                    Capability.UP_FIRING_LEVEL,
+                    Capability.RESET_EXPERT_SETTINGS]
 
     def support_debounce_mode(self):
         return True
@@ -136,3 +137,6 @@ class AmbeoEspressoApi(AmbeoApi):
 
     async def set_up_firing_level(self, level):
         await self.set_value("ui:/settings/audio/heightSettings", "i16_", level)
+
+    async def reset_expert_settings(self):
+        await self.execute_request("setData", "ui:/settings/audio/resetExpertSettings", "activate", '{"type":"bool_","bool_":true}')
