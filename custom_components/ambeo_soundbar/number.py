@@ -98,6 +98,50 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
         return "Level"
 
 
+class CenterSpeakerLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the center speaker level."""
+        super().__init__(device, api, "Center Speaker Level")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the center speaker level."""
+        await self.api.set_center_speaker_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current center speaker level."""
+        try:
+            level = await self.api.get_center_speaker_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update center speaker level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return -12
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 12
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "dB"
+
+    @property
+    def device_class(self):
+        """Device class"""
+        return NumberDeviceClass.SOUND_PRESSURE
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -111,4 +155,6 @@ async def async_setup_entry(
         entities.append(SubWooferVolume(ambeo_device, ambeo_api))
     if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_LEVEL):
         entities.append(VoiceEnhancementLevel(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.CENTER_SPEAKER_LEVEL):
+        entities.append(CenterSpeakerLevel(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)
