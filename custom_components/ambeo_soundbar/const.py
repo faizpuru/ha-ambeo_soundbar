@@ -35,6 +35,7 @@ class Capability:
     CODEC_LED = "CodecLED"
     VOICE_ENHANCEMENT = "VoiceEnhancementMode"
     VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
+    CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     SUBWOOFER = "SubWoofer"
     STANDBY = "standby"
