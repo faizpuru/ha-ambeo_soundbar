@@ -33,7 +33,7 @@ class Capability:
     AMBEO_LOGO = "AmbeoLogo"
     LED_BAR = "LEDBar"
     CODEC_LED = "CodecLED"
-    VOICE_ENHANCEMENT = "VoiceEnhancementMode"
+    VOICE_ENHANCEMENT_TOGGLE = "VoiceEnhancementMode"
     VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
     CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
     SIDE_FIRING_LEVEL = "SideFiringLevel"

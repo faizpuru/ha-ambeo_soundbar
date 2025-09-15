@@ -174,7 +174,7 @@ async def async_setup_entry(
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(
         ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
-    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT):
+    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_TOGGLE):
         entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
     if ambeo_api.has_capability(Capability.BLUETOOTH_PAIRING):
         entities.append(AmbeoBluetoothPairing(ambeo_device, ambeo_api))
