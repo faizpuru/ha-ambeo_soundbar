@@ -41,12 +41,12 @@ class SubWooferVolume(AmbeoBaseNumber):
     @property
     def native_min_value(self):
         """Min value """
-        return -10
+        return self.api.get_subwoofer_min_value()
 
     @property
     def native_max_value(self):
         """Max value"""
-        return 10
+        return self.api.get_subwoofer_max_value()
 
     @property
     def native_unit_of_measurement(self):
