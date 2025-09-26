@@ -11,7 +11,10 @@ class AmbeoEspressoApi(AmbeoApi):
                     Capability.CENTER_SPEAKER_LEVEL,
                     Capability.SIDE_FIRING_LEVEL,
                     Capability.UP_FIRING_LEVEL,
-                    Capability.RESET_EXPERT_SETTINGS]
+                    Capability.RESET_EXPERT_SETTINGS,
+                    Capability.SUBWOOFER]
+
+    _has_subwoofer = None
 
     def support_debounce_mode(self):
         return True
@@ -21,6 +24,12 @@ class AmbeoEspressoApi(AmbeoApi):
 
     def get_volume_step(self):
         return AMBEO_MAX_VOLUME_STEP
+
+    def get_subwoofer_min_value(self):
+        return -12
+
+    def get_subwoofer_max_value(self):
+        return 12
 
     async def stand_by(self):
         await self.set_value("espresso:appRequestedStandby", "bool_", True)
@@ -140,3 +149,33 @@ class AmbeoEspressoApi(AmbeoApi):
 
     async def reset_expert_settings(self):
         await self.execute_request("setData", "ui:/settings/audio/resetExpertSettings", "activate", '{"type":"bool_","bool_":true}')
+
+    # SUBWOOFER
+    async def has_subwoofer(self):
+        if self._has_subwoofer is None:
+            data = await self.execute_request("getData", "ui:/settings/audio/subWooferLevel", "@all")
+            if data is not None:
+                # present only when control is enabled (disabled == False)
+                disabled = data.get("disabled")
+                self._has_subwoofer = disabled is False
+            else:
+                self._has_subwoofer = False
+        return self._has_subwoofer
+
+    async def get_subwoofer_volume(self):
+        return await self.get_value("ui:/settings/audio/subWooferLevel", "i16_")
+
+    async def set_subwoofer_volume(self, volume):
+        await self.set_value("ui:/settings/audio/subWooferLevel", "i16_", int(volume))
+
+    async def get_subwoofer_status(self):
+        data = await self.execute_request("getData", "ui:/settings/audio/subWooferLevel", "@all")
+        if data is not None:
+            disabled = data.get("disabled")
+            return disabled is False
+        return False
+
+    async def set_subwoofer_status(self, status):
+        # Espresso API does not expose a dedicated enable/disable toggle for subwoofer.
+        # Treat as no-op; availability is reflected by the 'disabled' flag on the level control.
+        return
