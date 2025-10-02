@@ -20,9 +20,9 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 |---------|----------|---------|---------|-------------|
 | Night Mode | ✅ | ✅ | ✅ | Reduces dynamic range and bass intensity for quiet listening environments |
 | Ambeo Mode | ✅ | ✅ | ✅ | Enables 3D virtualization technology for immersive sound experience |
-| Voice Enhancement | ❌ | ✅ | ✅ | Emphasizes dialogue frequencies for clearer speech in media content |
+| Voice Enhancement | ✅ | ✅ | ✅ | Emphasizes dialogue frequencies for clearer speech in media content |
 | Sound Feedback | ✅ | ✅ | ✅ | Enables/disables audio confirmation for user actions |
-| Subwoofer Support | ❌ | ✅ | ✅ | Controls for external subwoofer connection, volume and power status |
+| Subwoofer Support | ✅ | ✅ | ✅ | Controls for external subwoofer connection, volume and power status |
 
 ### Sources Management
 
