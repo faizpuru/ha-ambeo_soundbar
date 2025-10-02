@@ -101,7 +101,7 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
 class CenterSpeakerLevel(AmbeoBaseNumber):
     def __init__(self, device, api):
         """Initialize the center speaker level."""
-        super().__init__(device, api, "Center Speaker Level")
+        super().__init__(device, api, "Speaker Level - Center")
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the center speaker level."""
@@ -141,11 +141,15 @@ class CenterSpeakerLevel(AmbeoBaseNumber):
         """Device class"""
         return NumberDeviceClass.SOUND_PRESSURE
 
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
+
 
 class SideFiringLevel(AmbeoBaseNumber):
     def __init__(self, device, api):
         """Initialize the side firing speakers level."""
-        super().__init__(device, api, "Side Firing Speakers Level")
+        super().__init__(device, api, "Speaker Level - Side Firing")
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the side firing speakers level."""
@@ -185,11 +189,15 @@ class SideFiringLevel(AmbeoBaseNumber):
         """Device class"""
         return NumberDeviceClass.SOUND_PRESSURE
 
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
+
 
 class UpFiringLevel(AmbeoBaseNumber):
     def __init__(self, device, api):
         """Initialize the up firing speakers level."""
-        super().__init__(device, api, "Up Firing Speakers Level")
+        super().__init__(device, api, "Speaker Level - Up Firing")
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the up firing speakers level."""
@@ -228,6 +236,10 @@ class UpFiringLevel(AmbeoBaseNumber):
     def device_class(self):
         """Device class"""
         return NumberDeviceClass.SOUND_PRESSURE
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
 
 
 async def async_setup_entry(
