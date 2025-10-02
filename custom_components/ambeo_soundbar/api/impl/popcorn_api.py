@@ -16,7 +16,7 @@ class AmbeoPopcornApi(AmbeoApi):
     capabilities = [Capability.AMBEO_LOGO,
                     Capability.LED_BAR,
                     Capability.CODEC_LED,
-                    Capability.VOICE_ENHANCEMENT,
+                    Capability.VOICE_ENHANCEMENT_TOGGLE,
                     Capability.BLUETOOTH_PAIRING,
                     Capability.SUBWOOFER,
                     Capability.ECO_MODE]

@@ -41,12 +41,12 @@ class SubWooferVolume(AmbeoBaseNumber):
     @property
     def native_min_value(self):
         """Min value """
-        return -10
+        return self.api.get_subwoofer_min_value()
 
     @property
     def native_max_value(self):
         """Max value"""
-        return 10
+        return self.api.get_subwoofer_max_value()
 
     @property
     def native_unit_of_measurement(self):
@@ -57,6 +57,189 @@ class SubWooferVolume(AmbeoBaseNumber):
     def device_class(self):
         """Device class"""
         return NumberDeviceClass.SOUND_PRESSURE
+
+
+class VoiceEnhancementLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the voice enhancement level."""
+        super().__init__(device, api, "Voice Enhancement Level")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the voice enhancement level."""
+        await self.api.set_voice_enhancement_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current voice enhancement level."""
+        try:
+            level = await self.api.get_voice_enhancement_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update voice enhancement level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return 0
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 3
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "Level"
+
+
+class CenterSpeakerLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the center speaker level."""
+        super().__init__(device, api, "Speaker Level - Center")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the center speaker level."""
+        await self.api.set_center_speaker_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current center speaker level."""
+        try:
+            level = await self.api.get_center_speaker_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update center speaker level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return -12
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 12
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "dB"
+
+    @property
+    def device_class(self):
+        """Device class"""
+        return NumberDeviceClass.SOUND_PRESSURE
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
+
+
+class SideFiringLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the side firing speakers level."""
+        super().__init__(device, api, "Speaker Level - Side Firing")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the side firing speakers level."""
+        await self.api.set_side_firing_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current side firing speakers level."""
+        try:
+            level = await self.api.get_side_firing_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update side firing speakers level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return -12
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 12
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "dB"
+
+    @property
+    def device_class(self):
+        """Device class"""
+        return NumberDeviceClass.SOUND_PRESSURE
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
+
+
+class UpFiringLevel(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the up firing speakers level."""
+        super().__init__(device, api, "Speaker Level - Up Firing")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the up firing speakers level."""
+        await self.api.set_up_firing_level(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current up firing speakers level."""
+        try:
+            level = await self.api.get_up_firing_level()
+            self._current_value = level
+        except Exception as e:
+            _LOGGER.error("Failed to update up firing speakers level: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return -12
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return 12
+
+    @property
+    def native_unit_of_measurement(self):
+        """Unit"""
+        return "dB"
+
+    @property
+    def device_class(self):
+        """Device class"""
+        return NumberDeviceClass.SOUND_PRESSURE
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        return EntityCategory.CONFIG
 
 
 async def async_setup_entry(
@@ -70,4 +253,12 @@ async def async_setup_entry(
     entities = []
     if ambeo_api.has_capability(Capability.SUBWOOFER) and await ambeo_api.has_subwoofer():
         entities.append(SubWooferVolume(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_LEVEL):
+        entities.append(VoiceEnhancementLevel(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.CENTER_SPEAKER_LEVEL):
+        entities.append(CenterSpeakerLevel(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.SIDE_FIRING_LEVEL):
+        entities.append(SideFiringLevel(ambeo_device, ambeo_api))
+    if ambeo_api.has_capability(Capability.UP_FIRING_LEVEL):
+        entities.append(UpFiringLevel(ambeo_device, ambeo_api))
     async_add_entities(entities, update_before_add=True)
