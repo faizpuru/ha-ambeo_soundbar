@@ -1,5 +1,5 @@
 DOMAIN = "ambeo_soundbar"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
 DEFAULT_PORT = 80
 TIMEOUT = 5
@@ -33,7 +33,12 @@ class Capability:
     AMBEO_LOGO = "AmbeoLogo"
     LED_BAR = "LEDBar"
     CODEC_LED = "CodecLED"
-    VOICE_ENHANCEMENT = "VoiceEnhancementMode"
+    VOICE_ENHANCEMENT_TOGGLE = "VoiceEnhancementMode"
+    VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
+    CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
+    SIDE_FIRING_LEVEL = "SideFiringLevel"
+    UP_FIRING_LEVEL = "UpFiringLevel"
+    RESET_EXPERT_SETTINGS = "ResetExpertSettings"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     SUBWOOFER = "SubWoofer"
     STANDBY = "standby"

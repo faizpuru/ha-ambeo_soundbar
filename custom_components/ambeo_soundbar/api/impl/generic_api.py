@@ -109,6 +109,13 @@ class AmbeoApi:
     def get_volume_step(self):
         return 0.01
 
+    # SUBWOOFER RANGE (defaults for popcorn)
+    def get_subwoofer_min_value(self):
+        return -10
+
+    def get_subwoofer_max_value(self):
+        return 10
+
     # NAME
     async def get_name(self):
         return await self.get_value("systemmanager:/deviceName", "string_")
