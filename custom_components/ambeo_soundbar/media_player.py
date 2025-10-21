@@ -64,11 +64,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         self._image_url = ""
         self._volume = 0
         self._muted = False
-        self._max_volume = 100
+        self._max_volume = api.get_max_volume()
         self._sources = sources
         self._presets = presets
         self._current_preset = None
-        self._volume_step = api.get_volume_step()
+        self._volume_step = 1 / self._max_volume
         if (api.has_capability(Capability.STANDBY)):
             STATE_DICT['networkStandby'] = STATE_STANDBY
         else:
@@ -135,7 +135,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume):
         """Sets the volume level."""
-        await self.api.set_volume(volume * self._max_volume)
+        await self.api.set_volume(volume * 100)
         self._volume = volume
 
     @property
@@ -283,7 +283,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def update_volume(self):
         await self._update_attr(
             self.api.get_volume,
-            lambda volume: volume / self._max_volume,
+            lambda volume: volume / 100,
             lambda value: setattr(self, "_volume", value),
             "Failed to get volume: %s"
         )

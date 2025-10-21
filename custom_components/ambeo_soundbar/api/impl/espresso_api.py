@@ -1,5 +1,5 @@
 from .generic_api import AmbeoApi
-from ...const import EXCLUDE_SOURCES_MAX, AMBEO_MAX_VOLUME_STEP, Capability
+from ...const import EXCLUDE_SOURCES_MAX, Capability
 
 
 class AmbeoEspressoApi(AmbeoApi):
@@ -22,8 +22,9 @@ class AmbeoEspressoApi(AmbeoApi):
     def has_capability(self, capa):
         return capa in self.capabilities
 
-    def get_volume_step(self):
-        return AMBEO_MAX_VOLUME_STEP
+    def get_max_volume(self):
+        """Return the device's absolute max volume scale for Espresso (MAX)."""
+        return 50
 
     def get_subwoofer_min_value(self):
         return -12

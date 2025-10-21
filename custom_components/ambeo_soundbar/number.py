@@ -51,12 +51,12 @@ class SubWooferVolume(AmbeoBaseNumber):
     @property
     def native_unit_of_measurement(self):
         """Unit"""
-        return "dB"
+        return None
 
     @property
     def device_class(self):
         """Device class"""
-        return NumberDeviceClass.SOUND_PRESSURE
+        return None
 
 
 class VoiceEnhancementLevel(AmbeoBaseNumber):
@@ -242,6 +242,42 @@ class UpFiringLevel(AmbeoBaseNumber):
         return EntityCategory.CONFIG
 
 
+class VolumeNumber(AmbeoBaseNumber):
+    def __init__(self, device, api):
+        """Initialize the volume number."""
+        super().__init__(device, api, "Volume")
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the volume."""
+        await self.api.set_volume(int(value))
+        self._current_value = int(value)
+
+    async def async_update(self):
+        """Update the current volume."""
+        try:
+            volume = await self.api.get_volume()
+            self._current_value = volume
+        except Exception as e:
+            _LOGGER.error("Failed to update volume: %s", e)
+
+    @property
+    def native_step(self):
+        """Step"""
+        return 1
+
+    @property
+    def native_min_value(self):
+        """Min value"""
+        return 0
+
+    @property
+    def native_max_value(self):
+        """Max value"""
+        return self.api.get_max_volume()
+
+
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -251,6 +287,10 @@ async def async_setup_entry(
     ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     entities = []
+    
+    # Add volume number entity for all devices
+    entities.append(VolumeNumber(ambeo_device, ambeo_api))
+    
     if ambeo_api.has_capability(Capability.SUBWOOFER) and await ambeo_api.has_subwoofer():
         entities.append(SubWooferVolume(ambeo_device, ambeo_api))
     if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_LEVEL):
