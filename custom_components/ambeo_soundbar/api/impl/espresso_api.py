@@ -153,29 +153,21 @@ class AmbeoEspressoApi(AmbeoApi):
     # SUBWOOFER
     async def has_subwoofer(self):
         if self._has_subwoofer is None:
-            data = await self.execute_request("getData", "ui:/settings/audio/subWooferLevel", "@all")
+            data = await self.execute_request("getData", "ui:/settings/subwoofer/enabled", "@all")
             if data is not None:
-                # present only when control is enabled (disabled == False)
-                disabled = data.get("disabled")
-                self._has_subwoofer = disabled is False
+                self._has_subwoofer = data.get("modifiable", False)
             else:
                 self._has_subwoofer = False
         return self._has_subwoofer
 
     async def get_subwoofer_volume(self):
-        return await self.get_value("ui:/settings/audio/subWooferLevel", "i16_")
+        return await self.get_value("ui:/settings/subwoofer/volume", "i16_")
 
     async def set_subwoofer_volume(self, volume):
-        await self.set_value("ui:/settings/audio/subWooferLevel", "i16_", int(volume))
+        await self.set_value("ui:/settings/subwoofer/volume", "i16_", int(volume))
 
     async def get_subwoofer_status(self):
-        data = await self.execute_request("getData", "ui:/settings/audio/subWooferLevel", "@all")
-        if data is not None:
-            disabled = data.get("disabled")
-            return disabled is False
-        return False
+        return await self.get_value("ui:/settings/subwoofer/enabled", "bool_", "value")
 
     async def set_subwoofer_status(self, status):
-        # Espresso API does not expose a dedicated enable/disable toggle for subwoofer.
-        # Treat as no-op; availability is reflected by the 'disabled' flag on the level control.
-        return
+        await self.set_value("ui:/settings/subwoofer/enabled", "bool_", status)
