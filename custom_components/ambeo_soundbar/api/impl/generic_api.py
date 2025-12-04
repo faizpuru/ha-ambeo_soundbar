@@ -63,10 +63,10 @@ class AmbeoApi:
                 json_data = json_data[key]
             return json_data
         except KeyError:
-            _LOGGER.error(f"Missing key '{key}' in JSON data")
+            _LOGGER.error("Missing key '%s' in JSON data", key)
             return None
         except Exception as e:
-            _LOGGER.error(f"Exception extracting data: {e}")
+            _LOGGER.error("Exception extracting data: %s", e)
             return None
 
     def generate_nocache(self):
@@ -89,7 +89,7 @@ class AmbeoApi:
 
     async def get_value(self, path, data_type, role="@all"):
         """Get a value of a specified type from a specified path."""
-        value = await self.execute_request("getData", path, "@all")
+        value = await self.execute_request("getData", path, role)
         if value is not None:
             return self.extract_data(value, ["value", data_type])
         return None
@@ -167,13 +167,13 @@ class AmbeoApi:
     async def get_subwoofer_status(self):
         pass
 
-    async def set_subwoofer_status(self):
+    async def set_subwoofer_status(self, status):
         pass
 
     async def get_subwoofer_volume(self):
         pass
 
-    async def set_subwoofer_volume(self):
+    async def set_subwoofer_volume(self, volume):
         pass
 
     # AMBEO MODE

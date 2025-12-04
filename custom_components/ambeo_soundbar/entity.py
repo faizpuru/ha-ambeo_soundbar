@@ -1,26 +1,25 @@
 import logging
+import math
 
-from homeassistant.components.light import LightEntity, ColorMode
+from homeassistant.components.light import LightEntity, ColorMode, ATTR_BRIGHTNESS
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.number import NumberEntity
-from homeassistant.util.color import value_to_brightness
-from homeassistant.helpers.entity import Entity
+from homeassistant.util.color import value_to_brightness, brightness_to_value
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .api.impl.generic_api import AmbeoApi
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AmbeoBaseEntity(Entity):
+class AmbeoBaseEntity(CoordinatorEntity):
     """Base class for Ambeo entities."""
 
-    def __init__(self, device, api: AmbeoApi, name_suffix, unique_id_suffix):
+    def __init__(self, coordinator, device, name_suffix, unique_id_suffix):
         """Initialize the base entity."""
+        super().__init__(coordinator)
         self._name = f"{device.name} {name_suffix}"
-        self.api = api
-        self._unique_id = f"{device.serial}_{
-            unique_id_suffix.lower().replace(' ', '_')}"
+        self._unique_id = f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
         self.ambeo_device = device
 
     @property
@@ -42,20 +41,16 @@ class AmbeoBaseEntity(Entity):
 
 
 class BaseLight(AmbeoBaseEntity, LightEntity):
-    def __init__(self, device, api, name_suffix, unique_id_suffix, brightness_scale):
-        """Initialize the light entity with specific brightness attribute."""
-        super().__init__(device, api, name_suffix, unique_id_suffix)
-        self._brightness = 0  # Specific to light type entities
+    """Base class for brightness-based light entities."""
+
+    def __init__(self, coordinator, device, name_suffix, unique_id_suffix,
+                 brightness_scale, data_key, set_method, default_brightness):
+        """Initialize the light entity."""
+        super().__init__(coordinator, device, name_suffix, unique_id_suffix)
         self._brightness_scale = brightness_scale
-
-    @property
-    def is_on(self):
-        """Check if the light is on based on brightness."""
-        return self._brightness > 0
-
-    @property
-    def available(self):
-        return self._brightness is not None
+        self._data_key = data_key
+        self._set_method = set_method
+        self._default_brightness = default_brightness
 
     @property
     def supported_color_modes(self):
@@ -68,38 +63,86 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
         return ColorMode.BRIGHTNESS
 
     @property
+    def is_on(self):
+        """Check if the light is on based on brightness."""
+        if self.coordinator.data and self._data_key in self.coordinator.data:
+            return self.coordinator.data[self._data_key] > 0
+        return False
+
+    @property
     def brightness(self):
         """Return the brightness of the light."""
-        return value_to_brightness(self._brightness_scale, self._brightness)
+        if self.coordinator.data and self._data_key in self.coordinator.data:
+            return value_to_brightness(self._brightness_scale, self.coordinator.data[self._data_key])
+        return None
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on the light with specified brightness, or default."""
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = math.floor(brightness_to_value(self._brightness_scale, kwargs[ATTR_BRIGHTNESS]))
+        else:
+            brightness = self._default_brightness
+        await getattr(self.coordinator, self._set_method)(brightness)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off the light."""
+        await getattr(self.coordinator, self._set_method)(0)
 
 
 class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
-    """The class remains largely unchanged."""
+    """Base class for Ambeo switch entities."""
 
-    def __init__(self, device, api, feature_name):
+    _data_key: str | None = None
+    _set_method: str | None = None
+
+    def __init__(self, coordinator, device, feature_name, data_key=None, set_method=None):
         """Initialize the switch entity."""
-        super().__init__(device, api, feature_name, feature_name)
-        self._is_on = True
+        super().__init__(coordinator, device, feature_name, feature_name)
+        if data_key:
+            self._data_key = data_key
+        if set_method:
+            self._set_method = set_method
 
     @property
     def is_on(self):
-        """Determine if the switch is currently on or off."""
-        return self._is_on
+        """Return True if the switch is on."""
+        if self._data_key and self.coordinator.data and self._data_key in self.coordinator.data:
+            return self.coordinator.data[self._data_key]
+        return None
 
-    @property
-    def available(self):
-        return self._is_on is not None
+    async def async_turn_on(self):
+        """Turn on."""
+        if self._set_method:
+            await getattr(self.coordinator, self._set_method)(True)
+
+    async def async_turn_off(self):
+        """Turn off."""
+        if self._set_method:
+            await getattr(self.coordinator, self._set_method)(False)
 
 
 class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
-    """Generic ambeo number."""
+    """Base class for Ambeo number entities."""
 
-    def __init__(self, device, api, feature_name):
+    _data_key: str | None = None
+    _set_method: str | None = None
+
+    def __init__(self, coordinator, device, feature_name, data_key=None, set_method=None):
         """Initialize the number entity."""
-        super().__init__(device, api, feature_name, feature_name)
-        self._current_value = None
+        super().__init__(coordinator, device, feature_name, feature_name)
+        if data_key:
+            self._data_key = data_key
+        if set_method:
+            self._set_method = set_method
 
     @property
     def native_value(self):
-        """Get current value"""
-        return self._current_value
+        """Return the current value."""
+        if self._data_key and self.coordinator.data and self._data_key in self.coordinator.data:
+            return self.coordinator.data[self._data_key]
+        return None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value."""
+        if self._set_method:
+            await getattr(self.coordinator, self._set_method)(value)
