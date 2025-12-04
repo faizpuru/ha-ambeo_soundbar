@@ -1,167 +1,49 @@
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
-
 from .const import DOMAIN, Capability
 from .entity import AmbeoBaseSwitch
-from .api.impl.generic_api import AmbeoApi
-
-
-_LOGGER = logging.getLogger(__name__)
-
-
-class SubWooferStatus(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        """Initialize the Subwoofer  switch."""
-        super().__init__(device, api, "Subwoofer Status")
-
-    async def async_turn_on(self):
-        """Turn the Subwoofer on."""
-        await self.api.set_subwoofer_status(True)
-        self._is_on = True
-
-    async def async_turn_off(self):
-        """Turn the Subwoofer off."""
-        await self.api.set_subwoofer_status(False)
-        self._is_on = False
-
-    async def async_update(self):
-        """Update the current status of the subwoofer."""
-        try:
-            status = await self.api.get_subwoofer_status()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update subwoofer status: %s", e)
-
-
-class VoiceEnhancementMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        """Initialize the Voice Enhancement switch."""
-        super().__init__(device, api, "Voice Enhancement")
-
-    async def async_turn_on(self):
-        """Turn the voice enhancement feature on."""
-        await self.api.set_voice_enhancement(True)
-        self._is_on = True
-
-    async def async_turn_off(self):
-        """Turn the voice enhancement feature off."""
-        await self.api.set_voice_enhancement(False)
-        self._is_on = False
-
-    async def async_update(self):
-        """Update the current status of the voice enhancement feature."""
-        try:
-            status = await self.api.get_voice_enhancement()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update voice enhancement status: %s", e)
-
-
-class SoundFeedback(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        """Initialize the Sound Feedback switch."""
-        super().__init__(device, api, "Sound Feedback")
-
-    async def async_turn_on(self):
-        """Turn the sound feedback feature on."""
-        await self.api.set_sound_feedback(True)
-        self._is_on = True
-
-    async def async_turn_off(self):
-        """Turn the sound feedback feature off."""
-        await self.api.set_sound_feedback(False)
-        self._is_on = False
-
-    async def async_update(self):
-        """Update the current status of the sound feedback feature."""
-        try:
-            status = await self.api.get_sound_feedback()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update sound feedback status: %s", e)
-
-
-class AmbeoMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        """Initialize the Ambeo Mode switch."""
-        super().__init__(device, api, "Ambeo Mode")
-
-    async def async_turn_on(self):
-        """Turn the Ambeo mode feature on."""
-        await self.api.set_ambeo_mode(True)
-        self._is_on = True
-
-    async def async_turn_off(self):
-        """Turn the Ambeo mode feature off."""
-        await self.api.set_ambeo_mode(False)
-        self._is_on = False
-
-    async def async_update(self):
-        """Update the current status of the Ambeo mode feature."""
-        try:
-            status = await self.api.get_ambeo_mode()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update Ambeo mode status: %s", e)
 
 
 class NightMode(AmbeoBaseSwitch):
-    def __init__(self, device, api):
-        """Initialize the Night Mode switch."""
-        super().__init__(device, api, "Night Mode")
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Night Mode",
+                         "night_mode", "async_set_night_mode")
 
-    async def async_turn_on(self):
-        """Turn the night mode feature on."""
-        await self.api.set_night_mode(True)
-        self._is_on = True
 
-    async def async_turn_off(self):
-        """Turn the night mode feature off."""
-        await self.api.set_night_mode(False)
-        self._is_on = False
+class AmbeoMode(AmbeoBaseSwitch):
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Ambeo Mode",
+                         "ambeo_mode", "async_set_ambeo_mode")
 
-    async def async_update(self):
-        """Update the current status of the night mode feature."""
-        try:
-            status = await self.api.get_night_mode()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update night mode status: %s", e)
+
+class SoundFeedback(AmbeoBaseSwitch):
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Sound Feedback",
+                         "sound_feedback", "async_set_sound_feedback")
+
+
+class VoiceEnhancementMode(AmbeoBaseSwitch):
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Voice Enhancement",
+                         "voice_enhancement", "async_set_voice_enhancement")
+
+
+class SubWooferStatus(AmbeoBaseSwitch):
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Subwoofer Status",
+                         "subwoofer_status", "async_set_subwoofer_status")
 
 
 class AmbeoBluetoothPairing(AmbeoBaseSwitch):
-    """The class remains largely unchanged."""
-
-    def __init__(self, device, api):
-        """Initialize the switch entity."""
-        super().__init__(device, api, "Ambeo Bluetooth Pairing")
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator, device, "Ambeo Bluetooth Pairing",
+                         "bluetooth_pairing", "async_set_bluetooth_pairing_state")
 
     @property
     def entity_category(self) -> EntityCategory:
-        """Return the entity category."""
         return EntityCategory.CONFIG
-
-    async def async_turn_on(self):
-        """Turn the bluetooth pairing feature on."""
-        await self.api.set_bluetooth_pairing_state(True)
-        self._is_on = True
-
-    async def async_turn_off(self):
-        """Turn the bluetooth pairing feature off."""
-        await self.api.set_bluetooth_pairing_state(False)
-        self._is_on = False
-
-    async def async_update(self):
-        """Update the current status of the bluetooth pairing feature."""
-        try:
-            status = await self.api.get_bluetooth_pairing_state()
-            self._is_on = status
-        except Exception as e:
-            _LOGGER.error("Failed to update bluetooth pairing status: %s", e)
 
 
 async def async_setup_entry(
@@ -170,14 +52,17 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the switch entities from a config entry created in the integrations UI."""
-    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    entities = [NightMode(ambeo_device, ambeo_api), AmbeoMode(
-        ambeo_device, ambeo_api), SoundFeedback(ambeo_device, ambeo_api)]
-    if ambeo_api.has_capability(Capability.VOICE_ENHANCEMENT_TOGGLE):
-        entities.append(VoiceEnhancementMode(ambeo_device, ambeo_api))
-    if ambeo_api.has_capability(Capability.BLUETOOTH_PAIRING):
-        entities.append(AmbeoBluetoothPairing(ambeo_device, ambeo_api))
-    if ambeo_api.has_capability(Capability.SUBWOOFER) and await ambeo_api.has_subwoofer():
-        entities.append(SubWooferStatus(ambeo_device, ambeo_api))
-    async_add_entities(entities, update_before_add=True)
+    entities = [
+        NightMode(coordinator, ambeo_device),
+        AmbeoMode(coordinator, ambeo_device),
+        SoundFeedback(coordinator, ambeo_device),
+    ]
+    if coordinator.has_capability(Capability.VOICE_ENHANCEMENT_TOGGLE):
+        entities.append(VoiceEnhancementMode(coordinator, ambeo_device))
+    if coordinator.has_capability(Capability.BLUETOOTH_PAIRING):
+        entities.append(AmbeoBluetoothPairing(coordinator, ambeo_device))
+    if coordinator.has_capability(Capability.SUBWOOFER) and await coordinator.has_subwoofer():
+        entities.append(SubWooferStatus(coordinator, ambeo_device))
+    async_add_entities(entities)

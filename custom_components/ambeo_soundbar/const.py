@@ -1,4 +1,5 @@
 DOMAIN = "ambeo_soundbar"
+PLATFORMS = ["media_player", "switch", "light", "button", "number", "binary_sensor"]
 VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
 DEFAULT_PORT = 80
@@ -8,6 +9,8 @@ CONFIG_HOST = "host"
 CONFIG_DEBOUNCE_COOLDOWN = "debounce_cooldown"
 CONFIG_DEBOUNCE_COOLDOWN_DEFAULT = 0
 CONFIG_HOST_DEFAULT = "ambeo.local"
+CONFIG_UPDATE_INTERVAL = "update_interval"
+CONFIG_UPDATE_INTERVAL_DEFAULT = 10
 
 BRIGHTNESS_SCALE = (0, 100)
 DEFAULT_BRIGHTNESS = 50
