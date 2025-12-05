@@ -4,21 +4,20 @@ from homeassistant.components.light import LightEntity, ColorMode
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.number import NumberEntity
 from homeassistant.util.color import value_to_brightness
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .api.impl.generic_api import AmbeoApi
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AmbeoBaseEntity(Entity):
+class AmbeoBaseEntity(CoordinatorEntity):
     """Base class for Ambeo entities."""
 
-    def __init__(self, device, api: AmbeoApi, name_suffix, unique_id_suffix):
+    def __init__(self, coordinator, device, name_suffix, unique_id_suffix):
         """Initialize the base entity."""
+        super().__init__(coordinator)
         self._name = f"{device.name} {name_suffix}"
-        self.api = api
         self._unique_id = f"{device.serial}_{
             unique_id_suffix.lower().replace(' ', '_')}"
         self.ambeo_device = device
@@ -42,20 +41,10 @@ class AmbeoBaseEntity(Entity):
 
 
 class BaseLight(AmbeoBaseEntity, LightEntity):
-    def __init__(self, device, api, name_suffix, unique_id_suffix, brightness_scale):
+    def __init__(self, coordinator, device, name_suffix, unique_id_suffix, brightness_scale):
         """Initialize the light entity with specific brightness attribute."""
-        super().__init__(device, api, name_suffix, unique_id_suffix)
-        self._brightness = 0  # Specific to light type entities
+        super().__init__(coordinator, device, name_suffix, unique_id_suffix)
         self._brightness_scale = brightness_scale
-
-    @property
-    def is_on(self):
-        """Check if the light is on based on brightness."""
-        return self._brightness > 0
-
-    @property
-    def available(self):
-        return self._brightness is not None
 
     @property
     def supported_color_modes(self):
@@ -67,39 +56,18 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
         """Current color mode."""
         return ColorMode.BRIGHTNESS
 
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return value_to_brightness(self._brightness_scale, self._brightness)
-
 
 class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
-    """The class remains largely unchanged."""
+    """Base class for Ambeo switch entities."""
 
-    def __init__(self, device, api, feature_name):
+    def __init__(self, coordinator, device, feature_name):
         """Initialize the switch entity."""
-        super().__init__(device, api, feature_name, feature_name)
-        self._is_on = True
-
-    @property
-    def is_on(self):
-        """Determine if the switch is currently on or off."""
-        return self._is_on
-
-    @property
-    def available(self):
-        return self._is_on is not None
+        super().__init__(coordinator, device, feature_name, feature_name)
 
 
 class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
-    """Generic ambeo number."""
+    """Base class for Ambeo number entities."""
 
-    def __init__(self, device, api, feature_name):
+    def __init__(self, coordinator, device, feature_name):
         """Initialize the number entity."""
-        super().__init__(device, api, feature_name, feature_name)
-        self._current_value = None
-
-    @property
-    def native_value(self):
-        """Get current value"""
-        return self._current_value
+        super().__init__(coordinator, device, feature_name, feature_name)

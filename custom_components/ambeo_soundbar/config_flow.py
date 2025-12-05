@@ -3,7 +3,16 @@ import voluptuous as vol
 import aiohttp
 
 from homeassistant import config_entries
-from .const import CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, CONFIG_HOST_DEFAULT, DOMAIN, DEFAULT_PORT, CONFIG_HOST, CONFIG_DEBOUNCE_COOLDOWN
+from .const import (
+    CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
+    CONFIG_HOST_DEFAULT,
+    DOMAIN,
+    DEFAULT_PORT,
+    CONFIG_HOST,
+    CONFIG_DEBOUNCE_COOLDOWN,
+    CONFIG_UPDATE_INTERVAL,
+    CONFIG_UPDATE_INTERVAL_DEFAULT,
+)
 from .api.factory import AmbeoAPIFactory
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,20 +50,25 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.display_form(errors, host_default)
 
     def display_form(self, errors, host_default):
-
         try:
-            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"].support_debounce_mode(
-            )
+            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id]["coordinator"].support_debounce_mode()
         except:
             support_debounce = False
 
         if self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, 0) > 0:
             errors["base"] = "experimental_feature_activated"
+
+        update_interval_default = self.config_entry.options.get(
+            CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT)
+
         options_schema = vol.Schema({
             vol.Optional(CONFIG_HOST, default=host_default): str,
             vol.Optional(CONFIG_DEBOUNCE_COOLDOWN, default=self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT)): int,
+            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
         }) if support_debounce else vol.Schema({
-            vol.Optional(CONFIG_HOST, default=host_default): str})
+            vol.Optional(CONFIG_HOST, default=host_default): str,
+            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
+        })
 
         return self.async_show_form(
             step_id="init",
@@ -83,7 +97,8 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=name, data=user_input)
 
         data_schema = vol.Schema({
-            vol.Required(CONFIG_HOST, default=CONFIG_HOST_DEFAULT): str
+            vol.Required(CONFIG_HOST, default=CONFIG_HOST_DEFAULT): str,
+            vol.Optional(CONFIG_UPDATE_INTERVAL, default=CONFIG_UPDATE_INTERVAL_DEFAULT): int,
         })
 
         return self.async_show_form(

@@ -7,8 +7,16 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER, CONFIG_HOST
+from .const import (
+    DEFAULT_PORT,
+    DOMAIN,
+    MANUFACTURER,
+    CONFIG_HOST,
+    CONFIG_UPDATE_INTERVAL,
+    CONFIG_UPDATE_INTERVAL_DEFAULT,
+)
 from .api.factory import AmbeoAPIFactory
+from .coordinator import AmbeoCoordinator
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +40,7 @@ class AmbeoDevice:
 async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle entry updates."""
     host = config_entry.options.get(CONFIG_HOST)
-    hass.data[DOMAIN][config_entry.entry_id]["api"].set_endpoint(host)
+    hass.data[DOMAIN][config_entry.entry_id]["coordinator"].set_endpoint(host)
     await hass.config_entries.async_reload(config_entry.entry_id)
     _LOGGER.info("Successfully updated configuration entries")
 
@@ -42,6 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
 
     host = entry.options.get(CONFIG_HOST, entry.data.get(CONFIG_HOST))
+    update_interval = entry.options.get(
+        CONFIG_UPDATE_INTERVAL,
+        entry.data.get(CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT)
+    )
     session = async_create_clientsession(hass)
 
     ambeo_api = await AmbeoAPIFactory.create_api(host, DEFAULT_PORT, session, hass)
@@ -50,15 +62,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model = await ambeo_api.get_model()
         name = await ambeo_api.get_name()
         version = await ambeo_api.get_version()
+        sources = await ambeo_api.get_all_sources()
+        presets = await ambeo_api.get_all_presets()
     except aiohttp.ClientError as ex:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 
     device = AmbeoDevice(serial, name, MANUFACTURER,
                          model, version, host, DEFAULT_PORT)
 
+    coordinator = AmbeoCoordinator(hass, ambeo_api, sources, presets, update_interval)
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
-        "api": ambeo_api,
+        "coordinator": coordinator,
         "device": device
     }
     _LOGGER.debug("Data initialized")
