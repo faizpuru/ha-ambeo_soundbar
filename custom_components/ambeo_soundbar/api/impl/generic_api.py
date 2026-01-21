@@ -106,8 +106,9 @@ class AmbeoApi:
     def support_debounce_mode(self):
         return False
 
-    def get_volume_step(self):
-        return 0.01
+    def get_max_volume(self):
+        """Return the device's absolute max volume scale."""
+        return 100
 
     # SUBWOOFER RANGE (defaults for popcorn)
     def get_subwoofer_min_value(self):
