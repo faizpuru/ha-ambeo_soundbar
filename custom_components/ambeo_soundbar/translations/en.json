@@ -1,6 +1,10 @@
 {
   "config": {
     "step": {
+      "discovery_confirm": {
+        "title": "Ambeo Soundbar discovered",
+        "description": "An Ambeo Soundbar named \"{name}\" has been discovered on your network. Would you like to add it?"
+      },
       "user": {
         "title": "Connect to Ambeo Soundbar",
         "data": {

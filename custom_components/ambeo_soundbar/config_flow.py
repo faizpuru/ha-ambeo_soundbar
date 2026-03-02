@@ -3,6 +3,7 @@ import voluptuous as vol
 import aiohttp
 
 from homeassistant import config_entries
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .const import CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, CONFIG_HOST_DEFAULT, DOMAIN, DEFAULT_PORT, CONFIG_HOST, CONFIG_DEBOUNCE_COOLDOWN
 from .api.factory import AmbeoAPIFactory
 
@@ -67,6 +68,39 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Manage the configuration flow for Ambeo Soundbar integration."""
 
     VERSION = 1
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> config_entries.ConfigFlowResult:
+        """Handle DHCP autodiscovery of an Ambeo Soundbar."""
+        _LOGGER.debug("DHCP discovery info: %s", discovery_info)
+
+        host = str(discovery_info.ip_address)
+        name, serial, error = await validate_connection(self.hass, host)
+
+        if error or not serial:
+            _LOGGER.warning("Failed to validate discovered device at %s: %s", host, error)
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONFIG_HOST: host})
+
+        self.context["title_placeholders"] = {"name": name or "Ambeo Soundbar"}
+        self._discovered_host = host
+        self._discovered_name = name or "Ambeo Soundbar"
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(self, user_input=None) -> config_entries.ConfigFlowResult:
+        """Confirm discovery of an Ambeo Soundbar."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_name,
+                data={CONFIG_HOST: self._discovered_host},
+            )
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._discovered_name},
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle a configuration initiated by the user."""

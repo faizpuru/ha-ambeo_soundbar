@@ -1,6 +1,10 @@
 {
   "config": {
     "step": {
+      "discovery_confirm": {
+        "title": "Barre de son Ambeo découverte",
+        "description": "Une barre de son Ambeo nommée \"{name}\" a été découverte sur votre réseau. Voulez-vous l'ajouter ?"
+      },
       "user": {
         "title": "Se connecter à la barre de son Ambeo",
         "data": {
