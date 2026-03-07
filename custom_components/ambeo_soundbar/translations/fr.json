@@ -4,10 +4,12 @@
       "user": {
         "title": "Se connecter à la barre de son Ambeo",
         "data": {
-          "host": "Hôte"
+          "host": "Hôte",
+          "update_interval": "Intervalle de mise à jour (secondes)"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)"
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
+          "update_interval": "Fréquence d'interrogation de la barre de son pour les mises à jour (par défaut : 10)"
         }
       }
     },
@@ -24,11 +26,13 @@
         "title": "Paramètres de la barre de son Ambeo",
         "data": {
           "host": "Hôte",
-          "debounce_cooldown": "⚠️ Expérimental: Délai avant passage à l'état inactif"
+          "debounce_cooldown": "⚠️ Expérimental: Délai avant passage à l'état inactif",
+          "update_interval": "Intervalle de mise à jour (secondes)"
         },
         "data_description": {
           "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
-          "debounce_cooldown": "Si vous rencontrez des comportements inhabituels des états du lecteur changeant sans arret entre 'Playing' et 'Idle', vous pouvez envisager d'utiliser ce réglage. \nDéfinit un délai (en secondes) utilisé avant de passer à l'état 'Idle' lorsqu'un changement irrégulier depuis 'Playing' est détecté. \nValeur recommandée : 100 secondes ; par défaut, désactivé (0)."
+          "debounce_cooldown": "Si vous rencontrez des comportements inhabituels des états du lecteur changeant sans arret entre 'Playing' et 'Idle', vous pouvez envisager d'utiliser ce réglage. \nDéfinit un délai (en secondes) utilisé avant de passer à l'état 'Idle' lorsqu'un changement irrégulier depuis 'Playing' est détecté. \nValeur recommandée : 100 secondes ; par défaut, désactivé (0).",
+          "update_interval": "Fréquence d'interrogation de la barre de son pour les mises à jour (par défaut : 10)"
         }
       }
     },
