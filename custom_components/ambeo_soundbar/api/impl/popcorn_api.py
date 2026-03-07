@@ -1,7 +1,7 @@
 import json
 
 from .generic_api import AmbeoApi
-from ...const import AMBEO_POPCORN_VOLUME_STEP, Capability
+from ...const import Capability
 
 
 class AmbeoPopcornApi(AmbeoApi):
@@ -27,8 +27,9 @@ class AmbeoPopcornApi(AmbeoApi):
     def support_debounce_mode(self):
         return False
 
-    def get_volume_step(self):
-        return AMBEO_POPCORN_VOLUME_STEP
+    def get_max_volume(self):
+        """Return the device's absolute max volume scale for Popcorn (Plus/Mini)."""
+        return 100
 
     async def get_bluetooth_pairing_state(self):
         bluetooth_pairing_state = await self.get_value("bluetooth:state", "bluetoothState")
