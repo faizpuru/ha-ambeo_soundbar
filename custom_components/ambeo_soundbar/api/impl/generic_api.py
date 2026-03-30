@@ -258,6 +258,9 @@ class AmbeoApi:
     async def previous(self):
         await self.execute_request("setData", "player:player/control", "activate", json.dumps({"control": "previous"}))
 
+    async def get_play_time(self):
+        return await self.get_value("player:player/data/playTime", "i64_")
+
     async def player_data(self):
         data = await self.execute_request("getData", "player:player/data/value", "@all")
         if data:
