@@ -180,7 +180,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        self._reset_media_info()
         await self.api.stand_by()
         self._power_state = STATE_STANDBY
 
