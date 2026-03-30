@@ -7,6 +7,7 @@ from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, STATE_IDLE
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT, DOMAIN, Capability
 from .entity import AmbeoBaseEntity
@@ -61,6 +62,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         self._media_title = ""
         self._artist = None
         self._album = None
+        self._media_content_id = None
+        self._media_duration = None
+        self._media_position = None
+        self._media_position_updated_at = None
         self._image_url = ""
         self._volume = 0
         self._muted = False
@@ -124,6 +129,26 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         return self._volume_step
 
     @property
+    def media_content_id(self):
+        """Return the media content ID of the current playing media."""
+        return self._media_content_id
+
+    @property
+    def media_duration(self):
+        """Return the duration of the current playing media."""
+        return self._media_duration
+
+    @property
+    def media_position(self):
+        """Return the current playback position in seconds."""
+        return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """Return the time at which the media position was last updated."""
+        return self._media_position_updated_at
+
+    @property
     def media_artist(self):
         """Return the artist of the current playing media."""
         return self._artist
@@ -155,6 +180,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn the media player off."""
+        self._reset_media_info()
         await self.api.stand_by()
         self._power_state = STATE_STANDBY
 
@@ -181,6 +207,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             source_id = find_id_by_title(source, self._sources)
             if source_id is not None:
                 await self.api.set_source(source_id)
+                await self.update_media_info()
                 self._current_source = source
 
     @property
@@ -217,15 +244,21 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         await self.api.pause()
         self._playing_state = STATE_PAUSED
 
+
+
     async def async_media_next_track(self):
         """Method to skip to the next track."""
         _LOGGER.debug("Skipping to the next track")
         await self.api.next()
+        await self.update_media_info()
+
+
 
     async def async_media_previous_track(self):
         """Method to go back to the previous track."""
         _LOGGER.debug("Going back to the previous track")
         await self.api.previous()
+        await self.update_media_info()
 
     async def async_update(self):
         """Update the media player state."""
@@ -237,6 +270,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             self.update_preset(),
             self.update_state(),
             self.update_player_data(),
+            self.update_play_time(),
         ]
         await asyncio.gather(*tasks)
 
@@ -288,6 +322,15 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             "Failed to get volume: %s"
         )
 
+    async def update_play_time(self):
+        try:
+            play_time = await self.api.get_play_time()
+            if play_time is not None:
+                self._media_position = play_time / 1000
+                self._media_position_updated_at = dt_util.utcnow()
+        except Exception as e:
+            _LOGGER.error("Failed to get play time: %s", e)
+
     def _should_debounce(self, player_state):
         """Determine if the update should be debounced."""
         return (player_state == 'stopped' and
@@ -308,6 +351,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             except asyncio.CancelledError:
                 _LOGGER.debug("[IMMEDIATE] Debounce task fully cancelled.")
             self._debounce_task = None
+
+    async def update_media_info(self):
+        await self.update_play_time()
+        await self.update_player_data()
 
     async def update_player_data(self):
         try:
@@ -379,6 +426,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         meta_data = media_data.get("metaData", {})
         self._artist = meta_data.get("artist")
         self._album = meta_data.get("album")
+        self._media_content_id = meta_data.get("trackId")
+        status = player_data.get("status") or {}
+        duration = status.get("duration")
+        self._media_duration = duration / 1000 if duration is not None else None
+
 
 
 async def async_setup_entry(
