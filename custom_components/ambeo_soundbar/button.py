@@ -1,9 +1,12 @@
+"""Button entities for Ambeo Soundbar integration."""
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
-from .entity import AmbeoBaseEntity
+
 from .const import DOMAIN, Capability
+from .entity import AmbeoBaseEntity
 
 
 class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
@@ -33,7 +36,9 @@ class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the reset expert settings button."""
-        super().__init__(coordinator, device, "Reset Expert Settings", "reset_expert_settings")
+        super().__init__(
+            coordinator, device, "Reset Expert Settings", "reset_expert_settings"
+        )
 
     async def async_press(self) -> None:
         """Handle the button press."""
