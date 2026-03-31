@@ -1,3 +1,6 @@
+"""Utility functions for Ambeo Soundbar integration."""
+
+
 def find_title_by_id(id, search_list):
     """Find title by ID from a list."""
     for source in search_list:

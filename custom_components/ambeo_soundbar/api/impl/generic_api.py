@@ -1,19 +1,20 @@
-import aiohttp
-import asyncio
+"""Generic API base class for Ambeo Soundbar integration."""
+
 import json
 import logging
 import time
 
+import aiohttp
 from homeassistant.core import HomeAssistant
 
-from ..exceptions import AmbeoConnectionError
 from ...const import TIMEOUT
-
+from ..exceptions import AmbeoConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AmbeoApi:
+    """Base API class for Ambeo Soundbar devices."""
 
     capabilities = []
 
@@ -25,6 +26,7 @@ class AmbeoApi:
         self.set_endpoint(ip)
 
     def set_endpoint(self, host):
+        """Set the API endpoint host."""
         self.ip = host
         self.endpoint = f"http://{host}:{self.port}/api"
 
@@ -48,13 +50,16 @@ class AmbeoApi:
 
         except aiohttp.ClientError as e:
             raise AmbeoConnectionError(
-                f"Client error during HTTP request for url: {full_url}. Exception: {e}")
-        except asyncio.TimeoutError:
+                f"Client error during HTTP request for url: {full_url}. Exception: {e}"
+            ) from e
+        except TimeoutError as e:
             raise AmbeoConnectionError(
-                f"Timeout error while fetching data from url: {full_url}")
+                f"Timeout error while fetching data from url: {full_url}"
+            ) from e
         except Exception as e:
             raise AmbeoConnectionError(
-                f"Unexpected exception with url: {full_url}. Exception: {e}")
+                f"Unexpected exception with url: {full_url}. Exception: {e}"
+            ) from e
 
     def extract_data(self, json_data, key_path):
         """Extract data from JSON using a specified key path."""
@@ -73,7 +78,9 @@ class AmbeoApi:
         """Generate a nocache parameter to prevent caching."""
         return int(time.time() * 1000)
 
-    async def execute_request(self, function, path, role=None, value=None, from_idx=None, to_idx=None):
+    async def execute_request(
+        self, function, path, role=None, value=None, from_idx=None, to_idx=None
+    ):
         """Execute a request with the specified parameters."""
         url = f"{function}?path={path}"
         if role:
@@ -96,198 +103,244 @@ class AmbeoApi:
 
     async def set_value(self, path, data_type, value):
         """Set a value of a specified type at a specified path."""
-        await self.execute_request("setData", path, "value", json.dumps({"type": data_type, data_type: value}))
-
-    # Specific functions for interacting with the device features like volume, mute, serial, version, model, night mode, voice enhancement, Ambeo mode, name, Ambeo logo brightness and state, LED bar brightness, codec LED brightness, sound feedback, sources, presets, and player controls follow here, each implemented with appropriate get and set methods as per the device's API.
+        await self.execute_request(
+            "setData", path, "value", json.dumps({"type": data_type, data_type: value})
+        )
 
     def has_capability(self, capa):
+        """Check if the device has a specific capability."""
         return capa in self.capabilities
 
     def support_debounce_mode(self):
+        """Check if debounce mode is supported."""
         return False
 
     def get_volume_step(self):
+        """Get the volume step size."""
         return 0.01
 
-    # SUBWOOFER RANGE (defaults for popcorn)
+    # Subwoofer range (defaults for Popcorn).
     def get_subwoofer_min_value(self):
+        """Get the subwoofer minimum value."""
         return -10
 
     def get_subwoofer_max_value(self):
+        """Get the subwoofer maximum value."""
         return 10
 
-    # NAME
+    # Name.
     async def get_name(self):
+        """Get the device name."""
         return await self.get_value("systemmanager:/deviceName", "string_")
 
-     # SERIAL
+    # Serial.
     async def get_serial(self):
+        """Get the device serial number."""
         return await self.get_value("settings:/system/serialNumber", "string_")
 
-    # VERSION
+    # Version.
     async def get_version(self):
-        return await self.get_value("ui:settings/firmwareUpdate/currentVersion", "string_")
+        """Get the firmware version."""
+        return await self.get_value(
+            "ui:settings/firmwareUpdate/currentVersion", "string_"
+        )
 
-    # MODEL
+    # Model.
     async def get_model(self):
+        """Get the device model."""
         return await self.get_value("settings:/system/productName", "string_")
 
-    # VOLUME
+    # Volume.
     async def get_volume(self):
+        """Get the current volume."""
         return await self.get_value("player:volume", "i32_")
 
     async def set_volume(self, volume):
+        """Set the volume."""
         await self.set_value("player:volume", "i32_", volume)
 
-    # MUTE
+    # Mute.
     async def is_mute(self):
+        """Check if the device is muted."""
         return await self.get_value("settings:/mediaPlayer/mute", "bool_")
 
     async def set_mute(self, mute):
+        """Set the mute state."""
         await self.set_value("settings:/mediaPlayer/mute", "bool_", mute)
 
-   # NIGHT MODE
+    # Night mode.
     async def get_night_mode(self):
-        pass
+        """Get the night mode state."""
 
     async def set_night_mode(self, night_mode):
-        pass
+        """Set the night mode state."""
 
-    # VOICE ENHANCEMENT
+    # Voice enhancement.
     async def get_voice_enhancement(self):
-        pass
+        """Get the voice enhancement state."""
 
     async def set_voice_enhancement(self, voice_enhancement_mode):
-        pass
+        """Set the voice enhancement mode."""
 
-    # SUB_WOOFER
+    # Subwoofer.
     async def has_subwoofer(self):
-        pass
+        """Check if a subwoofer is connected."""
 
     async def get_subwoofer_status(self):
-        pass
+        """Get the subwoofer enabled status."""
 
     async def set_subwoofer_status(self, status):
-        pass
+        """Set the subwoofer enabled status."""
 
     async def get_subwoofer_volume(self):
-        pass
+        """Get the subwoofer volume."""
 
     async def set_subwoofer_volume(self, volume):
-        pass
+        """Set the subwoofer volume."""
 
-    # AMBEO MODE
+    # Ambeo mode.
     async def get_ambeo_mode(self):
-        pass
+        """Get the Ambeo mode state."""
 
     async def set_ambeo_mode(self, ambeo_mode):
-        pass
+        """Set the Ambeo mode state."""
 
-    # SOUND FEEDBACK
+    # Sound feedback.
     async def get_sound_feedback(self):
-        pass
+        """Get the sound feedback state."""
 
     async def set_sound_feedback(self, state):
-        pass
+        """Set the sound feedback state."""
 
-    # AMBEO LOGO
-
+    # Ambeo logo.
     async def get_logo_state(self):
-        pass
+        """Get the Ambeo logo state."""
 
     async def change_logo_state(self, value):
-        pass
+        """Change the Ambeo logo state."""
 
     async def set_logo_brightness(self, brightness):
-        pass
+        """Set the Ambeo logo brightness."""
 
     async def get_logo_brightness(self):
-        pass
+        """Get the Ambeo logo brightness."""
 
-    # LED BAR
+    # LED bar.
     async def get_led_bar_brightness(self):
-        pass
+        """Get the LED bar brightness."""
 
     async def set_led_bar_brightness(self, brightness):
-        pass
+        """Set the LED bar brightness."""
 
-    # AMBEO DISPLAY
-
+    # Ambeo display.
     async def set_display_brightness(self, brightness):
-        pass
+        """Set the display brightness."""
 
     async def get_display_brightness(self):
-        pass
+        """Get the display brightness."""
 
-    # CODEC LED
+    # Codec LED.
     async def get_codec_led_brightness(self):
-        pass
+        """Get the codec LED brightness."""
 
     async def set_codec_led_brightness(self, brightness):
-        pass
+        """Set the codec LED brightness."""
 
-    # SOURCES:
+    # Sources.
     async def get_current_source(self):
-        pass
+        """Get the current audio source."""
 
     async def get_all_sources(self):
-        pass
+        """Get all available audio sources."""
 
     async def set_source(self, source_id):
-        pass
+        """Set the audio source."""
 
-    # PRESETS:
+    # Presets.
     async def get_current_preset(self):
-        pass
+        """Get the current audio preset."""
 
     async def set_preset(self, preset):
-        pass
+        """Set the audio preset."""
 
     async def get_all_presets(self):
-        pass
+        """Get all available audio presets."""
 
     async def play(self):
-        await self.execute_request("setData", "popcorn:multiPurposeButtonActivate", "activate", json.dumps({"type": "bool_", "bool_": True}))
+        """Send play command."""
+        await self.execute_request(
+            "setData",
+            "popcorn:multiPurposeButtonActivate",
+            "activate",
+            json.dumps({"type": "bool_", "bool_": True}),
+        )
 
     async def pause(self):
-        await self.execute_request("setData", "popcorn:multiPurposeButtonActivate", "activate", json.dumps({"type": "bool_", "bool_": True}))
+        """Send pause command."""
+        await self.execute_request(
+            "setData",
+            "popcorn:multiPurposeButtonActivate",
+            "activate",
+            json.dumps({"type": "bool_", "bool_": True}),
+        )
 
     async def next(self):
-        await self.execute_request("setData", "player:player/control", "activate", json.dumps({"control": "next"}))
+        """Skip to the next track."""
+        await self.execute_request(
+            "setData",
+            "player:player/control",
+            "activate",
+            json.dumps({"control": "next"}),
+        )
 
     async def previous(self):
-        await self.execute_request("setData", "player:player/control", "activate", json.dumps({"control": "previous"}))
+        """Go back to the previous track."""
+        await self.execute_request(
+            "setData",
+            "player:player/control",
+            "activate",
+            json.dumps({"control": "previous"}),
+        )
 
     async def get_play_time(self):
+        """Get the current play time in milliseconds."""
         return await self.get_value("player:player/data/playTime", "i64_")
 
     async def player_data(self):
+        """Get the current player data."""
         data = await self.execute_request("getData", "player:player/data/value", "@all")
         if data:
             return self.extract_data(data, ["value", "playLogicData"])
         return None
 
-    # Power off (standby)
+    # Power off (standby).
     async def stand_by(self):
-        pass
+        """Put the device into standby mode."""
 
-    # Power on (wake)
+    # Power on (wake).
     async def wake(self):
-        pass
+        """Wake the device from standby."""
 
-    # Reboot
+    # Reboot.
     async def reboot(self):
-        await self.execute_request("setData", "ui:/settings/system/restart", "activate", json.dumps({"type": "bool_", "bool_": True}))
+        """Reboot the device."""
+        await self.execute_request(
+            "setData",
+            "ui:/settings/system/restart",
+            "activate",
+            json.dumps({"type": "bool_", "bool_": True}),
+        )
 
     async def get_state(self):
+        """Get the current device state."""
         power_target = await self.get_value("powermanager:target", "powerTarget")
         if power_target:
             return power_target["target"]
         return None
 
-    # Bluetooth pairing
+    # Bluetooth pairing.
     async def get_bluetooth_pairing_state(self):
-        pass
+        """Get the Bluetooth pairing state."""
 
     async def set_bluetooth_pairing_state(self, state):
-        pass
+        """Set the Bluetooth pairing state."""

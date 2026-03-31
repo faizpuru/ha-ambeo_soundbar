@@ -1,12 +1,13 @@
+"""Binary sensor entities for Ambeo Soundbar integration."""
+
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN, Capability
 from .entity import AmbeoBaseEntity
-
 
 _LOGGER = logging.getLogger(__name__)
 

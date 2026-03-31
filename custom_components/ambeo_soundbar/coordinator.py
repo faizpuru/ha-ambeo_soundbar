@@ -1,3 +1,4 @@
+"""Data update coordinator for Ambeo Soundbar integration."""
 import asyncio
 import logging
 from datetime import timedelta
@@ -20,7 +21,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     TRACK_CHANGE_DELAY = 1
     SOURCE_CHANGE_DELAY = 1
     BLUETOOTH_SWITCH_DELAY = 1
-    END_OF_TRACK_BUFFER = 2  # seconds after expected track end to refresh
+    END_OF_TRACK_BUFFER = 2  # Seconds after expected track end to refresh.
 
     def __init__(self, hass: HomeAssistant, api: AmbeoApi, sources: list, presets: list, update_interval_seconds: int = 10):
         """Initialize the coordinator."""
@@ -46,7 +47,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
-            # Core media player data (required)
+            # Core media player data (required).
             volume, muted, state, current_source, current_preset, player_data = (
                 await asyncio.gather(
                     self.api.get_volume(),
@@ -66,8 +67,8 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                 "player_data": player_data,
             }
 
-            # Optional features fetched in parallel, filtered by capability
-            # Tuples: (data_key, api_method_name, label, required_capability or None)
+            # Optional features fetched in parallel, filtered by capability.
+            # Tuples: (data_key, api_method_name, label, required_capability or None).
             all_optional_features = [
                 ("play_time", "get_play_time", "Play time", None),
                 ("led_bar_brightness", "get_led_bar_brightness", "LED bar", Capability.LED_BAR),
@@ -115,7 +116,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
 
     def _schedule_end_of_track_refresh(self, data: dict[str, Any]):
         """Schedule a refresh when the current track is about to end."""
-        # Cancel any previously scheduled refresh
+        # Cancel any previously scheduled refresh.
         if self._end_of_track_unsub:
             self._end_of_track_unsub()
             self._end_of_track_unsub = None
@@ -335,15 +336,15 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_reboot(self):
         """Reboot the device."""
         await self.api.reboot()
-        # No state update needed for reboot
+        # No state update needed for reboot.
 
     async def async_reset_expert_settings(self):
         """Reset expert settings."""
         await self.api.reset_expert_settings()
-        # Trigger a full refresh to get reset values
+        # Trigger a full refresh to get reset values.
         await self.async_request_refresh()
 
-    # API wrapper methods
+    # API wrapper methods.
     def has_capability(self, capability: str) -> bool:
         """Check if the device has a specific capability."""
         return self.api.has_capability(capability)

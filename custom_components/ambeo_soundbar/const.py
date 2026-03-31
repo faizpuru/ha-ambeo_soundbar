@@ -1,5 +1,6 @@
+"""Constants for Ambeo Soundbar integration."""
 DOMAIN = "ambeo_soundbar"
-PLATFORMS = ["media_player", "switch", "light", "button", "number", "binary_sensor"]
+PLATFORMS = ["binary_sensor", "button", "light", "media_player", "number", "switch"]
 VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
 DEFAULT_PORT = 80
@@ -28,23 +29,25 @@ PLUS_SOUNDBAR = "AMBEO Soundbar Plus"
 MINI_SOUNDBAR = "AMBEO Soundbar Mini"
 AMBEO_POPCORN_VOLUME_STEP = 0.01
 
-POPCORN_API_MODELS = [PLUS_SOUNDBAR, MINI_SOUNDBAR]
+POPCORN_API_MODELS = [MINI_SOUNDBAR, PLUS_SOUNDBAR]
 ESPRESSO_API_MODELS = [MAX_SOUNDBAR]
 
 
 class Capability:
+    """Device capability identifiers."""
+
     AMBEO_LOGO = "AmbeoLogo"
-    LED_BAR = "LEDBar"
-    CODEC_LED = "CodecLED"
-    VOICE_ENHANCEMENT_TOGGLE = "VoiceEnhancementMode"
-    VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
-    CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
-    SIDE_FIRING_LEVEL = "SideFiringLevel"
-    UP_FIRING_LEVEL = "UpFiringLevel"
-    RESET_EXPERT_SETTINGS = "ResetExpertSettings"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
-    SUBWOOFER = "SubWoofer"
-    STANDBY = "standby"
+    CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
+    CODEC_LED = "CodecLED"
     ECO_MODE = "EcoMode"
-    MAX_LOGO = "AmbeoMaxLogo"
+    LED_BAR = "LEDBar"
     MAX_DISPLAY = "AmbeoMaxDisplay"
+    MAX_LOGO = "AmbeoMaxLogo"
+    RESET_EXPERT_SETTINGS = "ResetExpertSettings"
+    SIDE_FIRING_LEVEL = "SideFiringLevel"
+    STANDBY = "standby"
+    SUBWOOFER = "SubWoofer"
+    UP_FIRING_LEVEL = "UpFiringLevel"
+    VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
+    VOICE_ENHANCEMENT_TOGGLE = "VoiceEnhancementMode"
