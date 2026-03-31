@@ -21,9 +21,6 @@ class AmbeoPopcornApi(AmbeoApi):
                     Capability.SUBWOOFER,
                     Capability.ECO_MODE]
 
-    def has_capability(self, capa):
-        return capa in self.capabilities
-
     def support_debounce_mode(self):
         return False
 
@@ -118,9 +115,9 @@ class AmbeoPopcornApi(AmbeoApi):
 
     async def has_subwoofer(self):
         if self._has_subwoofer is None:
-            list = await self.get_value("settings:/popcorn/subwoofer/list", "popcornSubwooferList")
-            if list is not None:
-                self._has_subwoofer = len(list) > 0
+            subwoofers = await self.get_value("settings:/popcorn/subwoofer/list", "popcornSubwooferList")
+            if subwoofers is not None:
+                self._has_subwoofer = len(subwoofers) > 0
         return self._has_subwoofer
 
     async def get_subwoofer_status(self):
@@ -136,4 +133,4 @@ class AmbeoPopcornApi(AmbeoApi):
         await self.set_value("ui:/settings/subwoofer/volume", "double_", volume)
 
     async def get_eco_mode(self):
-        return await self.get_value("uipopcorn:ecoModeState", "bool_", "value")
+        return await self.get_value("uipopcorn:ecoModeState", "bool_")

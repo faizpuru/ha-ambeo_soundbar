@@ -1,3 +1,5 @@
+import asyncio
+
 from .generic_api import AmbeoApi
 from ...const import EXCLUDE_SOURCES_MAX, AMBEO_MAX_VOLUME_STEP, Capability
 
@@ -19,9 +21,6 @@ class AmbeoEspressoApi(AmbeoApi):
     def support_debounce_mode(self):
         return True
 
-    def has_capability(self, capa):
-        return capa in self.capabilities
-
     def get_volume_step(self):
         return AMBEO_MAX_VOLUME_STEP
 
@@ -38,19 +37,19 @@ class AmbeoEspressoApi(AmbeoApi):
         await self.set_value("espresso:appRequestedOnline", "bool_", True)
 
     async def get_night_mode(self):
-        return await self.get_value("espresso:nightModeUi", "bool_", "value")
+        return await self.get_value("espresso:nightModeUi", "bool_")
 
     async def set_night_mode(self, night_mode):
         await self.set_value("espresso:nightModeUi", "bool_", night_mode)
 
     async def get_ambeo_mode(self):
-        return await self.get_value("espresso:ambeoModeUi", "bool_", "value")
+        return await self.get_value("espresso:ambeoModeUi", "bool_")
 
     async def set_ambeo_mode(self, ambeo_mode):
         await self.set_value("espresso:ambeoModeUi", "bool_", ambeo_mode)
 
     async def get_sound_feedback(self):
-        return await self.get_value("settings:/espresso/soundFeedback", "bool_", "value")
+        return await self.get_value("settings:/espresso/soundFeedback", "bool_")
 
     async def set_sound_feedback(self, state):
         return await self.set_value("settings:/espresso/soundFeedback", "bool_", state)
@@ -59,8 +58,10 @@ class AmbeoEspressoApi(AmbeoApi):
         return await self.get_value("espresso:audioInputID", "i32_")
 
     async def get_all_sources(self):
-        input_names_res = await self.execute_request("getRows", "settings:/espresso/inputNames", "@all", None, 0, 20)
-        inputs_res = await self.execute_request("getRows", "espresso:", "@all", None, 0, 20)
+        input_names_res, inputs_res = await asyncio.gather(
+            self.execute_request("getRows", "settings:/espresso/inputNames", "@all", None, 0, 20),
+            self.execute_request("getRows", "espresso:", "@all", None, 0, 20),
+        )
         if input_names_res is not None and inputs_res is not None:
             input_names = self.extract_data(input_names_res, ["rows"])
             inputs = self.extract_data(inputs_res, ["rows"])
@@ -71,9 +72,9 @@ class AmbeoEspressoApi(AmbeoApi):
             formatted_inputs = []
             for name in input_names:
                 if not name["title"].lower() in EXCLUDE_SOURCES_MAX:
-                    id = input_index_map[name["title"]]
+                    source_id = input_index_map[name["title"]]
                     title = name['value']['string_']
-                    formatted_inputs.append({"id": id, "title": title})
+                    formatted_inputs.append({"id": source_id, "title": title})
             return formatted_inputs
         return None
 
@@ -124,25 +125,25 @@ class AmbeoEspressoApi(AmbeoApi):
         return None
 
     async def get_voice_enhancement_level(self):
-        return await self.get_value("ui:/mydevice/voiceEnhanceLevel", "i16_", "value")
+        return await self.get_value("ui:/mydevice/voiceEnhanceLevel", "i16_")
 
     async def set_voice_enhancement_level(self, level):
         await self.set_value("ui:/mydevice/voiceEnhanceLevel", "i16_", level)
 
     async def get_center_speaker_level(self):
-        return await self.get_value("ui:/settings/audio/centerSettings", "i16_", "value")
+        return await self.get_value("ui:/settings/audio/centerSettings", "i16_")
 
     async def set_center_speaker_level(self, level):
         await self.set_value("ui:/settings/audio/centerSettings", "i16_", level)
 
     async def get_side_firing_level(self):
-        return await self.get_value("ui:/settings/audio/widthSettings", "i16_", "value")
+        return await self.get_value("ui:/settings/audio/widthSettings", "i16_")
 
     async def set_side_firing_level(self, level):
         await self.set_value("ui:/settings/audio/widthSettings", "i16_", level)
 
     async def get_up_firing_level(self):
-        return await self.get_value("ui:/settings/audio/heightSettings", "i16_", "value")
+        return await self.get_value("ui:/settings/audio/heightSettings", "i16_")
 
     async def set_up_firing_level(self, level):
         await self.set_value("ui:/settings/audio/heightSettings", "i16_", level)
@@ -167,7 +168,7 @@ class AmbeoEspressoApi(AmbeoApi):
         await self.set_value("ui:/settings/subwoofer/volume", "i16_", int(volume))
 
     async def get_subwoofer_status(self):
-        return await self.get_value("ui:/settings/subwoofer/enabled", "bool_", "value")
+        return await self.get_value("ui:/settings/subwoofer/enabled", "bool_")
 
     async def set_subwoofer_status(self, status):
         await self.set_value("ui:/settings/subwoofer/enabled", "bool_", status)

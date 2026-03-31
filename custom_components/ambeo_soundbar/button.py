@@ -4,19 +4,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from .entity import AmbeoBaseEntity
 from .const import DOMAIN, Capability
-from .api.impl.generic_api import AmbeoApi
 
 
 class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
-    """The class remains largely unchanged."""
+    """Button to reboot the device."""
 
-    def __init__(self, device, api):
-        """Initialize the switch entity."""
-        super().__init__(device, api, "Ambeo Reboot", "ambeo_reboot")
+    def __init__(self, coordinator, device):
+        """Initialize the reboot button."""
+        super().__init__(coordinator, device, "Ambeo Reboot", "ambeo_reboot")
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.api.reboot()
+        await self.coordinator.async_reboot()
 
     @property
     def entity_category(self) -> EntityCategory:
@@ -32,23 +31,18 @@ class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
 class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
     """Button to reset expert audio settings."""
 
-    def __init__(self, device, api):
+    def __init__(self, coordinator, device):
         """Initialize the reset expert settings button."""
-        super().__init__(device, api, "Reset Expert Settings", "reset_expert_settings")
+        super().__init__(coordinator, device, "Reset Expert Settings", "reset_expert_settings")
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.api.reset_expert_settings()
+        await self.coordinator.async_reset_expert_settings()
 
     @property
     def entity_category(self) -> EntityCategory:
         """Return the entity category."""
         return EntityCategory.CONFIG
-
-    @property
-    def device_class(self) -> ButtonDeviceClass:
-        """Return the device class."""
-        return ButtonDeviceClass.RESTART
 
 
 async def async_setup_entry(
@@ -57,9 +51,9 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the button entities from a config entry created in the integrations UI."""
-    ambeo_api: AmbeoApi = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    entities = [AmbeoReboot(ambeo_device, ambeo_api)]
-    if ambeo_api.has_capability(Capability.RESET_EXPERT_SETTINGS):
-        entities.append(ResetExpertSettings(ambeo_device, ambeo_api))
+    entities = [AmbeoReboot(coordinator, ambeo_device)]
+    if coordinator.has_capability(Capability.RESET_EXPERT_SETTINGS):
+        entities.append(ResetExpertSettings(coordinator, ambeo_device))
     async_add_entities(entities)
