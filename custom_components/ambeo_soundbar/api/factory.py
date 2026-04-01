@@ -17,6 +17,7 @@ class AmbeoAPIFactory:
 
     @staticmethod
     async def create_api(ip: str, port, session: ClientSession, hass) -> AmbeoApi:
+        """Create and return the appropriate API instance for the given device model."""
         ambeo_api = AmbeoApi(ip, port, session, hass)
         model = await ambeo_api.get_model()
         _LOGGER.debug("Setting up the API for %s", model)

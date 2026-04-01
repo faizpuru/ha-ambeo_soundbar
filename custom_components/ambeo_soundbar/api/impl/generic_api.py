@@ -67,8 +67,8 @@ class AmbeoApi:
             for key in key_path:
                 json_data = json_data[key]
             return json_data
-        except KeyError:
-            _LOGGER.error("Missing key '%s' in JSON data", key)
+        except KeyError as e:
+            _LOGGER.error("Missing key '%s' in JSON data", e)
             return None
         except Exception as e:
             _LOGGER.error("Exception extracting data: %s", e)
@@ -183,8 +183,9 @@ class AmbeoApi:
         """Set the voice enhancement mode."""
 
     # Subwoofer.
-    async def has_subwoofer(self):
+    async def has_subwoofer(self) -> bool:
         """Check if a subwoofer is connected."""
+        raise NotImplementedError
 
     async def get_subwoofer_status(self):
         """Get the subwoofer enabled status."""
@@ -344,3 +345,40 @@ class AmbeoApi:
 
     async def set_bluetooth_pairing_state(self, state):
         """Set the Bluetooth pairing state."""
+
+    # Voice enhancement level.
+    async def get_voice_enhancement_level(self):
+        """Get the voice enhancement level."""
+
+    async def set_voice_enhancement_level(self, level):
+        """Set the voice enhancement level."""
+
+    # Speaker levels.
+    async def get_center_speaker_level(self):
+        """Get the center speaker level."""
+
+    async def set_center_speaker_level(self, level):
+        """Set the center speaker level."""
+
+    async def get_side_firing_level(self):
+        """Get the side firing level."""
+
+    async def set_side_firing_level(self, level):
+        """Set the side firing level."""
+
+    async def get_up_firing_level(self):
+        """Get the up firing level."""
+
+    async def set_up_firing_level(self, level):
+        """Set the up firing level."""
+
+    # Eco mode.
+    async def get_eco_mode(self):
+        """Get the eco mode state."""
+
+    async def set_eco_mode(self, mode):
+        """Set the eco mode state."""
+
+    # Expert settings.
+    async def reset_expert_settings(self):
+        """Reset expert settings."""

@@ -16,11 +16,15 @@ from .const import (
     DOMAIN,
     Capability,
 )
+from .coordinator import AmbeoCoordinator
 from .entity import BaseLight
 
 
 class LEDBar(BaseLight):
+    """Light entity for the LED bar."""
+
     def __init__(self, coordinator, device):
+        """Initialize the LED bar light."""
         super().__init__(
             coordinator,
             device,
@@ -34,7 +38,10 @@ class LEDBar(BaseLight):
 
 
 class CodecLED(BaseLight):
-    def __init__(self, coordinator, device):
+    """Light entity for the codec LED."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the codec LED light."""
         super().__init__(
             coordinator,
             device,
@@ -48,7 +55,10 @@ class CodecLED(BaseLight):
 
 
 class AmbeoMaxLogo(BaseLight):
-    def __init__(self, coordinator, device):
+    """Light entity for the Ambeo Max logo."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo Max logo light."""
         super().__init__(
             coordinator,
             device,
@@ -62,7 +72,10 @@ class AmbeoMaxLogo(BaseLight):
 
 
 class AmbeoMaxDisplay(BaseLight):
-    def __init__(self, coordinator, device):
+    """Light entity for the Ambeo Max display."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo Max display light."""
         super().__init__(
             coordinator,
             device,
@@ -78,7 +91,8 @@ class AmbeoMaxDisplay(BaseLight):
 class AmbeoLogo(BaseLight):
     """Special light with on/off state separate from brightness."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo logo light."""
         super().__init__(
             coordinator,
             device,

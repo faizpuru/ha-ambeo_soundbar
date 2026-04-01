@@ -1,8 +1,4 @@
-homeassistant:
-  name: Dev
-  unit_system: metric
-  time_zone: Europe/Paris
-
+default_config:
 http:
 
 debugpy:

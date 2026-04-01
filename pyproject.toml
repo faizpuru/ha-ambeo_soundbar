@@ -11,10 +11,14 @@ select = [
     "UP",  # pyupgrade
     "B",   # flake8-bugbear
     "SIM", # flake8-simplify
+    "D",   # pydocstyle (PEP 257)
 ]
 ignore = [
     "E501", # line too long, handled by formatter
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
 
 [tool.ruff.lint.isort]
 known-first-party = ["custom_components.ambeo_soundbar"]

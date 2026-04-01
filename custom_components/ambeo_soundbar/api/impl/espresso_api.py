@@ -86,6 +86,8 @@ class AmbeoEspressoApi(AmbeoApi):
         if input_names_res is not None and inputs_res is not None:
             input_names = self.extract_data(input_names_res, ["rows"])
             inputs = self.extract_data(inputs_res, ["rows"])
+            if input_names is None or inputs is None:
+                return None
             input_index_map = {
                 input["title"].lower(): index for index, input in enumerate(inputs)
             }
@@ -196,7 +198,7 @@ class AmbeoEspressoApi(AmbeoApi):
         )
 
     # Subwoofer.
-    async def has_subwoofer(self):
+    async def has_subwoofer(self) -> bool:
         """Check if a subwoofer is connected."""
         if self._has_subwoofer is None:
             data = await self.execute_request(
