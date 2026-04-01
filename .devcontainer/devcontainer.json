@@ -1,0 +1,14 @@
+{
+  "name": "HA Ambeo Soundbar",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13-bullseye",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}

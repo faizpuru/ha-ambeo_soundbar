@@ -1,1 +1,5 @@
 *.pyc
+__pycache__/
+
+# Ruff
+.ruff_cache/
