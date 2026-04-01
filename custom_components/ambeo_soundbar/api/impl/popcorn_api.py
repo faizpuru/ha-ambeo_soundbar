@@ -101,6 +101,8 @@ class AmbeoPopcornApi(AmbeoApi):
         data = await self.execute_request("getRows", "ui:/inputs", "@all", None, 0, 10)
         if data:
             rows = self.extract_data(data, ["rows"])
+            if rows is None:
+                return None
             rows.extend(self.additional_inputs)
             return rows
         return None
@@ -135,6 +137,8 @@ class AmbeoPopcornApi(AmbeoApi):
         )
         if data:
             rows = self.extract_data(data, ["rows"])
+            if rows is None:
+                return None
             simplified_list = [
                 {"title": row["title"], "id": row["value"]["popcornAudioPreset"]}
                 for row in rows
@@ -180,14 +184,15 @@ class AmbeoPopcornApi(AmbeoApi):
         """Set the LED bar brightness."""
         await self.set_value("ui:/settings/interface/ledBrightness", "i32_", brightness)
 
-    async def has_subwoofer(self):
+    async def has_subwoofer(self) -> bool:
         """Check if a subwoofer is connected."""
         if self._has_subwoofer is None:
             subwoofers = await self.get_value(
                 "settings:/popcorn/subwoofer/list", "popcornSubwooferList"
             )
-            if subwoofers is not None:
-                self._has_subwoofer = len(subwoofers) > 0
+            self._has_subwoofer = (
+                len(subwoofers) > 0 if subwoofers is not None else False
+            )
         return self._has_subwoofer
 
     async def get_subwoofer_status(self):

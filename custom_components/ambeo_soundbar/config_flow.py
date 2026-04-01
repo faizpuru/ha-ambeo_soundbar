@@ -40,6 +40,7 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options configuration for Ambeo Soundbar integration."""
 
     async def async_step_init(self, user_input=None):
+        """Handle the initial step of the options flow."""
         errors = {}
         host_default = self.config_entry.options.get(
             CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST)
@@ -57,6 +58,7 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.display_form(errors, host_default)
 
     def display_form(self, errors, host_default):
+        """Build and display the options form."""
         try:
             support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id][
                 "coordinator"
@@ -119,7 +121,9 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=name, data=user_input)
+                return self.async_create_entry(
+                    title=name or "Ambeo Soundbar", data=user_input
+                )
 
         data_schema = vol.Schema(
             {

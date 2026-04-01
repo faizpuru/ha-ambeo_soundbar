@@ -10,14 +10,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
+from .coordinator import AmbeoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AmbeoBaseEntity(CoordinatorEntity):
+class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
     """Base class for Ambeo entities."""
 
-    def __init__(self, coordinator, device, name_suffix, unique_id_suffix):
+    def __init__(
+        self, coordinator: AmbeoCoordinator, device, name_suffix, unique_id_suffix
+    ):
         """Initialize the base entity."""
         super().__init__(coordinator)
         self._name = f"{device.name} {name_suffix}"
@@ -49,7 +52,7 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
 
     def __init__(
         self,
-        coordinator,
+        coordinator: AmbeoCoordinator,
         device,
         name_suffix,
         unique_id_suffix,
@@ -113,7 +116,12 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     _set_method: str | None = None
 
     def __init__(
-        self, coordinator, device, feature_name, data_key=None, set_method=None
+        self,
+        coordinator: AmbeoCoordinator,
+        device,
+        feature_name,
+        data_key=None,
+        set_method=None,
     ):
         """Initialize the switch entity."""
         super().__init__(coordinator, device, feature_name, feature_name)
@@ -151,7 +159,12 @@ class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
     _set_method: str | None = None
 
     def __init__(
-        self, coordinator, device, feature_name, data_key=None, set_method=None
+        self,
+        coordinator: AmbeoCoordinator,
+        device,
+        feature_name,
+        data_key=None,
+        set_method=None,
     ):
         """Initialize the number entity."""
         super().__init__(coordinator, device, feature_name, feature_name)

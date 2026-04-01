@@ -28,6 +28,7 @@ class AmbeoDevice:
     """Represent an Ambeo Soundbar device."""
 
     def __init__(self, serial, name, manufacturer, model, version, host, port):
+        """Initialize an Ambeo device."""
         self._serial = serial
         self.name = name
         self.manufacturer = manufacturer
@@ -38,6 +39,7 @@ class AmbeoDevice:
 
     @property
     def serial(self):
+        """Return the serial number of the device."""
         return self._serial
 
 
@@ -63,12 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     ambeo_api = await AmbeoAPIFactory.create_api(host, DEFAULT_PORT, session, hass)
     try:
-        serial = await ambeo_api.get_serial()
+        serial = await ambeo_api.get_serial() or "unknown_serial"
         model = await ambeo_api.get_model()
         name = await ambeo_api.get_name()
         version = await ambeo_api.get_version()
-        sources = await ambeo_api.get_all_sources()
-        presets = await ambeo_api.get_all_presets()
+        sources = await ambeo_api.get_all_sources() or []
+        presets = await ambeo_api.get_all_presets() or []
     except aiohttp.ClientError as ex:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 

@@ -13,6 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EcoModeSensor(AmbeoBaseEntity, BinarySensorEntity):
+    """Binary sensor representing the eco mode state."""
+
     def __init__(self, coordinator, device):
         """Initialize the Eco Mode sensor."""
         super().__init__(coordinator, device, "Eco Mode", "eco_mode")

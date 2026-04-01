@@ -2,8 +2,8 @@
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN, Capability
 from .entity import AmbeoBaseEntity
@@ -58,7 +58,7 @@ async def async_setup_entry(
     """Set up the button entities from a config entry created in the integrations UI."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
-    entities = [AmbeoReboot(coordinator, ambeo_device)]
+    entities: list[AmbeoBaseEntity] = [AmbeoReboot(coordinator, ambeo_device)]
     if coordinator.has_capability(Capability.RESET_EXPERT_SETTINGS):
         entities.append(ResetExpertSettings(coordinator, ambeo_device))
     async_add_entities(entities)
