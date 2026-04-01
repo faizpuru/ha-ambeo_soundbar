@@ -1,19 +1,23 @@
+"""Factory for Ambeo Soundbar API instances."""
+
 import logging
 
 from aiohttp import ClientSession
+
+from ..const import ESPRESSO_API_MODELS, POPCORN_API_MODELS
 from .impl.espresso_api import AmbeoEspressoApi
-from .impl.popcorn_api import AmbeoPopcornApi
 from .impl.generic_api import AmbeoApi
-from ..const import POPCORN_API_MODELS, ESPRESSO_API_MODELS
+from .impl.popcorn_api import AmbeoPopcornApi
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AmbeoAPIFactory:
-    """Factory to get the correct API depending on model"""
+    """Factory to get the correct API depending on model."""
 
     @staticmethod
     async def create_api(ip: str, port, session: ClientSession, hass) -> AmbeoApi:
+        """Create and return the appropriate API instance for the given device model."""
         ambeo_api = AmbeoApi(ip, port, session, hass)
         model = await ambeo_api.get_model()
         _LOGGER.debug("Setting up the API for %s", model)

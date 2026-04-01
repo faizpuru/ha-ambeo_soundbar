@@ -1,2 +1,5 @@
+"""Exceptions for the Ambeo Soundbar API."""
+
+
 class AmbeoConnectionError(Exception):
-    pass
+    """Raised when a connection error occurs with the Ambeo Soundbar API."""

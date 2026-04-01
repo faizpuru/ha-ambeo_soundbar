@@ -1,57 +1,108 @@
+"""Light entities for Ambeo Soundbar integration."""
+
 import math
 
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.util.color import brightness_to_value
 from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.util.color import brightness_to_value
 
 from .const import (
-    DOMAIN,
-    DEFAULT_BRIGHTNESS,
     BRIGHTNESS_SCALE,
-    BRIGHTNESS_SCALE_AMBEO_MAX_LOGO,
     BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY,
+    BRIGHTNESS_SCALE_AMBEO_MAX_LOGO,
+    DEFAULT_BRIGHTNESS,
     DEFAULT_BRIGHTNESS_AMBEO_MAX,
+    DOMAIN,
     Capability,
 )
+from .coordinator import AmbeoCoordinator
 from .entity import BaseLight
 
 
 class LEDBar(BaseLight):
+    """Light entity for the LED bar."""
+
     def __init__(self, coordinator, device):
-        super().__init__(coordinator, device, "LED Bar", "led_bar",
-                         BRIGHTNESS_SCALE, "led_bar_brightness",
-                         "async_set_led_bar_brightness", DEFAULT_BRIGHTNESS)
+        """Initialize the LED bar light."""
+        super().__init__(
+            coordinator,
+            device,
+            "LED Bar",
+            "led_bar",
+            BRIGHTNESS_SCALE,
+            "led_bar_brightness",
+            "async_set_led_bar_brightness",
+            DEFAULT_BRIGHTNESS,
+        )
 
 
 class CodecLED(BaseLight):
-    def __init__(self, coordinator, device):
-        super().__init__(coordinator, device, "Codec LED", "codec_led",
-                         BRIGHTNESS_SCALE, "codec_led_brightness",
-                         "async_set_codec_led_brightness", DEFAULT_BRIGHTNESS)
+    """Light entity for the codec LED."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the codec LED light."""
+        super().__init__(
+            coordinator,
+            device,
+            "Codec LED",
+            "codec_led",
+            BRIGHTNESS_SCALE,
+            "codec_led_brightness",
+            "async_set_codec_led_brightness",
+            DEFAULT_BRIGHTNESS,
+        )
 
 
 class AmbeoMaxLogo(BaseLight):
-    def __init__(self, coordinator, device):
-        super().__init__(coordinator, device, "Ambeo Max Logo", "ambeo_max_logo",
-                         BRIGHTNESS_SCALE_AMBEO_MAX_LOGO, "logo_brightness",
-                         "async_set_logo_brightness", DEFAULT_BRIGHTNESS_AMBEO_MAX)
+    """Light entity for the Ambeo Max logo."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo Max logo light."""
+        super().__init__(
+            coordinator,
+            device,
+            "Ambeo Max Logo",
+            "ambeo_max_logo",
+            BRIGHTNESS_SCALE_AMBEO_MAX_LOGO,
+            "logo_brightness",
+            "async_set_logo_brightness",
+            DEFAULT_BRIGHTNESS_AMBEO_MAX,
+        )
 
 
 class AmbeoMaxDisplay(BaseLight):
-    def __init__(self, coordinator, device):
-        super().__init__(coordinator, device, "Ambeo Max Display", "ambeo_max_display",
-                         BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY, "display_brightness",
-                         "async_set_display_brightness", DEFAULT_BRIGHTNESS_AMBEO_MAX)
+    """Light entity for the Ambeo Max display."""
+
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo Max display light."""
+        super().__init__(
+            coordinator,
+            device,
+            "Ambeo Max Display",
+            "ambeo_max_display",
+            BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY,
+            "display_brightness",
+            "async_set_display_brightness",
+            DEFAULT_BRIGHTNESS_AMBEO_MAX,
+        )
 
 
 class AmbeoLogo(BaseLight):
     """Special light with on/off state separate from brightness."""
 
-    def __init__(self, coordinator, device):
-        super().__init__(coordinator, device, "Ambeo Logo", "ambeo_logo",
-                         BRIGHTNESS_SCALE, "logo_brightness",
-                         "async_set_logo_brightness", DEFAULT_BRIGHTNESS)
+    def __init__(self, coordinator: AmbeoCoordinator, device):
+        """Initialize the Ambeo logo light."""
+        super().__init__(
+            coordinator,
+            device,
+            "Ambeo Logo",
+            "ambeo_logo",
+            BRIGHTNESS_SCALE,
+            "logo_brightness",
+            "async_set_logo_brightness",
+            DEFAULT_BRIGHTNESS,
+        )
 
     @property
     def is_on(self):
@@ -66,10 +117,16 @@ class AmbeoLogo(BaseLight):
     async def async_turn_on(self, **kwargs):
         """Turn on the Ambeo Logo light with specified brightness, if provided."""
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = math.floor(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]))
+            brightness = math.floor(
+                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            )
             await self.coordinator.async_set_logo_brightness(brightness)
 
-        logo_state = self.coordinator.data.get("logo_state", False) if self.coordinator.data else False
+        logo_state = (
+            self.coordinator.data.get("logo_state", False)
+            if self.coordinator.data
+            else False
+        )
         if not logo_state:
             await self.coordinator.async_change_logo_state(True)
 
