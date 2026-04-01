@@ -2,7 +2,7 @@
 
 import asyncio
 
-from ...const import AMBEO_MAX_VOLUME_STEP, EXCLUDE_SOURCES_MAX, Capability
+from ..const import AMBEO_MAX_VOLUME_STEP, EXCLUDE_SOURCES_MAX, Capability
 from .generic_api import AmbeoApi
 
 

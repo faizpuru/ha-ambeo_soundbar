@@ -5,9 +5,7 @@ import logging
 import time
 
 import aiohttp
-from homeassistant.core import HomeAssistant
 
-from ...const import TIMEOUT
 from ..exceptions import AmbeoConnectionError
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,12 +16,12 @@ class AmbeoApi:
 
     capabilities = []
 
-    def __init__(self, ip, port, session: aiohttp.ClientSession, hass: HomeAssistant):
+    def __init__(self, ip, port, timeout: int, session: aiohttp.ClientSession):
         """Initialize the API with the given IP, port, session, and Home Assistant instance."""
         self.session = session
-        self.hass = hass
         self.port = port
         self.set_endpoint(ip)
+        self.timeout = timeout
 
     def set_endpoint(self, host):
         """Set the API endpoint host."""
@@ -34,7 +32,7 @@ class AmbeoApi:
         """Fetch data from a given URL."""
         full_url = f"{self.endpoint}/{url}"
         try:
-            timeout = aiohttp.ClientTimeout(total=TIMEOUT)
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
             _LOGGER.debug("Executing URL fetch: %s", full_url)
             async with self.session.get(full_url, timeout=timeout) as response:
                 if response.status != 200:

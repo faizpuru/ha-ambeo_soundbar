@@ -7,6 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util.color import brightness_to_value
 
+from .api.const import (
+    Capability,
+)
 from .const import (
     BRIGHTNESS_SCALE,
     BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY,
@@ -14,7 +17,6 @@ from .const import (
     DEFAULT_BRIGHTNESS,
     DEFAULT_BRIGHTNESS_AMBEO_MAX,
     DOMAIN,
-    Capability,
 )
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight

@@ -11,8 +11,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .api.const import Capability
 from .api.impl.generic_api import AmbeoApi
-from .const import DOMAIN, Capability
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

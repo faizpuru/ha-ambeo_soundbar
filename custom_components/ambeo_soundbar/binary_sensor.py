@@ -6,7 +6,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, Capability
+from .api.const import Capability
+from .const import DOMAIN
 from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

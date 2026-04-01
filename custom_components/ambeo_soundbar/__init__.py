@@ -18,6 +18,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     PLATFORMS,
+    TIMEOUT,
 )
 from .coordinator import AmbeoCoordinator
 
@@ -63,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     session = async_create_clientsession(hass)
 
-    ambeo_api = await AmbeoAPIFactory.create_api(host, DEFAULT_PORT, session, hass)
+    ambeo_api = await AmbeoAPIFactory.create_api(host, DEFAULT_PORT, TIMEOUT, session)
     try:
         serial = await ambeo_api.get_serial() or "unknown_serial"
         model = await ambeo_api.get_model()
