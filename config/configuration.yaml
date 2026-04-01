@@ -1,0 +1,13 @@
+default_config:
+http:
+
+debugpy:
+  start: true
+  wait: false
+  host: "0.0.0.0"
+  port: 5678
+
+logger:
+  default: warning
+  logs:
+    custom_components.ambeo_soundbar: debug

@@ -1,19 +1,22 @@
-import logging
-import voluptuous as vol
-import aiohttp
+"""Config flow for Ambeo Soundbar integration."""
 
+import logging
+
+import aiohttp
+import voluptuous as vol
 from homeassistant import config_entries
+
+from .api.factory import AmbeoAPIFactory
 from .const import (
-    CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
-    CONFIG_HOST_DEFAULT,
-    DOMAIN,
-    DEFAULT_PORT,
-    CONFIG_HOST,
     CONFIG_DEBOUNCE_COOLDOWN,
+    CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
+    CONFIG_HOST,
+    CONFIG_HOST_DEFAULT,
     CONFIG_UPDATE_INTERVAL,
     CONFIG_UPDATE_INTERVAL_DEFAULT,
+    DEFAULT_PORT,
+    DOMAIN,
 )
-from .api.factory import AmbeoAPIFactory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +26,8 @@ async def validate_connection(hass, host, port=DEFAULT_PORT):
     async with aiohttp.ClientSession() as client_session:
         try:
             ambeo_api = await AmbeoAPIFactory.create_api(
-                host, port, client_session, hass)
+                host, port, client_session, hass
+            )
             name = await ambeo_api.get_name()
             serial = await ambeo_api.get_serial()
             return name, serial, None
@@ -36,11 +40,15 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options configuration for Ambeo Soundbar integration."""
 
     async def async_step_init(self, user_input=None):
+        """Handle the initial step of the options flow."""
         errors = {}
         host_default = self.config_entry.options.get(
-            CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST))
+            CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST)
+        )
         if user_input is not None:
-            name, serial, error = await validate_connection(self.hass, user_input[CONFIG_HOST])
+            name, serial, error = await validate_connection(
+                self.hass, user_input[CONFIG_HOST]
+            )
             if error is not None:
                 errors["base"] = error
                 return self.display_form(errors, host_default)
@@ -50,8 +58,11 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.display_form(errors, host_default)
 
     def display_form(self, errors, host_default):
+        """Build and display the options form."""
         try:
-            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id]["coordinator"].support_debounce_mode()
+            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id][
+                "coordinator"
+            ].support_debounce_mode()
         except Exception:
             support_debounce = False
 
@@ -59,21 +70,37 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             errors["base"] = "experimental_feature_activated"
 
         update_interval_default = self.config_entry.options.get(
-            CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT)
+            CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
+        )
 
-        options_schema = vol.Schema({
-            vol.Optional(CONFIG_HOST, default=host_default): str,
-            vol.Optional(CONFIG_DEBOUNCE_COOLDOWN, default=self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT)): int,
-            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
-        }) if support_debounce else vol.Schema({
-            vol.Optional(CONFIG_HOST, default=host_default): str,
-            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
-        })
+        options_schema = (
+            vol.Schema(
+                {
+                    vol.Optional(CONFIG_HOST, default=host_default): str,
+                    vol.Optional(
+                        CONFIG_DEBOUNCE_COOLDOWN,
+                        default=self.config_entry.options.get(
+                            CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
+                        ),
+                    ): int,
+                    vol.Optional(
+                        CONFIG_UPDATE_INTERVAL, default=update_interval_default
+                    ): int,
+                }
+            )
+            if support_debounce
+            else vol.Schema(
+                {
+                    vol.Optional(CONFIG_HOST, default=host_default): str,
+                    vol.Optional(
+                        CONFIG_UPDATE_INTERVAL, default=update_interval_default
+                    ): int,
+                }
+            )
+        )
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=options_schema,
-            errors=errors
+            step_id="init", data_schema=options_schema, errors=errors
         )
 
 
@@ -94,17 +121,21 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=name, data=user_input)
+                return self.async_create_entry(
+                    title=name or "Ambeo Soundbar", data=user_input
+                )
 
-        data_schema = vol.Schema({
-            vol.Required(CONFIG_HOST, default=CONFIG_HOST_DEFAULT): str,
-            vol.Optional(CONFIG_UPDATE_INTERVAL, default=CONFIG_UPDATE_INTERVAL_DEFAULT): int,
-        })
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONFIG_HOST, default=CONFIG_HOST_DEFAULT): str,
+                vol.Optional(
+                    CONFIG_UPDATE_INTERVAL, default=CONFIG_UPDATE_INTERVAL_DEFAULT
+                ): int,
+            }
+        )
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=data_schema,
-            errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     @staticmethod

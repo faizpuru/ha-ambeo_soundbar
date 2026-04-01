@@ -1,5 +1,8 @@
+"""Data update coordinator for Ambeo Soundbar integration."""
+
 import asyncio
 import logging
+from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
@@ -20,9 +23,16 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     TRACK_CHANGE_DELAY = 1
     SOURCE_CHANGE_DELAY = 1
     BLUETOOTH_SWITCH_DELAY = 1
-    END_OF_TRACK_BUFFER = 2  # seconds after expected track end to refresh
+    END_OF_TRACK_BUFFER = 2  # Seconds after expected track end to refresh.
 
-    def __init__(self, hass: HomeAssistant, api: AmbeoApi, sources: list, presets: list, update_interval_seconds: int = 10):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: AmbeoApi,
+        sources: list,
+        presets: list,
+        update_interval_seconds: int = 10,
+    ):
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -33,7 +43,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         self.api = api
         self.sources = sources
         self.presets = presets
-        self._end_of_track_unsub: callback | None = None
+        self._end_of_track_unsub: Callable[[], None] | None = None
 
     async def _safe_fetch(self, coro, label: str):
         """Fetch data safely, returning None on failure."""
@@ -46,16 +56,21 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
-            # Core media player data (required)
-            volume, muted, state, current_source, current_preset, player_data = (
-                await asyncio.gather(
-                    self.api.get_volume(),
-                    self.api.is_mute(),
-                    self.api.get_state(),
-                    self.api.get_current_source(),
-                    self.api.get_current_preset(),
-                    self.api.player_data(),
-                )
+            # Core media player data (required).
+            (
+                volume,
+                muted,
+                state,
+                current_source,
+                current_preset,
+                player_data,
+            ) = await asyncio.gather(
+                self.api.get_volume(),
+                self.api.is_mute(),
+                self.api.get_state(),
+                self.api.get_current_source(),
+                self.api.get_current_preset(),
+                self.api.player_data(),
             )
             data = {
                 "volume": volume,
@@ -66,26 +81,86 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                 "player_data": player_data,
             }
 
-            # Optional features fetched in parallel, filtered by capability
-            # Tuples: (data_key, api_method_name, label, required_capability or None)
+            # Optional features fetched in parallel, filtered by capability.
+            # Tuples: (data_key, api_method_name, label, required_capability or None).
             all_optional_features = [
                 ("play_time", "get_play_time", "Play time", None),
-                ("led_bar_brightness", "get_led_bar_brightness", "LED bar", Capability.LED_BAR),
-                ("codec_led_brightness", "get_codec_led_brightness", "Codec LED", Capability.CODEC_LED),
-                ("logo_brightness", "get_logo_brightness", "Logo brightness", Capability.AMBEO_LOGO),
+                (
+                    "led_bar_brightness",
+                    "get_led_bar_brightness",
+                    "LED bar",
+                    Capability.LED_BAR,
+                ),
+                (
+                    "codec_led_brightness",
+                    "get_codec_led_brightness",
+                    "Codec LED",
+                    Capability.CODEC_LED,
+                ),
+                (
+                    "logo_brightness",
+                    "get_logo_brightness",
+                    "Logo brightness",
+                    Capability.AMBEO_LOGO,
+                ),
                 ("logo_state", "get_logo_state", "Logo state", Capability.AMBEO_LOGO),
-                ("display_brightness", "get_display_brightness", "Display", Capability.MAX_DISPLAY),
+                (
+                    "display_brightness",
+                    "get_display_brightness",
+                    "Display",
+                    Capability.MAX_DISPLAY,
+                ),
                 ("night_mode", "get_night_mode", "Night mode", None),
                 ("ambeo_mode", "get_ambeo_mode", "Ambeo mode", None),
                 ("sound_feedback", "get_sound_feedback", "Sound feedback", None),
-                ("voice_enhancement", "get_voice_enhancement", "Voice enhancement", Capability.VOICE_ENHANCEMENT_TOGGLE),
-                ("bluetooth_pairing", "get_bluetooth_pairing_state", "Bluetooth pairing", Capability.BLUETOOTH_PAIRING),
-                ("subwoofer_status", "get_subwoofer_status", "Subwoofer status", Capability.SUBWOOFER),
-                ("subwoofer_volume", "get_subwoofer_volume", "Subwoofer volume", Capability.SUBWOOFER),
-                ("voice_enhancement_level", "get_voice_enhancement_level", "Voice enhancement level", Capability.VOICE_ENHANCEMENT_LEVEL),
-                ("center_speaker_level", "get_center_speaker_level", "Center speaker level", Capability.CENTER_SPEAKER_LEVEL),
-                ("side_firing_level", "get_side_firing_level", "Side firing level", Capability.SIDE_FIRING_LEVEL),
-                ("up_firing_level", "get_up_firing_level", "Up firing level", Capability.UP_FIRING_LEVEL),
+                (
+                    "voice_enhancement",
+                    "get_voice_enhancement",
+                    "Voice enhancement",
+                    Capability.VOICE_ENHANCEMENT_TOGGLE,
+                ),
+                (
+                    "bluetooth_pairing",
+                    "get_bluetooth_pairing_state",
+                    "Bluetooth pairing",
+                    Capability.BLUETOOTH_PAIRING,
+                ),
+                (
+                    "subwoofer_status",
+                    "get_subwoofer_status",
+                    "Subwoofer status",
+                    Capability.SUBWOOFER,
+                ),
+                (
+                    "subwoofer_volume",
+                    "get_subwoofer_volume",
+                    "Subwoofer volume",
+                    Capability.SUBWOOFER,
+                ),
+                (
+                    "voice_enhancement_level",
+                    "get_voice_enhancement_level",
+                    "Voice enhancement level",
+                    Capability.VOICE_ENHANCEMENT_LEVEL,
+                ),
+                (
+                    "center_speaker_level",
+                    "get_center_speaker_level",
+                    "Center speaker level",
+                    Capability.CENTER_SPEAKER_LEVEL,
+                ),
+                (
+                    "side_firing_level",
+                    "get_side_firing_level",
+                    "Side firing level",
+                    Capability.SIDE_FIRING_LEVEL,
+                ),
+                (
+                    "up_firing_level",
+                    "get_up_firing_level",
+                    "Up firing level",
+                    Capability.UP_FIRING_LEVEL,
+                ),
                 ("eco_mode", "get_eco_mode", "Eco mode", Capability.ECO_MODE),
             ]
 
@@ -96,10 +171,13 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             ]
 
             results = await asyncio.gather(
-                *(self._safe_fetch(getattr(self.api, method)(), label) for _, method, label in optional_features)
+                *(
+                    self._safe_fetch(getattr(self.api, method)(), label)
+                    for _, method, label in optional_features
+                )
             )
 
-            for (key, _, _), value in zip(optional_features, results):
+            for (key, _, _), value in zip(optional_features, results, strict=True):
                 if value is not None:
                     data[key] = value
 
@@ -111,11 +189,11 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             return data
 
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def _schedule_end_of_track_refresh(self, data: dict[str, Any]):
         """Schedule a refresh when the current track is about to end."""
-        # Cancel any previously scheduled refresh
+        # Cancel any previously scheduled refresh.
         if self._end_of_track_unsub:
             self._end_of_track_unsub()
             self._end_of_track_unsub = None
@@ -144,9 +222,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             self.async_set_updated_data(self.data)
             self.hass.async_create_task(self.async_request_refresh())
 
-        self._end_of_track_unsub = async_call_later(
-            self.hass, delay, _on_track_end
-        )
+        self._end_of_track_unsub = async_call_later(self.hass, delay, _on_track_end)
 
     def _optimistic_update(self, key: str, value: Any):
         """Apply an optimistic state update and notify listeners."""
@@ -335,15 +411,15 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_reboot(self):
         """Reboot the device."""
         await self.api.reboot()
-        # No state update needed for reboot
+        # No state update needed for reboot.
 
     async def async_reset_expert_settings(self):
         """Reset expert settings."""
         await self.api.reset_expert_settings()
-        # Trigger a full refresh to get reset values
+        # Trigger a full refresh to get reset values.
         await self.async_request_refresh()
 
-    # API wrapper methods
+    # API wrapper methods.
     def has_capability(self, capability: str) -> bool:
         """Check if the device has a specific capability."""
         return self.api.has_capability(capability)

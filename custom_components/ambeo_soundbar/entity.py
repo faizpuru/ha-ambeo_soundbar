@@ -1,25 +1,32 @@
+"""Base entity classes for Ambeo Soundbar integration."""
+
 import logging
 import math
 
-from homeassistant.components.light import LightEntity, ColorMode, ATTR_BRIGHTNESS
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.components.number import NumberEntity
-from homeassistant.util.color import value_to_brightness, brightness_to_value
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
+from .coordinator import AmbeoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AmbeoBaseEntity(CoordinatorEntity):
+class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
     """Base class for Ambeo entities."""
 
-    def __init__(self, coordinator, device, name_suffix, unique_id_suffix):
+    def __init__(
+        self, coordinator: AmbeoCoordinator, device, name_suffix, unique_id_suffix
+    ):
         """Initialize the base entity."""
         super().__init__(coordinator)
         self._name = f"{device.name} {name_suffix}"
-        self._unique_id = f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
+        self._unique_id = (
+            f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
+        )
         self.ambeo_device = device
 
     @property
@@ -43,8 +50,17 @@ class AmbeoBaseEntity(CoordinatorEntity):
 class BaseLight(AmbeoBaseEntity, LightEntity):
     """Base class for brightness-based light entities."""
 
-    def __init__(self, coordinator, device, name_suffix, unique_id_suffix,
-                 brightness_scale, data_key, set_method, default_brightness):
+    def __init__(
+        self,
+        coordinator: AmbeoCoordinator,
+        device,
+        name_suffix,
+        unique_id_suffix,
+        brightness_scale,
+        data_key,
+        set_method,
+        default_brightness,
+    ):
         """Initialize the light entity."""
         super().__init__(coordinator, device, name_suffix, unique_id_suffix)
         self._brightness_scale = brightness_scale
@@ -73,13 +89,17 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     def brightness(self):
         """Return the brightness of the light."""
         if self.coordinator.data and self._data_key in self.coordinator.data:
-            return value_to_brightness(self._brightness_scale, self.coordinator.data[self._data_key])
+            return value_to_brightness(
+                self._brightness_scale, self.coordinator.data[self._data_key]
+            )
         return None
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light with specified brightness, or default."""
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = math.floor(brightness_to_value(self._brightness_scale, kwargs[ATTR_BRIGHTNESS]))
+            brightness = math.floor(
+                brightness_to_value(self._brightness_scale, kwargs[ATTR_BRIGHTNESS])
+            )
         else:
             brightness = self._default_brightness
         await getattr(self.coordinator, self._set_method)(brightness)
@@ -95,7 +115,14 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     _data_key: str | None = None
     _set_method: str | None = None
 
-    def __init__(self, coordinator, device, feature_name, data_key=None, set_method=None):
+    def __init__(
+        self,
+        coordinator: AmbeoCoordinator,
+        device,
+        feature_name,
+        data_key=None,
+        set_method=None,
+    ):
         """Initialize the switch entity."""
         super().__init__(coordinator, device, feature_name, feature_name)
         if data_key:
@@ -106,7 +133,11 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return True if the switch is on."""
-        if self._data_key and self.coordinator.data and self._data_key in self.coordinator.data:
+        if (
+            self._data_key
+            and self.coordinator.data
+            and self._data_key in self.coordinator.data
+        ):
             return self.coordinator.data[self._data_key]
         return None
 
@@ -127,7 +158,14 @@ class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
     _data_key: str | None = None
     _set_method: str | None = None
 
-    def __init__(self, coordinator, device, feature_name, data_key=None, set_method=None):
+    def __init__(
+        self,
+        coordinator: AmbeoCoordinator,
+        device,
+        feature_name,
+        data_key=None,
+        set_method=None,
+    ):
         """Initialize the number entity."""
         super().__init__(coordinator, device, feature_name, feature_name)
         if data_key:
@@ -138,7 +176,11 @@ class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if self._data_key and self.coordinator.data and self._data_key in self.coordinator.data:
+        if (
+            self._data_key
+            and self.coordinator.data
+            and self._data_key in self.coordinator.data
+        ):
             return self.coordinator.data[self._data_key]
         return None
 

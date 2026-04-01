@@ -1,17 +1,20 @@
+"""Binary sensor entities for Ambeo Soundbar integration."""
+
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN, Capability
 from .entity import AmbeoBaseEntity
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class EcoModeSensor(AmbeoBaseEntity, BinarySensorEntity):
+    """Binary sensor representing the eco mode state."""
+
     def __init__(self, coordinator, device):
         """Initialize the Eco Mode sensor."""
         super().__init__(coordinator, device, "Eco Mode", "eco_mode")
