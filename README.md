@@ -17,24 +17,35 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 ### Audio Features
 
 | Feature | Max | Plus | Mini | Description |
-|---------|----------|---------|---------|-------------|
+|---------|-----|------|------|-------------|
 | Night Mode | ✅ | ✅ | ✅ | Reduces dynamic range and bass intensity for quiet listening environments |
 | Ambeo Mode | ✅ | ✅ | ✅ | Enables 3D virtualization technology for immersive sound experience |
-| Voice Enhancement | ✅ | ✅ | ✅ | Emphasizes dialogue frequencies for clearer speech in media content |
+| Voice Enhancement (Toggle) | ❌ | ✅ | ✅ | On/off toggle to emphasize dialogue frequencies for clearer speech |
+| Voice Enhancement (Level) | ✅ | ❌ | ❌ | Adjustable voice enhancement level (0–3) for fine-tuned dialogue clarity |
 | Sound Feedback | ✅ | ✅ | ✅ | Enables/disables audio confirmation for user actions |
-| Subwoofer Support | ✅ | ✅ | ✅ | Controls for external subwoofer connection, volume and power status |
+| Subwoofer Status | ✅ | ✅ | ✅ | Toggles external subwoofer on/off (when connected) |
+| Subwoofer Volume | ✅ | ✅ | ✅ | Adjusts subwoofer volume in dB (when connected) |
+| Eco Mode | ❌ | ✅ | ✅ | Read-only binary sensor indicating eco mode state |
+
+### Speaker Level Controls (Max only)
+
+| Feature | Max | Plus | Mini | Description |
+|---------|-----|------|------|-------------|
+| Center Speaker Level | ✅ | ❌ | ❌ | Adjusts center speaker level (-12 to +12 dB) |
+| Side Firing Level | ✅ | ❌ | ❌ | Adjusts side-firing speaker level (-12 to +12 dB) |
+| Up Firing Level | ✅ | ❌ | ❌ | Adjusts up-firing speaker level (-12 to +12 dB) |
 
 ### Sources Management
 
 | Feature | Max | Plus | Mini | Description |
-|---------|----------|---------|---------|-------------|
+|---------|-----|------|------|-------------|
 | Source Selection | ✅ | ✅ | ✅ | Controls input source selection (HDMI, Optical, Bluetooth, etc.) |
 | Audio Presets | ✅ | ✅ | ✅ | Sound profiles optimized for different content types |
 
 ### Display Controls
 
 | Feature | Max | Plus | Mini | Description |
-|---------|----------|---------|---------|-------------|
+|---------|-----|------|------|-------------|
 | Ambeo Logo | ✅ | ✅ | ✅ | Controls the illuminated Ambeo logo brightness on device |
 | LED Bar | ❌ | ✅ | ✅ | Controls front LED display bar brightness for visual feedback |
 | Main Display | ✅ | ❌ | ❌ | Controls device's screen brightness and display settings |
@@ -43,7 +54,7 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 ### Media Player Controls
 
 | Feature | Max | Plus | Mini | Description |
-|---------|----------|---------|---------|-------------|
+|---------|-----|------|------|-------------|
 | Play/Pause | ✅ | ✅ | ✅ | Controls media playback state |
 | Next/Previous | ✅ | ✅ | ✅ | Skip to next or previous track |
 | Volume | ✅ | ✅ | ✅ | Adjusts audio volume level |
@@ -52,9 +63,10 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 ### Additional Features
 
 | Feature | Max | Plus | Mini | Description |
-|---------|----------|---------|---------|-------------|
+|---------|-----|------|------|-------------|
 | Bluetooth Pairing | ❌ | ✅ | ✅ | Manages Bluetooth device pairing mode and connected devices |
 | Standby Control | ✅ | ❌ | ❌ | Controls device power state between active and standby mode |
+| Reset Expert Settings | ✅ | ❌ | ❌ | Resets all audio customization settings to factory defaults |
 | Restart | ✅ | ✅ | ✅ | Reboots the device |
 
 ## 🚀 Quick Start
@@ -76,6 +88,25 @@ Home Assistant integration to control your Sennheiser AMBEO soundbar directly fr
 2. Click "Add Integration" and search for "Ambeo Soundbar"
 3. Enter your soundbar's IP address
 4. Integration will be ready within a few seconds
+
+## ⚙️ Configuration
+
+### Initial Setup
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| Host | `ambeo.local` | IP address or hostname of the soundbar |
+| Update Interval | `10` | Polling interval in seconds |
+
+### Options (after setup)
+
+These settings can be changed at any time via **Settings > Devices & Services > Ambeo Soundbar > Configure**.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| Host | — | Change the soundbar IP address (validated on save) |
+| Update Interval | `10` | Polling interval in seconds |
+| Debounce Cooldown | `0` | *Max only* — Experimental: cooldown in seconds to prevent API flooding during rapid commands. Set to `0` to disable |
 
 ## ❓ Troubleshooting
 
