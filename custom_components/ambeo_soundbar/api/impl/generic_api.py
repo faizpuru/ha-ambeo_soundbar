@@ -6,6 +6,7 @@ import time
 
 import aiohttp
 
+from ..const import BRIGHTNESS_RANGE_DEFAULT
 from ..exceptions import AmbeoConnectionError
 
 _LOGGER = logging.getLogger(__name__)
@@ -224,12 +225,20 @@ class AmbeoApi:
     async def get_logo_brightness(self):
         """Get the Ambeo logo brightness."""
 
+    def get_logo_brightness_range(self):
+        """Get the Ambeo logo brightness range."""
+        return BRIGHTNESS_RANGE_DEFAULT
+
     # LED bar.
     async def get_led_bar_brightness(self):
         """Get the LED bar brightness."""
 
     async def set_led_bar_brightness(self, brightness):
         """Set the LED bar brightness."""
+
+    def get_led_bar_brightness_range(self):
+        """Get the LED bar brightness range."""
+        return BRIGHTNESS_RANGE_DEFAULT
 
     # Ambeo display.
     async def set_display_brightness(self, brightness):
@@ -238,12 +247,20 @@ class AmbeoApi:
     async def get_display_brightness(self):
         """Get the display brightness."""
 
+    def get_display_brightness_range(self):
+        """Get the display brightness range."""
+        return BRIGHTNESS_RANGE_DEFAULT
+
     # Codec LED.
     async def get_codec_led_brightness(self):
         """Get the codec LED brightness."""
 
     async def set_codec_led_brightness(self, brightness):
         """Set the codec LED brightness."""
+
+    def get_codec_led_brightness_range(self):
+        """Get the codec LED brightness range."""
+        return BRIGHTNESS_RANGE_DEFAULT
 
     # Sources.
     async def get_current_source(self):
