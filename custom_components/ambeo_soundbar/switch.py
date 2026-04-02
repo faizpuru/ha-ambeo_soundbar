@@ -4,7 +4,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, Capability
+from .api.const import Capability
+from .const import DOMAIN
 from .entity import AmbeoBaseSwitch
 
 

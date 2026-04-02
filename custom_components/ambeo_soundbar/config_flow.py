@@ -16,17 +16,18 @@ from .const import (
     CONFIG_UPDATE_INTERVAL_DEFAULT,
     DEFAULT_PORT,
     DOMAIN,
+    TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_connection(hass, host, port=DEFAULT_PORT):
+async def validate_connection(host, port=DEFAULT_PORT):
     """Validate connection to Ambeo device and return name if successful."""
     async with aiohttp.ClientSession() as client_session:
         try:
             ambeo_api = await AmbeoAPIFactory.create_api(
-                host, port, client_session, hass
+                host, port, TIMEOUT, client_session
             )
             name = await ambeo_api.get_name()
             serial = await ambeo_api.get_serial()
@@ -115,7 +116,7 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input.get(CONFIG_HOST)
-            name, serial, error = await validate_connection(self.hass, host)
+            name, serial, error = await validate_connection(host)
             if error:
                 errors["base"] = error
             else:
