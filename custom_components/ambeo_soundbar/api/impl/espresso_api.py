@@ -2,12 +2,21 @@
 
 import asyncio
 
-from ...const import AMBEO_MAX_VOLUME_STEP, EXCLUDE_SOURCES_MAX, Capability
+from ..const import (
+    AMBEO_MAX_VOLUME_STEP,
+    BRIGHTNESS_RANGE_AMBEO_MAX_DISPLAY,
+    BRIGHTNESS_RANGE_AMBEO_MAX_LOGO,
+    EXCLUDE_SOURCES_MAX,
+    Capability,
+)
 from .generic_api import AmbeoApi
 
 
 class AmbeoEspressoApi(AmbeoApi):
     """API implementation for Ambeo Soundbar Max."""
+
+    DISPLAY_BRIGHTNESS_RANGE = (1, 126)
+    LOGO_BRIGHTNESS_RANGE = (1, 118)
 
     capabilities = [
         Capability.CENTER_SPEAKER_LEVEL,
@@ -155,6 +164,14 @@ class AmbeoEspressoApi(AmbeoApi):
         if espressoBrightness:
             return espressoBrightness["ambeologo"]
         return None
+
+    def get_logo_brightness_range(self):
+        """Get the Ambeo Max logo brightness range."""
+        return BRIGHTNESS_RANGE_AMBEO_MAX_LOGO
+
+    def get_display_brightness_range(self):
+        """Get the Ambeo Max display brightness range."""
+        return BRIGHTNESS_RANGE_AMBEO_MAX_DISPLAY
 
     async def get_voice_enhancement_level(self):
         """Get the voice enhancement level."""

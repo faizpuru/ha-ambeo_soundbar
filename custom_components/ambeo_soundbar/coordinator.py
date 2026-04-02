@@ -11,8 +11,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .api.const import Capability
 from .api.impl.generic_api import AmbeoApi
-from .const import DOMAIN, Capability
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -443,6 +444,22 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     def get_subwoofer_max_value(self) -> int:
         """Get subwoofer maximum value."""
         return self.api.get_subwoofer_max_value()
+
+    def get_led_bar_brightness_range(self):
+        """Get the LED bar brightness range."""
+        return self.api.get_led_bar_brightness_range()
+
+    def get_codec_led_brightness_range(self):
+        """Get the codec LED brightness range."""
+        return self.api.get_codec_led_brightness_range()
+
+    def get_logo_brightness_range(self):
+        """Get the logo brightness range."""
+        return self.api.get_logo_brightness_range()
+
+    def get_display_brightness_range(self):
+        """Get the display brightness range."""
+        return self.api.get_display_brightness_range()
 
     def set_endpoint(self, host: str):
         """Set the API endpoint."""

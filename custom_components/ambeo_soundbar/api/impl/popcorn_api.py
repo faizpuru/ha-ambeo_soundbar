@@ -2,7 +2,7 @@
 
 import json
 
-from ...const import AMBEO_POPCORN_VOLUME_STEP, Capability
+from ..const import AMBEO_POPCORN_VOLUME_STEP, Capability
 from .generic_api import AmbeoApi
 
 

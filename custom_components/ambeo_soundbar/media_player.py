@@ -15,11 +15,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .api.const import Capability
 from .const import (
     CONFIG_DEBOUNCE_COOLDOWN,
     CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
     DOMAIN,
-    Capability,
 )
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
