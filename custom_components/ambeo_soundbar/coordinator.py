@@ -445,6 +445,22 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Get subwoofer maximum value."""
         return self.api.get_subwoofer_max_value()
 
+    def get_led_bar_brightness_range(self):
+        """Get the LED bar brightness range."""
+        return self.api.get_led_bar_brightness_range()
+
+    def get_codec_led_brightness_range(self):
+        """Get the codec LED brightness range."""
+        return self.api.get_codec_led_brightness_range()
+
+    def get_logo_brightness_range(self):
+        """Get the logo brightness range."""
+        return self.api.get_logo_brightness_range()
+
+    def get_display_brightness_range(self):
+        """Get the display brightness range."""
+        return self.api.get_display_brightness_range()
+
     def set_endpoint(self, host: str):
         """Set the API endpoint."""
         self.api.set_endpoint(host)

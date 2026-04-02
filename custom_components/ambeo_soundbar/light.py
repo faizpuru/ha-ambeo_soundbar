@@ -10,16 +10,12 @@ from homeassistant.util.color import brightness_to_value
 from .api.const import (
     Capability,
 )
-from .const import (
-    BRIGHTNESS_SCALE,
-    BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY,
-    BRIGHTNESS_SCALE_AMBEO_MAX_LOGO,
-    DEFAULT_BRIGHTNESS,
-    DEFAULT_BRIGHTNESS_AMBEO_MAX,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight
+
+DEFAULT_BRIGHTNESS = 50
+DEFAULT_BRIGHTNESS_AMBEO_MAX = 128
 
 
 class LEDBar(BaseLight):
@@ -32,7 +28,7 @@ class LEDBar(BaseLight):
             device,
             "LED Bar",
             "led_bar",
-            BRIGHTNESS_SCALE,
+            coordinator.get_led_bar_brightness_range(),
             "led_bar_brightness",
             "async_set_led_bar_brightness",
             DEFAULT_BRIGHTNESS,
@@ -49,7 +45,7 @@ class CodecLED(BaseLight):
             device,
             "Codec LED",
             "codec_led",
-            BRIGHTNESS_SCALE,
+            coordinator.get_codec_led_brightness_range(),
             "codec_led_brightness",
             "async_set_codec_led_brightness",
             DEFAULT_BRIGHTNESS,
@@ -66,7 +62,7 @@ class AmbeoMaxLogo(BaseLight):
             device,
             "Ambeo Max Logo",
             "ambeo_max_logo",
-            BRIGHTNESS_SCALE_AMBEO_MAX_LOGO,
+            coordinator.get_logo_brightness_range(),
             "logo_brightness",
             "async_set_logo_brightness",
             DEFAULT_BRIGHTNESS_AMBEO_MAX,
@@ -83,7 +79,7 @@ class AmbeoMaxDisplay(BaseLight):
             device,
             "Ambeo Max Display",
             "ambeo_max_display",
-            BRIGHTNESS_SCALE_AMBEO_MAX_DISPLAY,
+            coordinator.get_display_brightness_range(),
             "display_brightness",
             "async_set_display_brightness",
             DEFAULT_BRIGHTNESS_AMBEO_MAX,
@@ -100,7 +96,7 @@ class AmbeoLogo(BaseLight):
             device,
             "Ambeo Logo",
             "ambeo_logo",
-            BRIGHTNESS_SCALE,
+            coordinator.get_logo_brightness_range(),
             "logo_brightness",
             "async_set_logo_brightness",
             DEFAULT_BRIGHTNESS,
@@ -120,7 +116,7 @@ class AmbeoLogo(BaseLight):
         """Turn on the Ambeo Logo light with specified brightness, if provided."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = math.floor(
-                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                brightness_to_value(self._brightness_scale, kwargs[ATTR_BRIGHTNESS])
             )
             await self.coordinator.async_set_logo_brightness(brightness)
 
