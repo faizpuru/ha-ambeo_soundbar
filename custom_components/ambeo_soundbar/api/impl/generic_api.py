@@ -158,6 +158,10 @@ class AmbeoApi:
         """Set the volume."""
         await self.set_value("player:volume", "i32_", volume)
 
+    def get_volume_max(self) -> int:
+        """Get the maximum native volume value."""
+        return 100
+
     # Mute.
     async def is_mute(self):
         """Check if the device is muted."""

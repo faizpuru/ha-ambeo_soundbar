@@ -22,6 +22,7 @@ class AmbeoEspressoApi(AmbeoApi):
         Capability.CENTER_SPEAKER_LEVEL,
         Capability.MAX_DISPLAY,
         Capability.MAX_LOGO,
+        Capability.NATIVE_VOLUME,
         Capability.RESET_EXPERT_SETTINGS,
         Capability.SIDE_FIRING_LEVEL,
         Capability.STANDBY,
@@ -35,6 +36,10 @@ class AmbeoEspressoApi(AmbeoApi):
     def support_debounce_mode(self):
         """Check if debounce mode is supported."""
         return True
+
+    def get_volume_max(self) -> int:
+        """Get the maximum native volume value."""
+        return 50
 
     def get_volume_step(self):
         """Get the volume step size."""
