@@ -10,6 +10,46 @@ from .const import DOMAIN
 from .entity import AmbeoBaseNumber
 
 
+class NativeVolume(AmbeoBaseNumber):
+    """Number entity for the native volume value."""
+
+    _attr_native_step = 1
+    _attr_native_min_value = 0
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator, device):
+        """Initialize the native volume number entity."""
+        super().__init__(
+            coordinator,
+            device,
+            "Native Volume",
+            "volume",
+            "async_set_volume",
+        )
+
+    @property
+    def native_max_value(self):
+        """Return the maximum native volume value."""
+        return self.coordinator.get_volume_max()
+
+    @property
+    def native_value(self):
+        """Return the current native volume value."""
+        if self.coordinator.data and "volume" in self.coordinator.data:
+            return round(
+                self.coordinator.data["volume"]
+                * self.coordinator.get_volume_max()
+                / 100
+            )
+        return None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the native volume."""
+        await self.coordinator.async_set_volume(
+            round(value * 100 / self.coordinator.get_volume_max())
+        )
+
+
 class SubWooferVolume(AmbeoBaseNumber):
     """Number entity for subwoofer volume."""
 
@@ -138,6 +178,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
     entities = []
+    if coordinator.has_capability(Capability.NATIVE_VOLUME):
+        entities.append(NativeVolume(coordinator, ambeo_device))
     if (
         coordinator.has_capability(Capability.SUBWOOFER)
         and await coordinator.has_subwoofer()

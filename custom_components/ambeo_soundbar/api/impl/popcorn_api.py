@@ -22,6 +22,7 @@ class AmbeoPopcornApi(AmbeoApi):
         Capability.CODEC_LED,
         Capability.ECO_MODE,
         Capability.LED_BAR,
+        Capability.NATIVE_VOLUME,
         Capability.SUBWOOFER,
         Capability.VOICE_ENHANCEMENT_TOGGLE,
     ]
