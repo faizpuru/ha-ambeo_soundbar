@@ -36,5 +36,6 @@ class Capability:
     STANDBY = "standby"
     SUBWOOFER = "SubWoofer"
     UP_FIRING_LEVEL = "UpFiringLevel"
+    NATIVE_VOLUME = "NativeVolume"
     VOICE_ENHANCEMENT_LEVEL = "VoiceEnhancementLevel"
     VOICE_ENHANCEMENT_TOGGLE = "VoiceEnhancementMode"
