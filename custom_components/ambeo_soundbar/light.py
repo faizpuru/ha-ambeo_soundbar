@@ -3,14 +3,11 @@
 import math
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util.color import brightness_to_value
 
-from .api.const import (
-    Capability,
-)
-from .const import DOMAIN
+from . import AmbeoConfigEntry
+from .api.const import Capability
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight
 
@@ -135,12 +132,12 @@ class AmbeoLogo(BaseLight):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmbeoConfigEntry,
     async_add_entities,
 ):
     """Set up lights from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = config_entry.runtime_data.coordinator
+    ambeo_device = config_entry.runtime_data.device
     entities = []
     if coordinator.has_capability(Capability.AMBEO_LOGO):
         entities.append(AmbeoLogo(coordinator, ambeo_device))

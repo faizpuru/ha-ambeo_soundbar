@@ -5,7 +5,6 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_IDLE,
     STATE_ON,
@@ -15,11 +14,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import AmbeoConfigEntry
 from .api.const import Capability
 from .const import (
     CONFIG_DEBOUNCE_COOLDOWN,
     CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
-    DOMAIN,
 )
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
@@ -301,11 +300,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmbeoConfigEntry,
     async_add_entities,
 ):
     """Set up media player from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = config_entry.runtime_data.coordinator
+    ambeo_device = config_entry.runtime_data.device
     ambeo_player = AmbeoMediaPlayer(coordinator, ambeo_device, config_entry)
     async_add_entities([ambeo_player])

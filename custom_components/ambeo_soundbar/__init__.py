@@ -1,6 +1,7 @@
 """Ambeo Soundbar integration setup."""
 
 import logging
+from dataclasses import dataclass
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +25,16 @@ from .coordinator import AmbeoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type AmbeoConfigEntry = ConfigEntry["AmbeoData"]
+
+
+@dataclass
+class AmbeoData:
+    """Runtime data stored in config entry."""
+
+    coordinator: AmbeoCoordinator
+    device: "AmbeoDevice"
+
 
 class AmbeoDevice:
     """Represent an Ambeo Soundbar device."""
@@ -44,12 +55,20 @@ class AmbeoDevice:
         return self._serial
 
 
-async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def _async_entry_updated(
+    hass: HomeAssistant, config_entry: AmbeoConfigEntry
+) -> None:
     """Handle entry updates."""
     host = config_entry.options.get(CONFIG_HOST)
-    hass.data[DOMAIN][config_entry.entry_id]["coordinator"].set_endpoint(host)
+    config_entry.runtime_data.coordinator.set_endpoint(host)
     await hass.config_entries.async_reload(config_entry.entry_id)
     _LOGGER.info("Successfully updated configuration entries")
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Ambeo Soundbar integration."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -80,8 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AmbeoCoordinator(hass, ambeo_api, sources, presets, update_interval)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "device": device}
+    entry.runtime_data = AmbeoData(coordinator=coordinator, device=device)
     _LOGGER.debug("Data initialized")
 
     device_registry = dr.async_get(hass)
@@ -99,11 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Handle integration unload."""
-    # Unload configuration
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
