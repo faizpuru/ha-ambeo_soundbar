@@ -1,136 +1,102 @@
-
-
 # Ambeo Soundbar for Home Assistant
 [![GitHub Release](https://img.shields.io/github/v/release/faizpuru/ha-ambeo_soundbar?style=flat)](https://github.com/faizpuru/ha-ambeo_soundbar/releases)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](LICENSE)
 
-Home Assistant integration to control your Sennheiser AMBEO soundbar directly from your smart home system.
+The **Sennheiser AMBEO Soundbar** is a premium home audio device featuring 3D spatial sound. The AMBEO line includes the Max, Plus, and Mini models.
+
+This integration brings full local control of your AMBEO soundbar into Home Assistant over your local network, with no cloud dependency. It exposes the soundbar as a media player along with dedicated entities for all audio, display, and connectivity settings.
 
 [![Sennheiser](https://raw.githubusercontent.com/home-assistant/brands/refs/heads/master/custom_integrations/ambeo_soundbar/logo.png)](https://www.sennheiser-hearing.com/soundbars/)
 
-## Compatible Devices
+## Supported Devices
+
 - AMBEO Soundbar Max
-- AMBEO Soundbar Mini
 - AMBEO Soundbar Plus
+- AMBEO Soundbar Mini
 
 ## Features
-### Audio Features
 
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Night Mode | ✅ | ✅ | ✅ | Reduces dynamic range and bass intensity for quiet listening environments |
-| Ambeo Mode | ✅ | ✅ | ✅ | Enables 3D virtualization technology for immersive sound experience |
-| Voice Enhancement (Toggle) | ❌ | ✅ | ✅ | On/off toggle to emphasize dialogue frequencies for clearer speech |
-| Voice Enhancement (Level) | ✅ | ❌ | ❌ | Adjustable voice enhancement level (0–3) for fine-tuned dialogue clarity |
-| Sound Feedback | ✅ | ✅ | ✅ | Enables/disables audio confirmation for user actions |
-| Subwoofer Status | ✅ | ✅ | ✅ | Toggles external subwoofer on/off (when connected) |
-| Subwoofer Volume | ✅ | ✅ | ✅ | Adjusts subwoofer volume in dB (when connected) |
-| Eco Mode | ❌ | ✅ | ✅ | Read-only binary sensor indicating eco mode state |
+| Feature | Max | Plus | Mini |
+|---------|:---:|:----:|:----:|
+| Media player (play/pause, volume, source, preset) | ✅ | ✅ | ✅ |
+| Night Mode | ✅ | ✅ | ✅ |
+| Ambeo Mode | ✅ | ✅ | ✅ |
+| Sound Feedback | ✅ | ✅ | ✅ |
+| Subwoofer (status + volume) | ✅ | ✅ | ✅ |
+| Ambeo Logo brightness | ✅ | ✅ | ✅ |
+| Restart | ✅ | ✅ | ✅ |
+| Voice Enhancement toggle | ❌ | ✅ | ✅ |
+| LED Bar + Codec LED brightness | ❌ | ✅ | ✅ |
+| Bluetooth Pairing | ❌ | ✅ | ✅ |
+| Eco Mode (read-only) | ❌ | ✅ | ✅ |
+| Voice Enhancement level (0–3) | ✅ | ❌ | ❌ |
+| Speaker Levels (center, side, up-firing) | ✅ | ❌ | ❌ |
+| Display + Logo brightness | ✅ | ❌ | ❌ |
+| Standby control | ✅ | ❌ | ❌ |
+| Reset Expert Settings | ✅ | ❌ | ❌ |
 
-### Speaker Level Controls (Max only)
+## Actions
 
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Center Speaker Level | ✅ | ❌ | ❌ | Adjusts center speaker level (-12 to +12 dB) |
-| Side Firing Level | ✅ | ❌ | ❌ | Adjusts side-firing speaker level (-12 to +12 dB) |
-| Up Firing Level | ✅ | ❌ | ❌ | Adjusts up-firing speaker level (-12 to +12 dB) |
+This integration uses standard Home Assistant platforms — no custom services. Available actions per platform:
 
-### Sources Management
+- **`media_player`**: `volume_set`, `volume_mute`, `select_source`, `select_sound_mode`, `media_play/pause`, `media_next/previous_track`, `turn_on/off`
+- **`switch`**: `turn_on/off` (Night Mode, Ambeo Mode, Sound Feedback, Voice Enhancement, Subwoofer, Bluetooth Pairing)
+- **`number`**: `set_value` (Subwoofer Volume, Voice Enhancement Level, Speaker Levels, Native Volume)
+- **`light`**: `turn_on/off` (LED brightness controls)
+- **`button`**: `press` (Restart, Reset Expert Settings)
 
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Source Selection | ✅ | ✅ | ✅ | Controls input source selection (HDMI, Optical, Bluetooth, etc.) |
-| Audio Presets | ✅ | ✅ | ✅ | Sound profiles optimized for different content types |
+## Installation
 
-### Display Controls
+**Prerequisites:** Home Assistant 2024.1+, soundbar and HA on the same local network.
 
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Ambeo Logo | ✅ | ✅ | ✅ | Controls the illuminated Ambeo logo brightness on device |
-| LED Bar | ❌ | ✅ | ✅ | Controls front LED display bar brightness for visual feedback |
-| Main Display | ✅ | ❌ | ❌ | Controls device's screen brightness and display settings |
-| Codec LED | ❌ | ✅ | ✅ | Controls LED indicator showing active audio codec |
+### HACS (Recommended)
 
-### Media Player Controls
-
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Play/Pause | ✅ | ✅ | ✅ | Controls media playback state |
-| Next/Previous | ✅ | ✅ | ✅ | Skip to next or previous track |
-| Volume | ✅ | ✅ | ✅ | Adjusts audio volume level |
-| Mute | ✅ | ✅ | ✅ | Toggles audio mute state |
-
-### Additional Features
-
-| Feature | Max | Plus | Mini | Description |
-|---------|-----|------|------|-------------|
-| Bluetooth Pairing | ❌ | ✅ | ✅ | Manages Bluetooth device pairing mode and connected devices |
-| Standby Control | ✅ | ❌ | ❌ | Controls device power state between active and standby mode |
-| Reset Expert Settings | ✅ | ❌ | ❌ | Resets all audio customization settings to factory defaults |
-| Restart | ✅ | ✅ | ✅ | Reboots the device |
-
-## 🚀 Quick Start
-
-### 📦 Using HACS (Recommended)
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=faizpuru&repository=ha-ambeo_soundbar&category=integration)
 
-1. Use the button above or search for "Ambeo Soundbar" in HACS
-2. Download the integration and restart Home Assistant
+Search for **"Ambeo Soundbar"** in HACS, download, then restart Home Assistant.
 
-### ⚙️ Manual Installation
-1. Download the `custom_components/ambeo_soundbar` directory to your Home Assistant configuration directory
-2. Restart Home Assistant
+### Manual
 
-## 🔧 Setup
+Copy the `custom_components/ambeo_soundbar` folder into your HA config directory, then restart.
+
+## Setup
+
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ambeo_soundbar)
 
-1. Go to the Integrations page in Home Assistant
-2. Click "Add Integration" and search for "Ambeo Soundbar"
-3. Enter your soundbar's IP address
-4. Integration will be ready within a few seconds
+Go to **Settings > Devices & Services > Add Integration**, search for "Ambeo Soundbar", and enter the soundbar's IP address or hostname (default: `ambeo.local`).
 
-## ⚙️ Configuration
-
-### Initial Setup
+## Configuration
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| Host | `ambeo.local` | IP address or hostname of the soundbar |
-| Update Interval | `10` | Polling interval in seconds |
+| Host | `ambeo.local` | IP address or hostname |
+| Update Interval | `10s` | Polling interval |
+| Debounce Cooldown | `0` | Max only — experimental idle-state delay (seconds) |
 
-### Options (after setup)
+Options can be changed anytime via **Settings > Devices & Services > Ambeo Soundbar > Configure**.
 
-These settings can be changed at any time via **Settings > Devices & Services > Ambeo Soundbar > Configure**.
+## Removal
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| Host | — | Change the soundbar IP address (validated on save) |
-| Update Interval | `10` | Polling interval in seconds |
-| Debounce Cooldown | `0` | *Max only* — Experimental: cooldown in seconds to prevent API flooding during rapid commands. Set to `0` to disable |
+Go to **Settings > Devices & Services**, find **Ambeo Soundbar**, open the three-dot menu and select **Delete**.
 
-## ❓ Troubleshooting
+## Troubleshooting
 
-If you encounter any issues:
-1. Verify that your soundbar is powered on and connected to your network
-2. Double-check that the configured IP address is correct
-3. Check Home Assistant logs for any error details
+- Verify the soundbar is powered on and reachable on the network
+- Confirm the configured IP address is correct
+- Check Home Assistant logs for error details
 
+## Contributing
 
-## 🤝 Contributing
+Bug reports, feature requests and pull requests are welcome — open an issue or PR on [GitHub](https://github.com/faizpuru/ha-ambeo_soundbar).
 
-Contributions are welcome! Feel free to:
-- 🐛 Report bugs
-- 💡 Suggest improvements
-- 🔀 Submit pull requests
+## License
 
-## 📄 License
+MIT — see [LICENSE](LICENSE).
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+## Disclaimer
 
-## ⚠️ Disclaimer
-
-This project is a community development and is not affiliated with or endorsed by Sennheiser. All product names, logos, and brands are property of their respective owners.
+This project is a community effort and is not affiliated with or endorsed by Sennheiser.
 
 ---
 
-If you find this integration helpful, please consider giving it a ⭐️ on GitHub!
+If this integration is useful to you, consider giving it a ⭐ on [GitHub](https://github.com/faizpuru/ha-ambeo_soundbar)!
