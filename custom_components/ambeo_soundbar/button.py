@@ -1,12 +1,11 @@
 """Button entities for Ambeo Soundbar integration."""
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
+from . import AmbeoConfigEntry
 from .api.const import Capability
-from .const import DOMAIN
 from .entity import AmbeoBaseEntity
 
 
@@ -53,12 +52,12 @@ class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmbeoConfigEntry,
     async_add_entities,
 ):
     """Set up the button entities from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = config_entry.runtime_data.coordinator
+    ambeo_device = config_entry.runtime_data.device
     entities: list[AmbeoBaseEntity] = [AmbeoReboot(coordinator, ambeo_device)]
     if coordinator.has_capability(Capability.RESET_EXPERT_SETTINGS):
         entities.append(ResetExpertSettings(coordinator, ambeo_device))

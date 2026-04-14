@@ -47,9 +47,7 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST)
         )
         if user_input is not None:
-            name, serial, error = await validate_connection(
-                self.hass, user_input[CONFIG_HOST]
-            )
+            name, serial, error = await validate_connection(user_input[CONFIG_HOST])
             if error is not None:
                 errors["base"] = error
                 return self.display_form(errors, host_default)
@@ -61,9 +59,9 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
     def display_form(self, errors, host_default):
         """Build and display the options form."""
         try:
-            support_debounce = self.hass.data[DOMAIN][self.config_entry.entry_id][
-                "coordinator"
-            ].support_debounce_mode()
+            support_debounce = (
+                self.config_entry.runtime_data.coordinator.support_debounce_mode()
+            )
         except Exception:
             support_debounce = False
 
