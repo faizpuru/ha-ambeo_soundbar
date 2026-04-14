@@ -2,9 +2,10 @@
 
 import logging
 
-import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api.factory import AmbeoAPIFactory
 from .const import (
@@ -22,19 +23,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_connection(host, port=DEFAULT_PORT):
+async def validate_connection(hass: HomeAssistant, host: str, port: int = DEFAULT_PORT):
     """Validate connection to Ambeo device and return name if successful."""
-    async with aiohttp.ClientSession() as client_session:
-        try:
-            ambeo_api = await AmbeoAPIFactory.create_api(
-                host, port, TIMEOUT, client_session
-            )
-            name = await ambeo_api.get_name()
-            serial = await ambeo_api.get_serial()
-            return name, serial, None
-        except Exception as error:
-            _LOGGER.error("Connection error to %s: %s", host, error)
-            return None, None, "cannot_connect"
+    client_session = async_create_clientsession(hass)
+    try:
+        ambeo_api = await AmbeoAPIFactory.create_api(
+            host, port, TIMEOUT, client_session
+        )
+        name = await ambeo_api.get_name()
+        serial = await ambeo_api.get_serial()
+        return name, serial, None
+    except Exception as error:
+        _LOGGER.error("Connection error to %s: %s", host, error)
+        return None, None, "cannot_connect"
 
 
 class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
@@ -47,7 +48,9 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST)
         )
         if user_input is not None:
-            name, serial, error = await validate_connection(user_input[CONFIG_HOST])
+            name, serial, error = await validate_connection(
+                self.hass, user_input[CONFIG_HOST]
+            )
             if error is not None:
                 errors["base"] = error
                 return self.display_form(errors, host_default)
@@ -114,7 +117,7 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input.get(CONFIG_HOST)
-            name, serial, error = await validate_connection(host)
+            name, serial, error = await validate_connection(self.hass, host)
             if error:
                 errors["base"] = error
             else:
