@@ -67,7 +67,6 @@ async def _async_entry_updated(
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Ambeo Soundbar integration."""
-    hass.data.setdefault(DOMAIN, {})
     return True
 
 
