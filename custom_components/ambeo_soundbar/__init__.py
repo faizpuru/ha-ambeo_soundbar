@@ -10,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .api.exceptions import AmbeoConnectionError
 from .api.factory import AmbeoAPIFactory
 from .const import (
     CONFIG_HOST,
@@ -82,15 +83,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     session = async_create_clientsession(hass)
 
-    ambeo_api = await AmbeoAPIFactory.create_api(host, DEFAULT_PORT, TIMEOUT, session)
     try:
+        ambeo_api = await AmbeoAPIFactory.create_api(
+            host, DEFAULT_PORT, TIMEOUT, session
+        )
         serial = await ambeo_api.get_serial() or "unknown_serial"
         model = await ambeo_api.get_model()
         name = await ambeo_api.get_name()
         version = await ambeo_api.get_version()
         sources = await ambeo_api.get_all_sources() or []
         presets = await ambeo_api.get_all_presets() or []
-    except aiohttp.ClientError as ex:
+    except (AmbeoConnectionError, aiohttp.ClientError) as ex:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 
     device = AmbeoDevice(serial, name, MANUFACTURER, model, version, host, DEFAULT_PORT)
