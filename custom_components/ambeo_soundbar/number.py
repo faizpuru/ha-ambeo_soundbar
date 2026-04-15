@@ -1,12 +1,11 @@
 """Number entities for Ambeo Soundbar integration."""
 
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
+from . import AmbeoConfigEntry
 from .api.const import Capability
-from .const import DOMAIN
 from .entity import AmbeoBaseNumber
 
 
@@ -171,12 +170,12 @@ class UpFiringLevel(_SpeakerLevel):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmbeoConfigEntry,
     async_add_entities,
 ):
     """Set up the number entities from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = config_entry.runtime_data.coordinator
+    ambeo_device = config_entry.runtime_data.device
     entities = []
     if coordinator.has_capability(Capability.NATIVE_VOLUME):
         entities.append(NativeVolume(coordinator, ambeo_device))
