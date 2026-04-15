@@ -18,13 +18,15 @@ _LOGGER = logging.getLogger(__name__)
 class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
     """Base class for Ambeo entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: AmbeoCoordinator, device, name_suffix, unique_id_suffix
     ):
         """Initialize the base entity."""
         super().__init__(coordinator)
-        self._name = f"{device.name} {name_suffix}"
-        self._unique_id = (
+        self._attr_name = name_suffix
+        self._attr_unique_id = (
             f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
         )
         self.ambeo_device = device
@@ -35,16 +37,6 @@ class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
         return {
             "identifiers": {(DOMAIN, self.ambeo_device.serial)},
         }
-
-    @property
-    def unique_id(self):
-        """Return the unique identifier for the entity."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
 
 class BaseLight(AmbeoBaseEntity, LightEntity):

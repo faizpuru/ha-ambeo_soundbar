@@ -5,7 +5,6 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_IDLE,
     STATE_ON,
@@ -15,11 +14,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import AmbeoConfigEntry
 from .api.const import Capability
 from .const import (
     CONFIG_DEBOUNCE_COOLDOWN,
     CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
-    DOMAIN,
 )
 from .entity import AmbeoBaseEntity
 from .util import find_id_by_title, find_title_by_id
@@ -65,11 +64,8 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     def __init__(self, coordinator, device, config_entry):
         """Initialize the Ambeo media player entity."""
-        super().__init__(coordinator, device, "Player", "player")
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(self._async_entry_updated)
-        )
-
+        super().__init__(coordinator, device, None, "player")
+        self._config_entry = config_entry
         self.update_debounce_mode(config_entry)
         self._max_volume = 100
         self._volume_step = coordinator.get_volume_step()
@@ -81,6 +77,17 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             if coordinator.has_capability(Capability.STANDBY)
             else STATE_IDLE,
         }
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to events when entity is added to HA."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._config_entry.add_update_listener(self._async_entry_updated)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up resources when entity is removed from HA."""
+        await self._cancel_existing_debounce()
 
     @property
     def debounce_mode_activated(self):
@@ -301,11 +308,11 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmbeoConfigEntry,
     async_add_entities,
 ):
     """Set up media player from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    ambeo_device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    coordinator = config_entry.runtime_data.coordinator
+    ambeo_device = config_entry.runtime_data.device
     ambeo_player = AmbeoMediaPlayer(coordinator, ambeo_device, config_entry)
     async_add_entities([ambeo_player])

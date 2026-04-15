@@ -3,21 +3,19 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from . import AmbeoConfigEntry
 
 TO_REDACT = {"serial", "host", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AmbeoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    coordinator = data["coordinator"]
-    device = data["device"]
+    coordinator = entry.runtime_data.coordinator
+    device = entry.runtime_data.device
 
     diagnostics = {
         "device": {
