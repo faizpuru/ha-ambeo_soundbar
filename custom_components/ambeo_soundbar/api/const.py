@@ -1,5 +1,26 @@
 """Constants for Ambeo Soundbar API."""
 
+from typing import NamedTuple
+
+
+class PathSub(NamedTuple):
+    """Describes a single event-queue subscription.
+
+    path       -- Device API path to subscribe to.
+    data_key   -- Key used in the coordinator data dict.
+    type_key   -- JSON type key inside the event's itemValue dict.
+    capability -- Required device capability, or None if always subscribed.
+    sub_key    -- If set, the final value is item_value[type_key][sub_key]
+                  (used when the type value is itself a dict).
+    """
+
+    path: str
+    data_key: str
+    type_key: str
+    capability: str | None = None
+    sub_key: str | None = None
+
+
 # ESPRESSO: MAX
 MAX_SOUNDBAR = "AMBEO Soundbar Max"
 EXCLUDE_SOURCES_MAX = ["aes"]

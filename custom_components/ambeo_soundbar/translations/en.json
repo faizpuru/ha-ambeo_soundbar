@@ -9,7 +9,7 @@
         },
         "data_description": {
           "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
-          "update_interval": "How often to poll the soundbar for updates (default: 10s)"
+          "update_interval": "How often to poll the soundbar for updates (default: 30s)"
         }
       }
     },
@@ -32,7 +32,7 @@
         "data_description": {
           "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
           "debounce_cooldown": "If you experience unusual activities in player state cycling between 'Playing' and 'Idle', you can consider using this setting. \nSets a delay (in seconds) before transitioning to the 'Idle' state when an irregular shift from 'Playing' is detected. \nRecommended value: 100 seconds; default is disabled (0).",
-          "update_interval": "How often to poll the soundbar for updates (default: 10s)"
+          "update_interval": "How often to poll the soundbar for updates (default: 30s)"
         }
       }
     },

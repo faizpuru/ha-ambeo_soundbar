@@ -21,7 +21,6 @@ from .const import (
     CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
 )
 from .entity import AmbeoBaseEntity
-from .util import find_id_by_title, find_title_by_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,44 +32,83 @@ STATE_DICT = {
 }
 
 
+class DebounceManager:
+    """Manages debounce state for volume changes."""
+
+    def __init__(self) -> None:
+        """Initialize with debounce inactive."""
+        self._cooldown: int = 0
+        self._task: asyncio.Task | None = None
+        self._lock: asyncio.Lock | None = None
+        self._start: float | None = None
+
+    def configure(self, cooldown: int, support_debounce: bool) -> None:
+        """Apply new cooldown setting and set up or tear down the lock."""
+        self._cooldown = cooldown
+        if self.active(support_debounce):
+            _LOGGER.debug("Debounce mode activated")
+            self._task = None
+            self._start = None
+            self._lock = asyncio.Lock()
+        else:
+            _LOGGER.debug("Debounce mode deactivated")
+
+    def active(self, support_debounce: bool) -> bool:
+        """Return whether debounce mode is currently active."""
+        return support_debounce and self._cooldown > 0
+
+    @property
+    def lock(self) -> asyncio.Lock | None:
+        """Return the debounce lock."""
+        return self._lock
+
+    @lock.setter
+    def lock(self, value: asyncio.Lock | None) -> None:
+        self._lock = value
+
+    async def cancel(self) -> None:
+        """Cancel any pending debounce task."""
+        if self._task is not None and not self._task.done():
+            _LOGGER.debug("[IMMEDIATE] Cancelling existing debounce task.")
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                _LOGGER.debug("[IMMEDIATE] Debounce task fully cancelled.")
+            self._task = None
+
+
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
-    _debounce_task: asyncio.Task | None
-
-    async def _async_entry_updated(self, hass, config_entry) -> None:
-        # Cancel existing debounce.
-        await self._cancel_existing_debounce()
-        if self._update_lock is not None and self._update_lock.locked():
+    async def _async_entry_updated(self, _hass, config_entry) -> None:
+        """Handle config entry option updates."""
+        await self._debounce.cancel()
+        if self._debounce.lock is not None and self._debounce.lock.locked():
             _LOGGER.debug("Waiting for lock release during unload")
-            async with self._update_lock:  # Acquire to ensure clean release
+            async with self._debounce.lock:
                 pass
-        self._update_lock = None
-        # Update debounce configuration.
-        self.update_debounce_mode(config_entry)
-
-    def update_debounce_mode(self, config_entry):
-        """Update debounce mode settings from the config entry."""
-        self._debounce_cooldown = config_entry.options.get(
-            CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
+        self._debounce.lock = None
+        self._debounce.configure(
+            config_entry.options.get(
+                CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
+            ),
+            self.coordinator.support_debounce_mode(),
         )
-        if self.debounce_mode_activated:
-            _LOGGER.debug("Debounce mode activated")
-            self._debounce_task = None
-            self._debounce_start = None
-            self._update_lock = asyncio.Lock()
-        else:
-            _LOGGER.debug("Debounce mode deactivated")
 
     def __init__(self, coordinator, device, config_entry):
         """Initialize the Ambeo media player entity."""
         super().__init__(coordinator, device, None, "player")
         self._config_entry = config_entry
-        self.update_debounce_mode(config_entry)
+        self._debounce = DebounceManager()
+        self._debounce.configure(
+            config_entry.options.get(
+                CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
+            ),
+            coordinator.support_debounce_mode(),
+        )
         self._max_volume = 100
         self._volume_step = coordinator.get_volume_step()
-        self._debounce_task = None
-        self._update_lock = None
         self._state_dict = {
             **STATE_DICT,
             "networkStandby": STATE_STANDBY
@@ -87,12 +125,12 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up resources when entity is removed from HA."""
-        await self._cancel_existing_debounce()
+        await self._debounce.cancel()
 
     @property
-    def debounce_mode_activated(self):
+    def debounce_mode_activated(self) -> bool:
         """Return whether debounce mode is active."""
-        return self.coordinator.support_debounce_mode() and self._debounce_cooldown > 0
+        return self._debounce.active(self.coordinator.support_debounce_mode())
 
     @property
     def supported_features(self):
@@ -230,8 +268,9 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     def source(self):
         """Return the current source."""
         if self.coordinator.data and "current_source" in self.coordinator.data:
-            source_id = self.coordinator.data["current_source"]
-            return find_title_by_id(source_id, self.coordinator.sources)
+            return self.coordinator.get_source_title(
+                self.coordinator.data["current_source"]
+            )
         return None
 
     @property
@@ -245,7 +284,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_select_source(self, source):
         """Select source."""
         if source is not None:
-            source_id = find_id_by_title(source, self.coordinator.sources)
+            source_id = self.coordinator.get_source_id(source)
             if source_id is not None:
                 await self.coordinator.async_select_source(source_id)
 
@@ -253,8 +292,9 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     def sound_mode(self):
         """Return the current audio preset."""
         if self.coordinator.data and "current_preset" in self.coordinator.data:
-            preset_id = self.coordinator.data["current_preset"]
-            return find_title_by_id(preset_id, self.coordinator.presets)
+            return self.coordinator.get_preset_title(
+                self.coordinator.data["current_preset"]
+            )
         return None
 
     @property
@@ -268,7 +308,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode):
         """Switch the sound mode of the entity."""
         if sound_mode is not None:
-            preset_id = find_id_by_title(sound_mode, self.coordinator.presets)
+            preset_id = self.coordinator.get_preset_id(sound_mode)
             if preset_id is not None:
                 await self.coordinator.async_select_sound_mode(preset_id)
 
@@ -289,21 +329,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         """Go back to the previous track."""
         _LOGGER.debug("Going back to the previous track")
         await self.coordinator.async_media_previous_track()
-
-    async def _cancel_existing_debounce(self):
-        """Cancel the existing debounce task, if any."""
-        if (
-            hasattr(self, "_debounce_task")
-            and self._debounce_task is not None
-            and not self._debounce_task.done()
-        ):
-            _LOGGER.debug("[IMMEDIATE] Cancelling existing debounce task.")
-            self._debounce_task.cancel()
-            try:
-                await self._debounce_task
-            except asyncio.CancelledError:
-                _LOGGER.debug("[IMMEDIATE] Debounce task fully cancelled.")
-            self._debounce_task = None
 
 
 async def async_setup_entry(

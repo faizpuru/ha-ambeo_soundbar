@@ -122,7 +122,8 @@ class _SpeakerLevel(AmbeoBaseNumber):
     _attr_entity_category = EntityCategory.CONFIG
 
     async def async_set_native_value(self, value: float) -> None:
-        assert self._set_method
+        if not self._set_method:
+            raise ValueError(f"{self.__class__.__name__} has no set method configured")
         await getattr(self.coordinator, self._set_method)(int(value))
 
 
