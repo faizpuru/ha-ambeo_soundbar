@@ -1,7 +1,15 @@
 """Constants for Ambeo Soundbar integration."""
 
 DOMAIN = "ambeo_soundbar"
-PLATFORMS = ["binary_sensor", "button", "light", "media_player", "number", "switch"]
+PLATFORMS = [
+    "binary_sensor",
+    "button",
+    "light",
+    "media_player",
+    "number",
+    "select",
+    "switch",
+]
 VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
 DEFAULT_PORT = 80

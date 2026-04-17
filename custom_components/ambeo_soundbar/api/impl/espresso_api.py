@@ -53,6 +53,12 @@ class AmbeoEspressoApi(AmbeoApi):
             Capability.UP_FIRING_LEVEL,
         ),
         PathSub(
+            "settings:/espresso/ambeoMode",
+            "ambeo_mode_level",
+            "i32_",
+            Capability.AMBEO_MODE_LEVEL,
+        ),
+        PathSub(
             "ui:/settings/subwoofer/enabled",
             "subwoofer_status",
             "bool_",
@@ -67,6 +73,7 @@ class AmbeoEspressoApi(AmbeoApi):
     ]
 
     capabilities = [
+        Capability.AMBEO_MODE_LEVEL,
         Capability.CENTER_SPEAKER_LEVEL,
         Capability.MAX_DISPLAY,
         Capability.MAX_LOGO,
@@ -260,6 +267,14 @@ class AmbeoEspressoApi(AmbeoApi):
     async def set_up_firing_level(self, level):
         """Set the up firing speaker level."""
         await self.set_value("ui:/settings/audio/heightSettings", "i16_", level)
+
+    async def get_ambeo_mode_level(self) -> int | None:
+        """Get the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        return await self.get_value("settings:/espresso/ambeoMode", "i32_")
+
+    async def set_ambeo_mode_level(self, level: int) -> None:
+        """Set the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        await self.set_value("settings:/espresso/ambeoMode", "i32_", level)
 
     async def reset_expert_settings(self):
         """Reset expert audio settings to defaults."""

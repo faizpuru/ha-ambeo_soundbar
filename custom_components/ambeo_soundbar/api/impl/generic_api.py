@@ -309,6 +309,14 @@ class AmbeoApi:
         """Set the Ambeo mode state."""
         raise NotImplementedError
 
+    async def get_ambeo_mode_level(self) -> int | None:
+        """Get the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        raise NotImplementedError
+
+    async def set_ambeo_mode_level(self, level: int) -> None:
+        """Set the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        raise NotImplementedError
+
     # Sound feedback.
     async def get_sound_feedback(self) -> bool | None:
         """Get the sound feedback state."""

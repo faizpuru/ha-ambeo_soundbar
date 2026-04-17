@@ -45,6 +45,7 @@ class Capability:
     """Device capability identifiers."""
 
     AMBEO_LOGO = "AmbeoLogo"
+    AMBEO_MODE_LEVEL = "AmbeoModeLevel"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
     CODEC_LED = "CodecLED"

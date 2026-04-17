@@ -184,6 +184,12 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                     Capability.UP_FIRING_LEVEL,
                 ),
                 FeatureDef("eco_mode", "get_eco_mode", "Eco mode", Capability.ECO_MODE),
+                FeatureDef(
+                    "ambeo_mode_level",
+                    "get_ambeo_mode_level",
+                    "Ambeo mode level",
+                    Capability.AMBEO_MODE_LEVEL,
+                ),
             ]
 
             optional_features = [
@@ -417,6 +423,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_set_up_firing_level(self, level: int):
         """Set up firing level."""
         await self._async_set("set_up_firing_level", "up_firing_level", level)
+
+    async def async_set_ambeo_mode_level(self, level: int) -> None:
+        """Set the Ambeo mode level."""
+        await self._async_set("set_ambeo_mode_level", "ambeo_mode_level", level)
 
     async def async_reboot(self):
         """Reboot the device."""
