@@ -1,7 +1,14 @@
 """Base entity classes for Ambeo Soundbar integration."""
 
+from __future__ import annotations
+
 import logging
 import math
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .__init__ import AmbeoDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.components.number import NumberEntity
@@ -12,6 +19,17 @@ from homeassistant.util.color import brightness_to_value, value_to_brightness
 from .const import DOMAIN
 from .coordinator import AmbeoCoordinator
 
+
+@dataclass
+class LightConfig:
+    """Configuration for a BaseLight entity."""
+
+    brightness_scale: tuple[int, int]
+    data_key: str
+    set_method: str
+    default_brightness: int
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,7 +39,11 @@ class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: AmbeoCoordinator, device, name_suffix, unique_id_suffix
+        self,
+        coordinator: AmbeoCoordinator,
+        device: AmbeoDevice,
+        name_suffix: str | None,
+        unique_id_suffix: str,
     ):
         """Initialize the base entity."""
         super().__init__(coordinator)
@@ -45,20 +67,17 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
     def __init__(
         self,
         coordinator: AmbeoCoordinator,
-        device,
-        name_suffix,
-        unique_id_suffix,
-        brightness_scale,
-        data_key,
-        set_method,
-        default_brightness,
+        device: AmbeoDevice,
+        name_suffix: str,
+        unique_id_suffix: str,
+        config: LightConfig,
     ):
         """Initialize the light entity."""
         super().__init__(coordinator, device, name_suffix, unique_id_suffix)
-        self._brightness_scale = brightness_scale
-        self._data_key = data_key
-        self._set_method = set_method
-        self._default_brightness = default_brightness
+        self._brightness_scale = config.brightness_scale
+        self._data_key = config.data_key
+        self._set_method = config.set_method
+        self._default_brightness = config.default_brightness
 
     @property
     def supported_color_modes(self):

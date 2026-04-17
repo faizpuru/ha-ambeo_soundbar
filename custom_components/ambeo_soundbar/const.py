@@ -1,7 +1,15 @@
 """Constants for Ambeo Soundbar integration."""
 
 DOMAIN = "ambeo_soundbar"
-PLATFORMS = ["binary_sensor", "button", "light", "media_player", "number", "switch"]
+PLATFORMS = [
+    "binary_sensor",
+    "button",
+    "light",
+    "media_player",
+    "number",
+    "select",
+    "switch",
+]
 VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
 DEFAULT_PORT = 80
@@ -12,4 +20,4 @@ CONFIG_DEBOUNCE_COOLDOWN = "debounce_cooldown"
 CONFIG_DEBOUNCE_COOLDOWN_DEFAULT = 0
 CONFIG_HOST_DEFAULT = "ambeo.local"
 CONFIG_UPDATE_INTERVAL = "update_interval"
-CONFIG_UPDATE_INTERVAL_DEFAULT = 10
+CONFIG_UPDATE_INTERVAL_DEFAULT = 30

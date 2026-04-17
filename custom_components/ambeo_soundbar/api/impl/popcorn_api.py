@@ -1,15 +1,78 @@
 """API implementation for Ambeo Soundbar Plus and Mini (Popcorn)."""
 
 import json
+from typing import Any
 
-from ..const import AMBEO_POPCORN_VOLUME_STEP, Capability
-from .generic_api import AmbeoApi
+from ..const import AMBEO_POPCORN_VOLUME_STEP, Capability, PathSub
+from .generic_api import AmbeoApi, _extract_from_subs
 
 
 class AmbeoPopcornApi(AmbeoApi):
     """API implementation for Ambeo Soundbar Plus and Mini."""
 
-    _has_subwoofer = None
+    _SUBSCRIPTIONS: list[PathSub] = [
+        PathSub("player:volume", "volume", "i32_"),
+        PathSub("settings:/mediaPlayer/mute", "muted", "bool_"),
+        PathSub("settings:/popcorn/audio/nightModeStatus", "night_mode", "bool_"),
+        PathSub("settings:/popcorn/audio/ambeoModeStatus", "ambeo_mode", "bool_"),
+        PathSub("settings:/popcorn/ux/soundFeedbackStatus", "sound_feedback", "bool_"),
+        PathSub("popcorn:inputChange/selected", "current_source", "popcornInputId"),
+        PathSub(
+            "settings:/popcorn/audio/audioPresets/audioPreset",
+            "current_preset",
+            "popcornAudioPreset",
+        ),
+        PathSub(
+            "ui:/settings/interface/codecLedBrightness",
+            "codec_led_brightness",
+            "i32_",
+            Capability.CODEC_LED,
+        ),
+        PathSub(
+            "ui:/settings/interface/ambeoSection/brightness",
+            "logo_brightness",
+            "i32_",
+            Capability.AMBEO_LOGO,
+        ),
+        PathSub(
+            "settings:/popcorn/ui/ledStatus",
+            "logo_state",
+            "bool_",
+            Capability.AMBEO_LOGO,
+        ),
+        PathSub(
+            "ui:/settings/interface/ledBrightness",
+            "led_bar_brightness",
+            "i32_",
+            Capability.LED_BAR,
+        ),
+        PathSub(
+            "ui:/settings/subwoofer/enabled",
+            "subwoofer_status",
+            "bool_",
+            Capability.SUBWOOFER,
+        ),
+        PathSub(
+            "ui:/settings/subwoofer/volume",
+            "subwoofer_volume",
+            "double_",
+            Capability.SUBWOOFER,
+        ),
+        PathSub("uipopcorn:ecoModeState", "eco_mode", "bool_", Capability.ECO_MODE),
+        PathSub(
+            "settings:/popcorn/audio/voiceEnhancement",
+            "voice_enhancement",
+            "bool_",
+            Capability.VOICE_ENHANCEMENT_TOGGLE,
+        ),
+        PathSub(
+            "bluetooth:state",
+            "bluetooth_pairing",
+            "bluetoothState",
+            Capability.BLUETOOTH_PAIRING,
+            "pairable",
+        ),
+    ]
 
     additional_inputs = [
         {"id": "airplay", "title": "AirPlay"},
@@ -27,7 +90,12 @@ class AmbeoPopcornApi(AmbeoApi):
         Capability.VOICE_ENHANCEMENT_TOGGLE,
     ]
 
-    def support_debounce_mode(self):
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize and set up instance variables."""
+        super().__init__(*args, **kwargs)
+        self._has_subwoofer: bool | None = None
+
+    def support_debounce_mode(self) -> bool:
         """Check if debounce mode is supported."""
         return False
 
@@ -215,3 +283,19 @@ class AmbeoPopcornApi(AmbeoApi):
     async def get_eco_mode(self):
         """Get the eco mode state."""
         return await self.get_value("uipopcorn:ecoModeState", "bool_")
+
+    def get_subscribed_paths(self) -> list[str]:
+        """Return paths to subscribe to, filtered by device capabilities."""
+        paths = super().get_subscribed_paths()
+        paths.extend(
+            s.path
+            for s in self._SUBSCRIPTIONS
+            if s.capability is None or self.has_capability(s.capability)
+        )
+        return paths
+
+    def process_event(self, path: str, item_value: dict) -> dict[str, Any]:
+        """Map an event path + itemValue to coordinator data updates."""
+        return super().process_event(path, item_value) or _extract_from_subs(
+            self._SUBSCRIPTIONS, path, item_value
+        )

@@ -70,7 +70,7 @@ Go to **Settings > Devices & Services > Add Integration**, search for "Ambeo Sou
 | Option | Default | Description |
 |--------|---------|-------------|
 | Host | `ambeo.local` | IP address or hostname |
-| Update Interval | `10s` | Polling interval |
+| Update Interval | `30s` | Polling interval |
 | Debounce Cooldown | `0` | Max only — experimental idle-state delay (seconds) |
 
 Options can be changed anytime via **Settings > Devices & Services > Ambeo Soundbar > Configure**.

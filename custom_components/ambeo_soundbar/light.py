@@ -9,7 +9,7 @@ from homeassistant.util.color import brightness_to_value
 from . import AmbeoConfigEntry
 from .api.const import Capability
 from .coordinator import AmbeoCoordinator
-from .entity import BaseLight
+from .entity import BaseLight, LightConfig
 
 DEFAULT_BRIGHTNESS = 50
 DEFAULT_BRIGHTNESS_AMBEO_MAX = 128
@@ -18,17 +18,19 @@ DEFAULT_BRIGHTNESS_AMBEO_MAX = 128
 class LEDBar(BaseLight):
     """Light entity for the LED bar."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device):
         """Initialize the LED bar light."""
         super().__init__(
             coordinator,
             device,
             "LED Bar",
             "led_bar",
-            coordinator.get_led_bar_brightness_range(),
-            "led_bar_brightness",
-            "async_set_led_bar_brightness",
-            DEFAULT_BRIGHTNESS,
+            LightConfig(
+                brightness_scale=coordinator.get_led_bar_brightness_range(),
+                data_key="led_bar_brightness",
+                set_method="async_set_led_bar_brightness",
+                default_brightness=DEFAULT_BRIGHTNESS,
+            ),
         )
 
 
@@ -42,10 +44,12 @@ class CodecLED(BaseLight):
             device,
             "Codec LED",
             "codec_led",
-            coordinator.get_codec_led_brightness_range(),
-            "codec_led_brightness",
-            "async_set_codec_led_brightness",
-            DEFAULT_BRIGHTNESS,
+            LightConfig(
+                brightness_scale=coordinator.get_codec_led_brightness_range(),
+                data_key="codec_led_brightness",
+                set_method="async_set_codec_led_brightness",
+                default_brightness=DEFAULT_BRIGHTNESS,
+            ),
         )
 
 
@@ -59,10 +63,12 @@ class AmbeoMaxLogo(BaseLight):
             device,
             "Ambeo Max Logo",
             "ambeo_max_logo",
-            coordinator.get_logo_brightness_range(),
-            "logo_brightness",
-            "async_set_logo_brightness",
-            DEFAULT_BRIGHTNESS_AMBEO_MAX,
+            LightConfig(
+                brightness_scale=coordinator.get_logo_brightness_range(),
+                data_key="logo_brightness",
+                set_method="async_set_logo_brightness",
+                default_brightness=DEFAULT_BRIGHTNESS_AMBEO_MAX,
+            ),
         )
 
 
@@ -76,10 +82,12 @@ class AmbeoMaxDisplay(BaseLight):
             device,
             "Ambeo Max Display",
             "ambeo_max_display",
-            coordinator.get_display_brightness_range(),
-            "display_brightness",
-            "async_set_display_brightness",
-            DEFAULT_BRIGHTNESS_AMBEO_MAX,
+            LightConfig(
+                brightness_scale=coordinator.get_display_brightness_range(),
+                data_key="display_brightness",
+                set_method="async_set_display_brightness",
+                default_brightness=DEFAULT_BRIGHTNESS_AMBEO_MAX,
+            ),
         )
 
 
@@ -93,10 +101,12 @@ class AmbeoLogo(BaseLight):
             device,
             "Ambeo Logo",
             "ambeo_logo",
-            coordinator.get_logo_brightness_range(),
-            "logo_brightness",
-            "async_set_logo_brightness",
-            DEFAULT_BRIGHTNESS,
+            LightConfig(
+                brightness_scale=coordinator.get_logo_brightness_range(),
+                data_key="logo_brightness",
+                set_method="async_set_logo_brightness",
+                default_brightness=DEFAULT_BRIGHTNESS,
+            ),
         )
 
     @property

@@ -11,3 +11,4 @@ logger:
   default: warning
   logs:
     custom_components.ambeo_soundbar: debug
+

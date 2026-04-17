@@ -100,6 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = AmbeoCoordinator(hass, ambeo_api, sources, presets, update_interval)
     await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_start_event_listener()
 
     entry.runtime_data = AmbeoData(coordinator=coordinator, device=device)
     _LOGGER.debug("Data initialized")
@@ -121,4 +122,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Handle integration unload."""
+    await entry.runtime_data.coordinator.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -2,11 +2,13 @@
 
 import logging
 
+import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .api.exceptions import AmbeoConnectionError
 from .api.factory import AmbeoAPIFactory
 from .const import (
     CONFIG_DEBOUNCE_COOLDOWN,
@@ -23,7 +25,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_connection(hass: HomeAssistant, host: str, port: int = DEFAULT_PORT):
+async def validate_connection(
+    hass: HomeAssistant, host: str, port: int = DEFAULT_PORT
+) -> tuple[str | None, str | None, str | None]:
     """Validate connection to Ambeo device and return name if successful."""
     client_session = async_create_clientsession(hass)
     try:
@@ -33,7 +37,7 @@ async def validate_connection(hass: HomeAssistant, host: str, port: int = DEFAUL
         name = await ambeo_api.get_name()
         serial = await ambeo_api.get_serial()
         return name, serial, None
-    except Exception as error:
+    except (AmbeoConnectionError, aiohttp.ClientError) as error:
         _LOGGER.error("Connection error to %s: %s", host, error)
         return None, None, "cannot_connect"
 
@@ -65,7 +69,8 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             support_debounce = (
                 self.config_entry.runtime_data.coordinator.support_debounce_mode()
             )
-        except Exception:
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Could not determine debounce support", exc_info=True)
             support_debounce = False
 
         if self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, 0) > 0:
@@ -75,34 +80,22 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
         )
 
-        options_schema = (
-            vol.Schema(
-                {
-                    vol.Optional(CONFIG_HOST, default=host_default): str,
-                    vol.Optional(
-                        CONFIG_DEBOUNCE_COOLDOWN,
-                        default=self.config_entry.options.get(
-                            CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
-                        ),
-                    ): int,
-                    vol.Optional(
-                        CONFIG_UPDATE_INTERVAL, default=update_interval_default
-                    ): int,
-                }
-            )
-            if support_debounce
-            else vol.Schema(
-                {
-                    vol.Optional(CONFIG_HOST, default=host_default): str,
-                    vol.Optional(
-                        CONFIG_UPDATE_INTERVAL, default=update_interval_default
-                    ): int,
-                }
-            )
-        )
+        schema: dict = {
+            vol.Optional(CONFIG_HOST, default=host_default): str,
+            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
+        }
+        if support_debounce:
+            schema[
+                vol.Optional(
+                    CONFIG_DEBOUNCE_COOLDOWN,
+                    default=self.config_entry.options.get(
+                        CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
+                    ),
+                )
+            ] = int
 
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id="init", data_schema=vol.Schema(schema), errors=errors
         )
 
 

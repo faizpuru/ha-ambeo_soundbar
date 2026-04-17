@@ -1,6 +1,7 @@
 """API implementation for Ambeo Soundbar Max (Espresso)."""
 
 import asyncio
+from typing import Any
 
 from ..const import (
     AMBEO_MAX_VOLUME_STEP,
@@ -8,17 +9,71 @@ from ..const import (
     BRIGHTNESS_RANGE_AMBEO_MAX_LOGO,
     EXCLUDE_SOURCES_MAX,
     Capability,
+    PathSub,
 )
-from .generic_api import AmbeoApi
+from .generic_api import AmbeoApi, _extract_from_subs
 
 
 class AmbeoEspressoApi(AmbeoApi):
     """API implementation for Ambeo Soundbar Max."""
 
-    DISPLAY_BRIGHTNESS_RANGE = (1, 126)
-    LOGO_BRIGHTNESS_RANGE = (1, 118)
+    # brightnessSensor is subscribed separately because it maps to two keys.
+    _BRIGHTNESS_PATH = "settings:/espresso/brightnessSensor"
+
+    _SUBSCRIPTIONS: list[PathSub] = [
+        PathSub("player:volume", "volume", "i32_"),
+        PathSub("settings:/mediaPlayer/mute", "muted", "bool_"),
+        PathSub("espresso:nightModeUi", "night_mode", "bool_"),
+        PathSub("espresso:ambeoModeUi", "ambeo_mode", "bool_"),
+        PathSub("settings:/espresso/soundFeedback", "sound_feedback", "bool_"),
+        PathSub("espresso:audioInputID", "current_source", "i32_"),
+        PathSub("settings:/espresso/equalizerPreset", "current_preset", "i32_"),
+        PathSub(
+            "ui:/mydevice/voiceEnhanceLevel",
+            "voice_enhancement_level",
+            "i16_",
+            Capability.VOICE_ENHANCEMENT_LEVEL,
+        ),
+        PathSub(
+            "ui:/settings/audio/centerSettings",
+            "center_speaker_level",
+            "i16_",
+            Capability.CENTER_SPEAKER_LEVEL,
+        ),
+        PathSub(
+            "ui:/settings/audio/widthSettings",
+            "side_firing_level",
+            "i16_",
+            Capability.SIDE_FIRING_LEVEL,
+        ),
+        PathSub(
+            "ui:/settings/audio/heightSettings",
+            "up_firing_level",
+            "i16_",
+            Capability.UP_FIRING_LEVEL,
+        ),
+        PathSub(
+            "settings:/espresso/ambeoMode",
+            "ambeo_mode_level",
+            "i32_",
+            Capability.AMBEO_MODE_LEVEL,
+        ),
+        PathSub(
+            "ui:/settings/subwoofer/enabled",
+            "subwoofer_status",
+            "bool_",
+            Capability.SUBWOOFER,
+        ),
+        PathSub(
+            "ui:/settings/subwoofer/volume",
+            "subwoofer_volume",
+            "i16_",
+            Capability.SUBWOOFER,
+        ),
+    ]
 
     capabilities = [
+        Capability.AMBEO_MODE_LEVEL,
         Capability.CENTER_SPEAKER_LEVEL,
         Capability.MAX_DISPLAY,
         Capability.MAX_LOGO,
@@ -31,7 +86,10 @@ class AmbeoEspressoApi(AmbeoApi):
         Capability.VOICE_ENHANCEMENT_LEVEL,
     ]
 
-    _has_subwoofer = None
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize and set up instance variables."""
+        super().__init__(*args, **kwargs)
+        self._has_subwoofer: bool | None = None
 
     def support_debounce_mode(self):
         """Check if debounce mode is supported."""
@@ -210,6 +268,14 @@ class AmbeoEspressoApi(AmbeoApi):
         """Set the up firing speaker level."""
         await self.set_value("ui:/settings/audio/heightSettings", "i16_", level)
 
+    async def get_ambeo_mode_level(self) -> int | None:
+        """Get the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        return await self.get_value("settings:/espresso/ambeoMode", "i32_")
+
+    async def set_ambeo_mode_level(self, level: int) -> None:
+        """Set the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
+        await self.set_value("settings:/espresso/ambeoMode", "i32_", level)
+
     async def reset_expert_settings(self):
         """Reset expert audio settings to defaults."""
         await self.execute_request(
@@ -247,3 +313,31 @@ class AmbeoEspressoApi(AmbeoApi):
     async def set_subwoofer_status(self, status):
         """Set the subwoofer enabled status."""
         await self.set_value("ui:/settings/subwoofer/enabled", "bool_", status)
+
+    def get_subscribed_paths(self) -> list[str]:
+        """Return paths to subscribe to, filtered by device capabilities."""
+        paths = super().get_subscribed_paths()
+        paths.extend(
+            s.path
+            for s in self._SUBSCRIPTIONS
+            if s.capability is None or self.has_capability(s.capability)
+        )
+        if self.has_capability(Capability.MAX_DISPLAY) or self.has_capability(
+            Capability.MAX_LOGO
+        ):
+            paths.append(self._BRIGHTNESS_PATH)
+        return paths
+
+    def process_event(self, path: str, item_value: dict) -> dict[str, Any]:
+        """Map an event path + itemValue to coordinator data updates."""
+        if result := super().process_event(path, item_value):
+            return result
+        if path == self._BRIGHTNESS_PATH:
+            brightness = item_value.get("espressoBrightness", {})
+            updates: dict[str, Any] = {}
+            if "ambeologo" in brightness:
+                updates["logo_brightness"] = brightness["ambeologo"]
+            if "display" in brightness:
+                updates["display_brightness"] = brightness["display"]
+            return updates
+        return _extract_from_subs(self._SUBSCRIPTIONS, path, item_value)
