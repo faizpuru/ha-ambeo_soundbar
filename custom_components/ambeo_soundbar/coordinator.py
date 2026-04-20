@@ -39,7 +39,8 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         api: AmbeoApi,
         sources: list[dict],
         presets: list[dict],
-        update_interval_seconds: int = 10,
+        update_interval_seconds: int = 30,
+        concurrent_requests: int = 3,
     ):
         """Initialize the coordinator."""
         super().__init__(
@@ -52,6 +53,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         self.sources = sources
         self.presets = presets
         self._event_listener_task: asyncio.Task | None = None
+        self._request_semaphore = asyncio.Semaphore(concurrent_requests)
         # Lookup dicts for O(1) source/preset resolution.
         self._source_title_by_id: dict = {
             s["id"]: s["title"] for s in sources if "id" in s and "title" in s
@@ -67,9 +69,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         }
 
     async def _safe_fetch(self, coro, label: str):
-        """Fetch data safely, returning None on failure."""
+        """Fetch data safely with concurrency limiting, returning None on failure."""
         try:
-            return await coro
+            async with self._request_semaphore:
+                return await coro
         except Exception as e:
             _LOGGER.debug("%s not available: %s", label, e)
             return None
@@ -333,16 +336,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_media_play(self):
         """Play."""
         await self.api.play()
-        if self.data and "player_data" in self.data:
-            self.data["player_data"]["state"] = "playing"
-            self.async_set_updated_data(self.data)
 
     async def async_media_pause(self):
         """Pause."""
         await self.api.pause()
-        if self.data and "player_data" in self.data:
-            self.data["player_data"]["state"] = "paused"
-            self.async_set_updated_data(self.data)
 
     async def async_media_next_track(self):
         """Next track."""

@@ -13,6 +13,8 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .api.exceptions import AmbeoConnectionError
 from .api.factory import AmbeoAPIFactory
 from .const import (
+    CONFIG_CONCURRENT_REQUESTS,
+    CONFIG_CONCURRENT_REQUESTS_DEFAULT,
     CONFIG_HOST,
     CONFIG_UPDATE_INTERVAL,
     CONFIG_UPDATE_INTERVAL_DEFAULT,
@@ -81,6 +83,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONFIG_UPDATE_INTERVAL,
         entry.data.get(CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT),
     )
+    concurrent_requests = entry.options.get(
+        CONFIG_CONCURRENT_REQUESTS,
+        entry.data.get(CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT),
+    )
     session = async_create_clientsession(hass)
 
     try:
@@ -98,7 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = AmbeoDevice(serial, name, MANUFACTURER, model, version, host, DEFAULT_PORT)
 
-    coordinator = AmbeoCoordinator(hass, ambeo_api, sources, presets, update_interval)
+    coordinator = AmbeoCoordinator(
+        hass, ambeo_api, sources, presets, update_interval, concurrent_requests
+    )
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_start_event_listener()
 
