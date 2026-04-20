@@ -11,6 +11,8 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .api.exceptions import AmbeoConnectionError
 from .api.factory import AmbeoAPIFactory
 from .const import (
+    CONFIG_CONCURRENT_REQUESTS,
+    CONFIG_CONCURRENT_REQUESTS_DEFAULT,
     CONFIG_DEBOUNCE_COOLDOWN,
     CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
     CONFIG_HOST,
@@ -83,6 +85,12 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         schema: dict = {
             vol.Optional(CONFIG_HOST, default=host_default): str,
             vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
+            vol.Optional(
+                CONFIG_CONCURRENT_REQUESTS,
+                default=self.config_entry.options.get(
+                    CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT
+                ),
+            ): int,
         }
         if support_debounce:
             schema[
