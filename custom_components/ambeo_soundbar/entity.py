@@ -134,12 +134,15 @@ class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
         self,
         coordinator: AmbeoCoordinator,
         device,
-        feature_name,
-        data_key=None,
-        set_method=None,
+        feature_name: str,
+        data_key: str | None = None,
+        set_method: str | None = None,
+        unique_id_suffix: str | None = None,
     ):
         """Initialize the switch entity."""
-        super().__init__(coordinator, device, feature_name, feature_name)
+        super().__init__(
+            coordinator, device, feature_name, unique_id_suffix or feature_name
+        )
         if data_key:
             self._data_key = data_key
         if set_method:
@@ -180,9 +183,12 @@ class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
         feature_name,
         data_key=None,
         set_method=None,
+        unique_id_suffix: str | None = None,
     ):
         """Initialize the number entity."""
-        super().__init__(coordinator, device, feature_name, feature_name)
+        super().__init__(
+            coordinator, device, feature_name, unique_id_suffix or feature_name
+        )
         if data_key:
             self._data_key = data_key
         if set_method:

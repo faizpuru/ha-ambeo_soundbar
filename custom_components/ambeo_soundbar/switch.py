@@ -77,9 +77,10 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
         super().__init__(
             coordinator,
             device,
-            "Ambeo Bluetooth Pairing",
+            "Bluetooth Pairing",
             "bluetooth_pairing",
             "async_set_bluetooth_pairing_state",
+            unique_id_suffix="Ambeo Bluetooth Pairing",
         )
 
 

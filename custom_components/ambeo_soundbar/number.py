@@ -21,9 +21,10 @@ class NativeVolume(AmbeoBaseNumber):
         super().__init__(
             coordinator,
             device,
-            "Native Volume",
+            "Volume (native)",
             "volume",
             "async_set_volume",
+            unique_id_suffix="Native Volume",
         )
 
     @property
@@ -59,7 +60,7 @@ class SubWooferVolume(AmbeoBaseNumber):
         super().__init__(
             coordinator,
             device,
-            "Subwoofer volume",
+            "Subwoofer Volume",
             "subwoofer_volume",
             "async_set_subwoofer_volume",
         )

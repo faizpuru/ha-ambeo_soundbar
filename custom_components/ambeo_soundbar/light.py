@@ -61,7 +61,7 @@ class AmbeoMaxLogo(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Ambeo Max Logo",
+            "Logo",
             "ambeo_max_logo",
             LightConfig(
                 brightness_scale=coordinator.get_logo_brightness_range(),
@@ -80,7 +80,7 @@ class AmbeoMaxDisplay(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Ambeo Max Display",
+            "Display",
             "ambeo_max_display",
             LightConfig(
                 brightness_scale=coordinator.get_display_brightness_range(),
@@ -99,7 +99,7 @@ class AmbeoLogo(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Ambeo Logo",
+            "Logo",
             "ambeo_logo",
             LightConfig(
                 brightness_scale=coordinator.get_logo_brightness_range(),
