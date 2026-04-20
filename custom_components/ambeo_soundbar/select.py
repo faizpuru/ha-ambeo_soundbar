@@ -1,6 +1,7 @@
 """Select entities for Ambeo Soundbar integration."""
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
 from . import AmbeoConfigEntry
@@ -18,6 +19,7 @@ _AMBEO_MODE_LEVEL_BY_NAME = {v: k for k, v in AMBEO_MODE_LEVELS.items()}
 class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
     """Select entity for the Ambeo mode level (Light / Regular / Boost)."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_options = list(AMBEO_MODE_LEVELS.values())
 
     def __init__(self, coordinator, device):
@@ -29,7 +31,8 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
         """Return the currently selected option."""
         if self.coordinator.data:
             level = self.coordinator.data.get("ambeo_mode_level")
-            return AMBEO_MODE_LEVELS.get(level)
+            if level is not None:
+                return AMBEO_MODE_LEVELS.get(int(level))
         return None
 
     async def async_select_option(self, option: str) -> None:

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
@@ -63,6 +64,8 @@ class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
 
 class BaseLight(AmbeoBaseEntity, LightEntity):
     """Base class for brightness-based light entities."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -123,6 +126,7 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
 class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
     """Base class for Ambeo switch entities."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _data_key: str | None = None
     _set_method: str | None = None
 

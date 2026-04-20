@@ -52,6 +52,8 @@ class NativeVolume(AmbeoBaseNumber):
 class SubWooferVolume(AmbeoBaseNumber):
     """Number entity for subwoofer volume."""
 
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, coordinator, device):
         """Initialize the subwoofer volume number entity."""
         super().__init__(
@@ -90,6 +92,8 @@ class SubWooferVolume(AmbeoBaseNumber):
 
 class VoiceEnhancementLevel(AmbeoBaseNumber):
     """Number entity for the voice enhancement level."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     _attr_native_step = 1
     _attr_native_min_value = 0

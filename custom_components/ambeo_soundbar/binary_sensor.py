@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
 from . import AmbeoConfigEntry
@@ -14,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class EcoModeSensor(AmbeoBaseEntity, BinarySensorEntity):
     """Binary sensor representing the eco mode state."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator, device):
         """Initialize the Eco Mode sensor."""
