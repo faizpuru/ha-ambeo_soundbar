@@ -116,6 +116,31 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
         await self.coordinator.async_set_voice_enhancement_level(int(value))
 
 
+class CenterVolume(AmbeoBaseNumber):
+    """Number entity for the center channel volume."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_step = 1
+    _attr_native_min_value = -3
+    _attr_native_max_value = 6
+    _attr_native_unit_of_measurement = "dB"
+    _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
+
+    def __init__(self, coordinator, device):
+        """Initialize the center volume number entity."""
+        super().__init__(
+            coordinator,
+            device,
+            "Center Volume",
+            "center_volume",
+            "async_set_center_volume",
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the center volume."""
+        await self.coordinator.async_set_center_volume(int(value))
+
+
 class _SpeakerLevel(AmbeoBaseNumber):
     """Base for speaker level numbers (dB, -12 to 12, CONFIG category)."""
 
@@ -198,4 +223,6 @@ async def async_setup_entry(
         entities.append(SideFiringLevel(coordinator, ambeo_device))
     if coordinator.has_capability(Capability.UP_FIRING_LEVEL):
         entities.append(UpFiringLevel(coordinator, ambeo_device))
+    if coordinator.has_capability(Capability.CENTER_VOLUME):
+        entities.append(CenterVolume(coordinator, ambeo_device))
     async_add_entities(entities)

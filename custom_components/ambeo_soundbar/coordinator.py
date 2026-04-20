@@ -186,6 +186,12 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                     "Up firing level",
                     Capability.UP_FIRING_LEVEL,
                 ),
+                FeatureDef(
+                    "center_volume",
+                    "get_center_volume",
+                    "Center volume",
+                    Capability.CENTER_VOLUME,
+                ),
                 FeatureDef("eco_mode", "get_eco_mode", "Eco mode", Capability.ECO_MODE),
                 FeatureDef(
                     "ambeo_mode_level",
@@ -420,6 +426,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_set_up_firing_level(self, level: int):
         """Set up firing level."""
         await self._async_set("set_up_firing_level", "up_firing_level", level)
+
+    async def async_set_center_volume(self, volume: float):
+        """Set center volume."""
+        await self._async_set("set_center_volume", "center_volume", volume)
 
     async def async_set_ambeo_mode_level(self, level: int) -> None:
         """Set the Ambeo mode level."""

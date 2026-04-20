@@ -48,6 +48,7 @@ class Capability:
     AMBEO_MODE_LEVEL = "AmbeoModeLevel"
     BLUETOOTH_PAIRING = "AmbeoBluetoothPairing"
     CENTER_SPEAKER_LEVEL = "CenterSpeakerLevel"
+    CENTER_VOLUME = "CenterVolume"
     CODEC_LED = "CodecLED"
     ECO_MODE = "EcoMode"
     LED_BAR = "LEDBar"
