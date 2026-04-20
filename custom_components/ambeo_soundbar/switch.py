@@ -1,6 +1,5 @@
 """Switch entities for Ambeo Soundbar integration."""
 
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 
 from . import AmbeoConfigEntry
@@ -82,11 +81,6 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
             "bluetooth_pairing",
             "async_set_bluetooth_pairing_state",
         )
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Return the entity category for the Bluetooth pairing switch."""
-        return EntityCategory.CONFIG
 
 
 async def async_setup_entry(
