@@ -529,6 +529,14 @@ class AmbeoApi:
         """Set the up firing level."""
         raise NotImplementedError
 
+    async def get_center_volume(self) -> float | None:
+        """Get the center volume."""
+        raise NotImplementedError
+
+    async def set_center_volume(self, volume: float) -> None:
+        """Set the center volume."""
+        raise NotImplementedError
+
     # Eco mode.
     async def get_eco_mode(self) -> bool | None:
         """Get the eco mode state."""

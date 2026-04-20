@@ -72,6 +72,12 @@ class AmbeoPopcornApi(AmbeoApi):
             Capability.BLUETOOTH_PAIRING,
             "pairable",
         ),
+        PathSub(
+            "settings:/popcorn/audio/centerVolume",
+            "center_volume",
+            "double_",
+            Capability.CENTER_VOLUME,
+        ),
     ]
 
     additional_inputs = [
@@ -88,6 +94,7 @@ class AmbeoPopcornApi(AmbeoApi):
         Capability.NATIVE_VOLUME,
         Capability.SUBWOOFER,
         Capability.VOICE_ENHANCEMENT_TOGGLE,
+        Capability.CENTER_VOLUME,
     ]
 
     def __init__(self, *args, **kwargs) -> None:
@@ -279,6 +286,14 @@ class AmbeoPopcornApi(AmbeoApi):
     async def set_subwoofer_volume(self, volume):
         """Set the subwoofer volume."""
         await self.set_value("ui:/settings/subwoofer/volume", "double_", volume)
+
+    async def get_center_volume(self):
+        """Get the center volume."""
+        return await self.get_value("settings:/popcorn/audio/centerVolume", "double_")
+
+    async def set_center_volume(self, volume: float):
+        """Set the center volume."""
+        await self.set_value("settings:/popcorn/audio/centerVolume", "double_", volume)
 
     async def get_eco_mode(self):
         """Get the eco mode state."""
