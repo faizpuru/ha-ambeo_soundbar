@@ -14,7 +14,7 @@ class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the reboot button."""
-        super().__init__(coordinator, device, "Ambeo Reboot", "ambeo_reboot")
+        super().__init__(coordinator, device, "Restart", "ambeo_reboot")
 
     async def async_press(self) -> None:
         """Handle the button press."""

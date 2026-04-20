@@ -24,7 +24,7 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the Ambeo mode level select entity."""
-        super().__init__(coordinator, device, "Ambeo Mode Level", "ambeo_mode_level")
+        super().__init__(coordinator, device, "Ambeo Mode", "ambeo_mode_level")
 
     @property
     def current_option(self) -> str | None:
