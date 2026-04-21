@@ -169,12 +169,12 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._get_player_data("trackRoles", "title")
+        return self._get_player_data("trackRoles", "title") or None
 
     @property
     def media_image_url(self):
         """URL for image of current playing media."""
-        return self._get_player_data("trackRoles", "icon")
+        return self._get_player_data("trackRoles", "icon") or None
 
     @property
     def state(self):
@@ -208,7 +208,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Return the media content ID of the current playing media."""
-        return self._get_player_data("trackRoles", "mediaData", "metaData", "trackId")
+        return (
+            self._get_player_data("trackRoles", "mediaData", "metaData", "trackId")
+            or None
+        )
 
     @property
     def media_duration(self):
@@ -234,12 +237,18 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_artist(self):
         """Return the artist of the current playing media."""
-        return self._get_player_data("trackRoles", "mediaData", "metaData", "artist")
+        return (
+            self._get_player_data("trackRoles", "mediaData", "metaData", "artist")
+            or None
+        )
 
     @property
     def media_album_name(self):
         """Return the album name of the current playing media."""
-        return self._get_player_data("trackRoles", "mediaData", "metaData", "album")
+        return (
+            self._get_player_data("trackRoles", "mediaData", "metaData", "album")
+            or None
+        )
 
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
