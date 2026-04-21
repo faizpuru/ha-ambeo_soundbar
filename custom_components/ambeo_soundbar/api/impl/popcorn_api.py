@@ -106,6 +106,24 @@ class AmbeoPopcornApi(AmbeoApi):
         """Check if debounce mode is supported."""
         return False
 
+    async def play(self) -> None:
+        """Send play command."""
+        await self.execute_request(
+            "setData",
+            "popcorn:multiPurposeButtonActivate",
+            "activate",
+            json.dumps({"type": "bool_", "bool_": True}),
+        )
+
+    async def pause(self) -> None:
+        """Send pause command."""
+        await self.execute_request(
+            "setData",
+            "popcorn:multiPurposeButtonActivate",
+            "activate",
+            json.dumps({"type": "bool_", "bool_": True}),
+        )
+
     def get_volume_step(self):
         """Get the volume step size."""
         return AMBEO_POPCORN_VOLUME_STEP
