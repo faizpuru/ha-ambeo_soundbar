@@ -416,18 +416,18 @@ class AmbeoApi:
         """Send play command."""
         await self.execute_request(
             "setData",
-            "popcorn:multiPurposeButtonActivate",
+            "player:player/control",
             "activate",
-            json.dumps({"type": "bool_", "bool_": True}),
+            json.dumps({"control": "play"}),
         )
 
     async def pause(self) -> None:
         """Send pause command."""
         await self.execute_request(
             "setData",
-            "popcorn:multiPurposeButtonActivate",
+            "player:player/control",
             "activate",
-            json.dumps({"type": "bool_", "bool_": True}),
+            json.dumps({"control": "pause"}),
         )
 
     async def next(self) -> None:
