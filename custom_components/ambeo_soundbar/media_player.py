@@ -174,7 +174,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_image_url(self):
         """URL for image of current playing media."""
-        return self._get_player_data("trackRoles", "icon") or None
+        url = self._get_player_data("trackRoles", "icon")
+        if url and url.startswith(("http://", "https://")):
+            return url
+        return None
 
     @property
     def state(self):
