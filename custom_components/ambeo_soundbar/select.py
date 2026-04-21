@@ -14,13 +14,14 @@ AMBEO_MODE_LEVELS: dict[int, str] = {
     3: "Boost",
 }
 _AMBEO_MODE_LEVEL_BY_NAME = {v: k for k, v in AMBEO_MODE_LEVELS.items()}
+_AMBEO_OFF = "Off"
 
 
 class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
-    """Select entity for the Ambeo mode level (Light / Regular / Boost)."""
+    """Select entity for the Ambeo mode level (Off / Light / Regular / Boost)."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = list(AMBEO_MODE_LEVELS.values())
+    _attr_options = [_AMBEO_OFF, *AMBEO_MODE_LEVELS.values()]
 
     def __init__(self, coordinator, device):
         """Initialize the Ambeo mode level select entity."""
@@ -30,6 +31,8 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         if self.coordinator.data:
+            if not self.coordinator.data.get("ambeo_mode"):
+                return _AMBEO_OFF
             level = self.coordinator.data.get("ambeo_mode_level")
             if level is not None:
                 return AMBEO_MODE_LEVELS.get(int(level))
@@ -37,8 +40,12 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        level = _AMBEO_MODE_LEVEL_BY_NAME[option]
-        await self.coordinator.async_set_ambeo_mode_level(level)
+        if option == _AMBEO_OFF:
+            await self.coordinator.async_set_ambeo_mode(False)
+        else:
+            level = _AMBEO_MODE_LEVEL_BY_NAME[option]
+            await self.coordinator.async_set_ambeo_mode(True)
+            await self.coordinator.async_set_ambeo_mode_level(level)
 
 
 async def async_setup_entry(
