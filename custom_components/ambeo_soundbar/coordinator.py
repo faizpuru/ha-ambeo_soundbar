@@ -6,6 +6,13 @@ import logging
 from datetime import timedelta
 from typing import Any, NamedTuple
 
+from homeassistant.const import (
+    STATE_IDLE,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -483,6 +490,34 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     def get_volume_max(self) -> int:
         """Get the maximum native volume value."""
         return self.api.get_volume_max()
+
+    def get_state(self) -> str | None:
+        """Return the effective HA state, accounting for eco mode and player state."""
+        if not self.data:
+            return None
+
+        if self.data.get("eco_mode"):
+            return STATE_STANDBY
+
+        state_map = {
+            "playing": STATE_PLAYING,
+            "paused": STATE_PAUSED,
+            "stopped": STATE_IDLE,
+            "online": STATE_ON,
+            "networkStandby": STATE_STANDBY
+            if self.has_capability(Capability.STANDBY)
+            else STATE_IDLE,
+        }
+
+        power_state = state_map.get(self.data.get("state", ""), STATE_ON)
+
+        if power_state == STATE_ON:
+            player_data = self.data.get("player_data") or {}
+            player_state = player_data.get("state")
+            if player_state:
+                return state_map.get(player_state, STATE_IDLE)
+
+        return power_state
 
     def get_subwoofer_min_value(self) -> int:
         """Get subwoofer minimum value."""

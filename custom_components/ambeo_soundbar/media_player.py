@@ -5,13 +5,6 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
-)
 from homeassistant.core import HomeAssistant
 
 from . import AmbeoConfigEntry
@@ -23,13 +16,6 @@ from .const import (
 from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_DICT = {
-    "playing": STATE_PLAYING,
-    "paused": STATE_PAUSED,
-    "stopped": STATE_IDLE,
-    "online": STATE_ON,
-}
 
 
 class DebounceManager:
@@ -109,12 +95,6 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         )
         self._max_volume = 100
         self._volume_step = coordinator.get_volume_step()
-        self._state_dict = {
-            **STATE_DICT,
-            "networkStandby": STATE_STANDBY
-            if coordinator.has_capability(Capability.STANDBY)
-            else STATE_IDLE,
-        }
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events when entity is added to HA."""
@@ -182,19 +162,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if not self.coordinator.data:
-            return None
-
-        power_state = self._state_dict.get(
-            self.coordinator.data.get("state", ""), STATE_ON
-        )
-
-        if power_state == STATE_ON:
-            player_state = self._get_player_data("state")
-            if player_state:
-                return self._state_dict.get(player_state, STATE_IDLE)
-
-        return power_state
+        return self.coordinator.get_state()
 
     @property
     def volume_level(self):
