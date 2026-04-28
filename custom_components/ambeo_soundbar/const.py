@@ -8,6 +8,7 @@ PLATFORMS = [
     "media_player",
     "number",
     "select",
+    "sensor",
     "switch",
 ]
 VERSION = "1.1.0"
