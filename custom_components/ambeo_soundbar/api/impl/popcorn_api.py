@@ -60,6 +60,12 @@ class AmbeoPopcornApi(AmbeoApi):
         ),
         PathSub("uipopcorn:ecoModeState", "eco_mode", "bool_", Capability.ECO_MODE),
         PathSub(
+            "imx8af:decoderAudioFormat",
+            "decoder_status",
+            "imx8AfAudioFormat",
+            Capability.DECODER_STATUS,
+        ),
+        PathSub(
             "settings:/popcorn/audio/voiceEnhancement",
             "voice_enhancement",
             "bool_",
@@ -89,6 +95,7 @@ class AmbeoPopcornApi(AmbeoApi):
         Capability.AMBEO_LOGO,
         Capability.BLUETOOTH_PAIRING,
         Capability.CODEC_LED,
+        Capability.DECODER_STATUS,
         Capability.ECO_MODE,
         Capability.LED_BAR,
         Capability.NATIVE_VOLUME,
@@ -312,6 +319,10 @@ class AmbeoPopcornApi(AmbeoApi):
     async def set_center_volume(self, volume: float):
         """Set the center volume."""
         await self.set_value("settings:/popcorn/audio/centerVolume", "double_", volume)
+
+    async def get_decoder_status(self) -> dict | None:
+        """Get the current audio decoder status."""
+        return await self.get_value("imx8af:decoderAudioFormat", "imx8AfAudioFormat")
 
     async def get_eco_mode(self):
         """Get the eco mode state."""
