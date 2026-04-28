@@ -70,11 +70,18 @@ class AmbeoEspressoApi(AmbeoApi):
             "i16_",
             Capability.SUBWOOFER,
         ),
+        PathSub(
+            "settings:/espresso/decoderStatus",
+            "decoder_status",
+            "espressoDecoderStatus",
+            Capability.DECODER_STATUS,
+        ),
     ]
 
     capabilities = [
         Capability.AMBEO_MODE_LEVEL,
         Capability.CENTER_SPEAKER_LEVEL,
+        Capability.DECODER_STATUS,
         Capability.MAX_DISPLAY,
         Capability.MAX_LOGO,
         Capability.NATIVE_VOLUME,
@@ -275,6 +282,12 @@ class AmbeoEspressoApi(AmbeoApi):
     async def set_ambeo_mode_level(self, level: int) -> None:
         """Set the Ambeo mode level (1=Light, 2=Regular, 3=Boost)."""
         await self.set_value("settings:/espresso/ambeoMode", "i32_", level)
+
+    async def get_decoder_status(self) -> dict | None:
+        """Get the current audio decoder status."""
+        return await self.get_value(
+            "settings:/espresso/decoderStatus", "espressoDecoderStatus"
+        )
 
     async def reset_expert_settings(self):
         """Reset expert audio settings to defaults."""
