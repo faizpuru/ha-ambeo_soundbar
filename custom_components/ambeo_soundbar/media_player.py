@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
 
 from . import AmbeoConfigEntry
@@ -95,6 +96,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         )
         self._max_volume = 100
         self._volume_step = coordinator.get_volume_step()
+        self._last_title: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events when entity is added to HA."""
@@ -149,7 +151,16 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._get_player_data("trackRoles", "title") or None
+        title = self._get_player_data("trackRoles", "title") or self._get_player_data(
+            "mediaRoles", "title"
+        )
+        if title:
+            self._last_title = title
+            return title
+        if self.coordinator.get_state() == STATE_PLAYING:
+            return self._last_title
+        self._last_title = None
+        return None
 
     @property
     def media_image_url(self):
