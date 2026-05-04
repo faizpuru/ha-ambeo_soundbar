@@ -481,10 +481,6 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Check if the device has a specific capability."""
         return self.api.has_capability(capability)
 
-    def support_debounce_mode(self) -> bool:
-        """Check if debounce mode is supported."""
-        return self.api.support_debounce_mode()
-
     def get_volume_step(self) -> float:
         """Get the volume step."""
         return self.api.get_volume_step()

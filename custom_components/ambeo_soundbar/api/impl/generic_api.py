@@ -200,10 +200,6 @@ class AmbeoApi:
         """Check if the device has a specific capability."""
         return capa in self.capabilities
 
-    def support_debounce_mode(self) -> bool:
-        """Check if debounce mode is supported."""
-        return False
-
     def get_volume_step(self) -> float:
         """Get the volume step size."""
         return 0.01

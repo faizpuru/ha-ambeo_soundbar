@@ -26,21 +26,18 @@
         "title": "Paramètres de la barre de son Ambeo",
         "data": {
           "host": "Hôte",
-          "debounce_cooldown": "⚠️ Expérimental: Délai avant passage à l'état inactif",
           "update_interval": "Intervalle de mise à jour (secondes)",
           "concurrent_requests": "Requêtes simultanées maximum"
         },
         "data_description": {
           "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
-          "debounce_cooldown": "Si vous rencontrez des comportements inhabituels des états du lecteur changeant sans arret entre 'Playing' et 'Idle', vous pouvez envisager d'utiliser ce réglage. \nDéfinit un délai (en secondes) utilisé avant de passer à l'état 'Idle' lorsqu'un changement irrégulier depuis 'Playing' est détecté. \nValeur recommandée : 100 secondes ; par défaut, désactivé (0).",
           "update_interval": "Fréquence d'interrogation de la barre de son pour les mises à jour (par défaut : 30)",
           "concurrent_requests": "Nombre maximum de requêtes HTTP simultanées envoyées à la barre de son lors d'un cycle de polling. Des valeurs plus faibles réduisent la charge sur le serveur embarqué de l'appareil (par défaut : 3)."
         }
       }
     },
     "error": {
-      "cannot_connect": "Échec de la connexion à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée.",
-      "experimental_feature_activated": "Fonctionnalité expérimentale activée. Veuillez signaler tout problème rencontré."
+      "cannot_connect": "Échec de la connexion à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée."
     }
   }
 }

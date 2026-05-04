@@ -13,8 +13,6 @@ from .api.factory import AmbeoAPIFactory
 from .const import (
     CONFIG_CONCURRENT_REQUESTS,
     CONFIG_CONCURRENT_REQUESTS_DEFAULT,
-    CONFIG_DEBOUNCE_COOLDOWN,
-    CONFIG_DEBOUNCE_COOLDOWN_DEFAULT,
     CONFIG_HOST,
     CONFIG_HOST_DEFAULT,
     CONFIG_UPDATE_INTERVAL,
@@ -67,17 +65,6 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
 
     def display_form(self, errors, host_default):
         """Build and display the options form."""
-        try:
-            support_debounce = (
-                self.config_entry.runtime_data.coordinator.support_debounce_mode()
-            )
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Could not determine debounce support", exc_info=True)
-            support_debounce = False
-
-        if self.config_entry.options.get(CONFIG_DEBOUNCE_COOLDOWN, 0) > 0:
-            errors["base"] = "experimental_feature_activated"
-
         update_interval_default = self.config_entry.options.get(
             CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
         )
@@ -92,15 +79,6 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
             ): int,
         }
-        if support_debounce:
-            schema[
-                vol.Optional(
-                    CONFIG_DEBOUNCE_COOLDOWN,
-                    default=self.config_entry.options.get(
-                        CONFIG_DEBOUNCE_COOLDOWN, CONFIG_DEBOUNCE_COOLDOWN_DEFAULT
-                    ),
-                )
-            ] = int
 
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(schema), errors=errors
