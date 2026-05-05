@@ -98,10 +98,6 @@ class AmbeoEspressoApi(AmbeoApi):
         super().__init__(*args, **kwargs)
         self._has_subwoofer: bool | None = None
 
-    def support_debounce_mode(self):
-        """Check if debounce mode is supported."""
-        return True
-
     def get_volume_max(self) -> int:
         """Get the maximum native volume value."""
         return 50

@@ -109,10 +109,6 @@ class AmbeoPopcornApi(AmbeoApi):
         super().__init__(*args, **kwargs)
         self._has_subwoofer: bool | None = None
 
-    def support_debounce_mode(self) -> bool:
-        """Check if debounce mode is supported."""
-        return False
-
     async def play(self) -> None:
         """Send play command."""
         await self.execute_request(

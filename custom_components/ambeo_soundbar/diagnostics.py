@@ -29,7 +29,6 @@ async def async_get_config_entry_diagnostics(
         },
         "capabilities": {
             "supported_features": coordinator.api.capabilities,
-            "supports_debounce": coordinator.support_debounce_mode(),
         },
         "current_state": coordinator.data or {},
         "config": {
