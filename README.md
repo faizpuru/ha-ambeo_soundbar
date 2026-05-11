@@ -20,15 +20,18 @@ This integration brings full local control of your AMBEO soundbar into Home Assi
 |---------|:---:|:----:|:----:|
 | Media player (play/pause, volume, source, preset) | ✅ | ✅ | ✅ |
 | Night Mode | ✅ | ✅ | ✅ |
-| Ambeo Mode | ✅ | ✅ | ✅ |
+| Ambeo Mode (on/off switch) | ✅ | ✅ | ✅ |
+| Ambeo Mode Level (Off/Light/Regular/Boost) | ✅ | ❌ | ❌ |
 | Sound Feedback | ✅ | ✅ | ✅ |
 | Subwoofer (status + volume) | ✅ | ✅ | ✅ |
 | Ambeo Logo brightness | ✅ | ✅ | ✅ |
 | Restart | ✅ | ✅ | ✅ |
+| Decoder Status (diagnostic sensor) | ✅ | ✅ | ✅ |
 | Voice Enhancement toggle | ❌ | ✅ | ✅ |
 | LED Bar + Codec LED brightness | ❌ | ✅ | ✅ |
 | Bluetooth Pairing | ❌ | ✅ | ✅ |
 | Eco Mode (read-only) | ❌ | ✅ | ✅ |
+| Center Volume | ❌ | ✅ | ✅ |
 | Voice Enhancement level (0–3) | ✅ | ❌ | ❌ |
 | Speaker Levels (center, side, up-firing) | ✅ | ❌ | ❌ |
 | Display + Logo brightness | ✅ | ❌ | ❌ |
@@ -41,7 +44,8 @@ This integration uses standard Home Assistant platforms — no custom services. 
 
 - **`media_player`**: `volume_set`, `volume_mute`, `select_source`, `select_sound_mode`, `media_play/pause`, `media_next/previous_track`, `turn_on/off`
 - **`switch`**: `turn_on/off` (Night Mode, Ambeo Mode, Sound Feedback, Voice Enhancement, Subwoofer, Bluetooth Pairing)
-- **`number`**: `set_value` (Subwoofer Volume, Voice Enhancement Level, Speaker Levels, Native Volume)
+- **`select`**: `select_option` (Ambeo Mode Level: Off/Light/Regular/Boost)
+- **`number`**: `set_value` (Subwoofer Volume, Voice Enhancement Level, Speaker Levels, Center Volume, Native Volume)
 - **`light`**: `turn_on/off` (LED brightness controls)
 - **`button`**: `press` (Restart, Reset Expert Settings)
 
@@ -71,7 +75,7 @@ Go to **Settings > Devices & Services > Add Integration**, search for "Ambeo Sou
 |--------|---------|-------------|
 | Host | `ambeo.local` | IP address or hostname |
 | Update Interval | `30s` | Polling interval |
-| Debounce Cooldown | `0` | Max only — experimental idle-state delay (seconds) |
+| Concurrent Requests | `3` | Max simultaneous API requests |
 
 Options can be changed anytime via **Settings > Devices & Services > Ambeo Soundbar > Configure**.
 
