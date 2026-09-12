@@ -102,9 +102,29 @@ class AmbeoEspressoApi(AmbeoApi):
         """Get the maximum native volume value."""
         return 50
 
-    def get_volume_step(self):
-        """Get the volume step size."""
-        return AMBEO_MAX_VOLUME_STEP
+    def get_volume_step(self) -> float:
+        """Get the volume step size.
+
+        Halved relative to the native-scale constant: after the native->display
+        conversion (data["volume"] is now 0-50 display units mapped to HA %),
+        one step must equal one display unit.
+        """
+        return AMBEO_MAX_VOLUME_STEP / 2
+
+    async def get_volume(self) -> int | None:
+        """Get the current volume in display units (0-50).
+
+        The device stores native 2*D or 2*D+1 for displayed value D,
+        so floor division reproduces exactly what the display shows.
+        """
+        native = await self.get_value("player:volume", "i32_")
+        return native // 2 if native is not None else None
+
+    async def set_volume(self, volume: float) -> None:
+        """Set the volume given in display units (0-50)."""
+        clamped = max(0, min(int(volume), 50))
+        native = 0 if clamped == 0 else clamped * 2 + 1
+        await self.set_value("player:volume", "i32_", native)
 
     def get_subwoofer_min_value(self):
         """Get the subwoofer minimum value."""
@@ -341,6 +361,10 @@ class AmbeoEspressoApi(AmbeoApi):
         """Map an event path + itemValue to coordinator data updates."""
         if result := super().process_event(path, item_value):
             return result
+        if path == "player:volume":
+            value = item_value.get("i32_")
+            if value is not None:
+                return {"volume": value // 2}
         if path == self._BRIGHTNESS_PATH:
             brightness = item_value.get("espressoBrightness", {})
             updates: dict[str, Any] = {}
