@@ -3,3 +3,7 @@ __pycache__/
 
 # Ruff
 .ruff_cache/
+
+# Coverage
+.coverage
+htmlcov/

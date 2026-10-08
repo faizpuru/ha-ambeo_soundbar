@@ -3,15 +3,13 @@
 import logging
 from dataclasses import dataclass
 
-import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api.exceptions import AmbeoConnectionError
-from .api.factory import AmbeoAPIFactory
+from .api import AmbeoError, AmbeoSoundbar, AmbeoUnsupportedModelError
 from .const import (
     CONFIG_CONCURRENT_REQUESTS,
     CONFIG_CONCURRENT_REQUESTS_DEFAULT,
@@ -62,8 +60,6 @@ async def _async_entry_updated(
     hass: HomeAssistant, config_entry: AmbeoConfigEntry
 ) -> None:
     """Handle entry updates."""
-    host = config_entry.options.get(CONFIG_HOST)
-    config_entry.runtime_data.coordinator.set_endpoint(host)
     await hass.config_entries.async_reload(config_entry.entry_id)
     _LOGGER.info("Successfully updated configuration entries")
 
@@ -87,25 +83,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONFIG_CONCURRENT_REQUESTS,
         entry.data.get(CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT),
     )
-    session = async_create_clientsession(hass)
+    session = async_get_clientsession(hass)
 
     try:
-        ambeo_api = await AmbeoAPIFactory.create_api(
-            host, DEFAULT_PORT, TIMEOUT, session
+        ambeo_api = await AmbeoSoundbar.connect(
+            host, session, port=DEFAULT_PORT, timeout=TIMEOUT
         )
-        serial = await ambeo_api.get_serial() or "unknown_serial"
-        model = await ambeo_api.get_model()
-        name = await ambeo_api.get_name()
-        version = await ambeo_api.get_version()
-        sources = await ambeo_api.get_all_sources() or []
-        presets = await ambeo_api.get_all_presets() or []
-    except (AmbeoConnectionError, aiohttp.ClientError) as ex:
+    except AmbeoUnsupportedModelError as ex:
+        raise ConfigEntryError(f"Unsupported device at {host}: {ex}") from ex
+    except AmbeoError as ex:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 
+    info = ambeo_api.info
+    serial = info.serial or "unknown_serial"
+    name = info.name
+    model = info.model
+    version = info.firmware_version
     device = AmbeoDevice(serial, name, MANUFACTURER, model, version, host, DEFAULT_PORT)
 
     coordinator = AmbeoCoordinator(
-        hass, ambeo_api, sources, presets, update_interval, concurrent_requests
+        hass, ambeo_api, update_interval, concurrent_requests
     )
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_start_event_listener()
@@ -130,5 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Handle integration unload."""
-    await entry.runtime_data.coordinator.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        await entry.runtime_data.coordinator.async_stop()
+    return unloaded
