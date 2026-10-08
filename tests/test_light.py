@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.ambeo_soundbar.api.const import Capability
+from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.light import (
     AmbeoLogo,
     AmbeoMaxDisplay,
@@ -16,7 +17,7 @@ BRIGHTNESS_RANGE = (0, 100)
 
 
 def _make_coordinator(data=None, capabilities=None):
-    coordinator = MagicMock()
+    coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.data = data if data is not None else {}
     coordinator.has_capability = MagicMock(
         side_effect=lambda cap: cap in (capabilities or [])

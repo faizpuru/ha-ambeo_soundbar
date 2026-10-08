@@ -6,6 +6,7 @@ from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PLAYING
 
 from custom_components.ambeo_soundbar.api.const import Capability
 from custom_components.ambeo_soundbar.api.models import Preset, Source
+from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.media_player import (
     AmbeoMediaPlayer,
     async_setup_entry,
@@ -23,7 +24,7 @@ PRESETS = [
 
 
 def _make_coordinator(data=None, capabilities=None, sources=None, presets=None):
-    coordinator = MagicMock()
+    coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.data = data if data is not None else {}
     coordinator.sources = sources or []
     coordinator.presets = presets or []

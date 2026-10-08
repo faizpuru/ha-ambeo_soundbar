@@ -11,10 +11,11 @@ from custom_components.ambeo_soundbar.button import (
     ResetExpertSettings,
     async_setup_entry,
 )
+from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 
 
 def _make_coordinator(capabilities=None):
-    coordinator = MagicMock()
+    coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.has_capability = MagicMock(
         side_effect=lambda cap: cap in (capabilities or [])
     )
