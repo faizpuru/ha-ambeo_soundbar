@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.ambeo_soundbar.api.const import Capability
+from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.number import (
     CenterSpeakerLevel,
     CenterVolume,
@@ -18,7 +19,7 @@ from custom_components.ambeo_soundbar.number import (
 def _make_coordinator(
     data=None, capabilities=None, has_subwoofer=False, volume_max=100
 ):
-    coordinator = MagicMock()
+    coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.data = data if data is not None else {}
     coordinator.has_capability = MagicMock(
         side_effect=lambda cap: cap in (capabilities or [])

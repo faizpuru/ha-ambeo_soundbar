@@ -1,5 +1,5 @@
-homeassistant
 ruff
 pre-commit
 pytest-homeassistant-custom-component
+pytest-cov
 aioresponses

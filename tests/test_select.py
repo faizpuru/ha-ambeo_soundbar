@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.ambeo_soundbar.api.const import Capability
 from custom_components.ambeo_soundbar.api.models import Preset, Source
+from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.select import (
     AmbeoModeLevel,
     SoundModeSelect,
@@ -25,7 +26,7 @@ PRESETS = [
 
 
 def _make_coordinator(sources=None, presets=None, data=None, capabilities=None):
-    coordinator = MagicMock()
+    coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.sources = sources or []
     coordinator.presets = presets or []
     coordinator.data = data or {}
