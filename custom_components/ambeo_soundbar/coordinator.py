@@ -4,33 +4,26 @@ import asyncio
 import contextlib
 import logging
 from datetime import timedelta
-from typing import Any, NamedTuple
+from typing import Any
 
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
-)
+from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .api.const import Capability
-from .api.impl.generic_api import AmbeoApi
+from .api import AmbeoError, AmbeoSoundbar, PlayerStatus, StateKey
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-class FeatureDef(NamedTuple):
-    """Definition of an optional feature fetched during coordinator update."""
-
-    data_key: str
-    api_method: str
-    label: str
-    capability: str | None = None
+_HA_STATE_BY_STATUS = {
+    PlayerStatus.PLAYING: MediaPlayerState.PLAYING,
+    PlayerStatus.PAUSED: MediaPlayerState.PAUSED,
+    PlayerStatus.IDLE: MediaPlayerState.IDLE,
+    PlayerStatus.ON: MediaPlayerState.ON,
+    PlayerStatus.STANDBY: MediaPlayerState.OFF,
+}
 
 
 class AmbeoCoordinator(DataUpdateCoordinator):
@@ -43,9 +36,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: AmbeoApi,
-        sources: list[dict],
-        presets: list[dict],
+        api: AmbeoSoundbar,
         update_interval_seconds: int = 30,
         concurrent_requests: int = 3,
     ):
@@ -57,192 +48,30 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval_seconds),
         )
         self.api = api
-        self.sources = sources
-        self.presets = presets
+        self.sources = api.sources
+        self.presets = api.presets
         self._event_listener_task: asyncio.Task | None = None
-        self._request_semaphore = asyncio.Semaphore(concurrent_requests)
+        self._concurrent_requests = concurrent_requests
         # Lookup dicts for O(1) source/preset resolution.
-        self._source_title_by_id: dict = {
-            s["id"]: s["title"] for s in sources if "id" in s and "title" in s
-        }
-        self._source_id_by_title: dict = {
-            s["title"]: s["id"] for s in sources if "id" in s and "title" in s
-        }
-        self._preset_title_by_id: dict = {
-            p["id"]: p["title"] for p in presets if "id" in p and "title" in p
-        }
-        self._preset_id_by_title: dict = {
-            p["title"]: p["id"] for p in presets if "id" in p and "title" in p
-        }
-
-    async def _safe_fetch(self, coro, label: str):
-        """Fetch data safely with concurrency limiting, returning None on failure."""
-        try:
-            async with self._request_semaphore:
-                return await coro
-        except Exception as e:
-            _LOGGER.debug("%s not available: %s", label, e)
-            return None
+        self._source_title_by_id = {s.id: s.title for s in self.sources}
+        self._source_id_by_title = {s.title: s.id for s in self.sources}
+        self._preset_title_by_id = {p.id: p.title for p in self.presets}
+        self._preset_id_by_title = {p.title: p.id for p in self.presets}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
-            # Core media player data (required).
-            (
-                volume,
-                muted,
-                state,
-                current_source,
-                current_preset,
-                player_data,
-            ) = await asyncio.gather(
-                self.api.get_volume(),
-                self.api.is_mute(),
-                self.api.get_state(),
-                self.api.get_current_source(),
-                self.api.get_current_preset(),
-                self.api.player_data(),
-            )
-            data = {
-                "volume": volume,
-                "muted": muted,
-                "state": state,
-                "current_source": current_source,
-                "current_preset": current_preset,
-                "player_data": player_data,
-            }
-
-            # Optional features fetched in parallel, filtered by capability.
-            all_optional_features = [
-                FeatureDef("play_time", "get_play_time", "Play time"),
-                FeatureDef(
-                    "led_bar_brightness",
-                    "get_led_bar_brightness",
-                    "LED bar",
-                    Capability.LED_BAR,
-                ),
-                FeatureDef(
-                    "codec_led_brightness",
-                    "get_codec_led_brightness",
-                    "Codec LED",
-                    Capability.CODEC_LED,
-                ),
-                FeatureDef(
-                    "logo_brightness",
-                    "get_logo_brightness",
-                    "Logo brightness",
-                    Capability.AMBEO_LOGO,
-                ),
-                FeatureDef(
-                    "logo_state", "get_logo_state", "Logo state", Capability.AMBEO_LOGO
-                ),
-                FeatureDef(
-                    "display_brightness",
-                    "get_display_brightness",
-                    "Display",
-                    Capability.MAX_DISPLAY,
-                ),
-                FeatureDef("night_mode", "get_night_mode", "Night mode"),
-                FeatureDef("ambeo_mode", "get_ambeo_mode", "Ambeo mode"),
-                FeatureDef("sound_feedback", "get_sound_feedback", "Sound feedback"),
-                FeatureDef(
-                    "voice_enhancement",
-                    "get_voice_enhancement",
-                    "Voice enhancement",
-                    Capability.VOICE_ENHANCEMENT_TOGGLE,
-                ),
-                FeatureDef(
-                    "bluetooth_pairing",
-                    "get_bluetooth_pairing_state",
-                    "Bluetooth pairing",
-                    Capability.BLUETOOTH_PAIRING,
-                ),
-                FeatureDef(
-                    "subwoofer_status",
-                    "get_subwoofer_status",
-                    "Subwoofer status",
-                    Capability.SUBWOOFER,
-                ),
-                FeatureDef(
-                    "subwoofer_volume",
-                    "get_subwoofer_volume",
-                    "Subwoofer volume",
-                    Capability.SUBWOOFER,
-                ),
-                FeatureDef(
-                    "voice_enhancement_level",
-                    "get_voice_enhancement_level",
-                    "Voice enhancement level",
-                    Capability.VOICE_ENHANCEMENT_LEVEL,
-                ),
-                FeatureDef(
-                    "center_speaker_level",
-                    "get_center_speaker_level",
-                    "Center speaker level",
-                    Capability.CENTER_SPEAKER_LEVEL,
-                ),
-                FeatureDef(
-                    "side_firing_level",
-                    "get_side_firing_level",
-                    "Side firing level",
-                    Capability.SIDE_FIRING_LEVEL,
-                ),
-                FeatureDef(
-                    "up_firing_level",
-                    "get_up_firing_level",
-                    "Up firing level",
-                    Capability.UP_FIRING_LEVEL,
-                ),
-                FeatureDef(
-                    "center_volume",
-                    "get_center_volume",
-                    "Center volume",
-                    Capability.CENTER_VOLUME,
-                ),
-                FeatureDef("eco_mode", "get_eco_mode", "Eco mode", Capability.ECO_MODE),
-                FeatureDef(
-                    "decoder_status",
-                    "get_decoder_status",
-                    "Decoder status",
-                    Capability.DECODER_STATUS,
-                ),
-                FeatureDef(
-                    "ambeo_mode_level",
-                    "get_ambeo_mode_level",
-                    "Ambeo mode level",
-                    Capability.AMBEO_MODE_LEVEL,
-                ),
-            ]
-
-            optional_features = [
-                f
-                for f in all_optional_features
-                if f.capability is None or self.api.has_capability(f.capability)
-            ]
-
-            results = await asyncio.gather(
-                *(
-                    self._safe_fetch(getattr(self.api, f.api_method)(), f.label)
-                    for f in optional_features
-                )
-            )
-
-            for feature, value in zip(optional_features, results, strict=True):
-                if value is not None:
-                    data[feature.data_key] = value
-
-            if "play_time" in data:
-                data["play_time_updated_at"] = dt_util.utcnow()
-
-            _LOGGER.debug("Data updated successfully: %s", data)
-            return data
-
-        except Exception as err:
+            data: dict[str, Any] = await self.api.fetch_state(self._concurrent_requests)
+        except AmbeoError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        if StateKey.PLAY_TIME in data:
+            data["play_time_updated_at"] = dt_util.utcnow()
+        _LOGGER.debug("Data updated successfully: %s", data)
+        return data
 
     async def async_start_event_listener(self) -> None:
         """Start the background event listener task."""
-        if not self.api.get_subscribed_paths():
+        if not self.api.subscribed_paths():
             return
         self._event_listener_task = self.hass.async_create_background_task(
             self._run_event_listener(),
@@ -258,45 +87,15 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         self._event_listener_task = None
 
     async def _run_event_listener(self) -> None:
-        """Background task: subscribe to device paths and react to changes."""
-        paths = self.api.get_subscribed_paths()
-        _LOGGER.debug("Starting event listener for %d paths", len(paths))
-
+        """Background task: apply state updates pushed by the device."""
         while True:
             try:
-                queue_id = await self.api.create_event_queue(paths)
-                if not queue_id:
-                    _LOGGER.debug(
-                        "Failed to create event queue, retrying in %ds",
-                        self.EVENT_LISTENER_RETRY_DELAY,
-                    )
-                    await asyncio.sleep(self.EVENT_LISTENER_RETRY_DELAY)
-                    continue
-
-                _LOGGER.debug("Event queue created: %s", queue_id)
-
-                while True:
-                    events = await self.api.poll_event_queue(
-                        queue_id, timeout_ms=self.POLL_TIMEOUT_MS
-                    )
-                    if events is None:
-                        _LOGGER.debug("Poll error, recreating event queue")
-                        break
-                    for event in events:
-                        if event.get("itemType") != "update":
-                            continue
-                        path = event.get("path")
-                        item_value = event.get("itemValue")
-                        if not path or not item_value:
-                            continue
-                        updates = self.api.process_event(path, item_value)
-                        for key, value in updates.items():
-                            _LOGGER.debug("Event update: %s = %r", key, value)
-                            self._apply_event_update(key, value)
-
-            except asyncio.CancelledError:
-                _LOGGER.debug("Event listener cancelled")
-                return
+                async for updates in self.api.listen(
+                    poll_timeout_ms=self.POLL_TIMEOUT_MS,
+                    retry_delay=self.EVENT_LISTENER_RETRY_DELAY,
+                ):
+                    _LOGGER.debug("Event updates: %r", updates)
+                    self._apply_event_updates(updates)
             except Exception as e:  # noqa: BLE001
                 _LOGGER.debug(
                     "Event listener error: %s, retrying in %ds",
@@ -311,23 +110,30 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             self.data[key] = value
             self.async_set_updated_data(self.data)
 
+    async def _async_call(self, api_method: str, *args: Any) -> None:
+        """Call an API command, converting API errors to HomeAssistantError."""
+        try:
+            await getattr(self.api, api_method)(*args)
+        except AmbeoError as err:
+            raise HomeAssistantError(f"Error calling {api_method}: {err}") from err
+
     async def _async_set(self, api_method: str, data_key: str, value: Any) -> None:
         """Call an API setter and apply an optimistic update."""
-        await getattr(self.api, api_method)(value)
+        await self._async_call(api_method, value)
         self._optimistic_update(data_key, value)
 
-    def _apply_event_update(self, key: str, value: Any):
-        """Apply an event-driven update with special handling for player keys."""
+    def _apply_event_updates(self, updates: dict[str, Any]):
+        """Apply event-driven updates with special handling for player keys."""
         if not self.data:
             return
-        self.data[key] = value
-        if key == "play_time":
+        self.data.update(updates)
+        if StateKey.PLAY_TIME in updates:
             self.data["play_time_updated_at"] = dt_util.utcnow()
         self.async_set_updated_data(self.data)
 
     async def async_set_volume(self, volume: float):
         """Set volume."""
-        await self.api.set_volume(volume)
+        await self._async_call("set_volume", volume)
         self._optimistic_update("volume", int(volume))
 
     async def async_set_mute(self, mute: bool):
@@ -336,12 +142,12 @@ class AmbeoCoordinator(DataUpdateCoordinator):
 
     async def async_turn_on(self):
         """Turn on."""
-        await self.api.wake()
+        await self._async_call("wake")
         self._optimistic_update("state", "online")
 
     async def async_turn_off(self):
         """Turn off."""
-        await self.api.stand_by()
+        await self._async_call("stand_by")
         self._optimistic_update("state", "networkStandby")
 
     async def async_select_source(self, source_id: str):
@@ -354,19 +160,19 @@ class AmbeoCoordinator(DataUpdateCoordinator):
 
     async def async_media_play(self):
         """Play."""
-        await self.api.play()
+        await self._async_call("play")
 
     async def async_media_pause(self):
         """Pause."""
-        await self.api.pause()
+        await self._async_call("pause")
 
     async def async_media_next_track(self):
         """Next track."""
-        await self.api.next()
+        await self._async_call("next")
 
     async def async_media_previous_track(self):
         """Previous track."""
-        await self.api.previous()
+        await self._async_call("previous")
 
     async def async_set_led_bar_brightness(self, brightness: int):
         """Set LED bar brightness."""
@@ -450,12 +256,12 @@ class AmbeoCoordinator(DataUpdateCoordinator):
 
     async def async_reboot(self):
         """Reboot the device."""
-        await self.api.reboot()
+        await self._async_call("reboot")
         # No state update needed for reboot.
 
     async def async_reset_expert_settings(self):
         """Reset expert settings."""
-        await self.api.reset_expert_settings()
+        await self._async_call("reset_expert_settings")
         # Trigger a full refresh to get reset values.
         await self.async_request_refresh()
 
@@ -497,39 +303,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Return the effective HA state, accounting for eco mode and player state."""
         if not self.data:
             return None
-
-        state_map = {
-            "playing": STATE_PLAYING,
-            "paused": STATE_PAUSED,
-            "stopped": STATE_IDLE,
-            "online": STATE_ON,
-            "networkStandby": STATE_STANDBY
-            if self.has_capability(Capability.STANDBY)
-            else STATE_IDLE,
-        }
-
-        power_state = state_map.get(self.data.get("state", ""), STATE_ON)
-
-        if power_state == STATE_ON:
-            player_data = self.data.get("player_data") or {}
-            if player_data.get("state") == "paused":
-                return STATE_PAUSED
-
-            decoder_status = self.data.get("decoder_status")
-            if decoder_status is not None:
-                is_playing = (
-                    decoder_status.get(
-                        "decoder_status", decoder_status.get("channels", 0)
-                    )
-                    > 0
-                )
-                return STATE_PLAYING if is_playing else STATE_IDLE
-
-            player_state = player_data.get("state")
-            if player_state:
-                return state_map.get(player_state, STATE_IDLE)
-
-        return power_state
+        return _HA_STATE_BY_STATUS[self.api.player_status(self.data)]
 
     def get_subwoofer_min_value(self) -> int:
         """Get subwoofer minimum value."""
@@ -554,7 +328,3 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     def get_display_brightness_range(self):
         """Get the display brightness range."""
         return self.api.get_display_brightness_range()
-
-    def set_endpoint(self, host: str):
-        """Set the API endpoint."""
-        self.api.set_endpoint(host)

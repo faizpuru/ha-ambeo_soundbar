@@ -28,7 +28,7 @@ async def async_get_config_entry_diagnostics(
             "port": device.port,
         },
         "capabilities": {
-            "supported_features": coordinator.api.capabilities,
+            "supported_features": sorted(coordinator.api.capabilities),
         },
         "current_state": coordinator.data or {},
         "config": {

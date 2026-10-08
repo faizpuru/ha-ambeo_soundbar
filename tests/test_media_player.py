@@ -5,19 +5,20 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PLAYING
 
 from custom_components.ambeo_soundbar.api.const import Capability
+from custom_components.ambeo_soundbar.api.models import Preset, Source
 from custom_components.ambeo_soundbar.media_player import (
     AmbeoMediaPlayer,
     async_setup_entry,
 )
 
 SOURCES = [
-    {"id": "hdmi1", "title": "HDMI 1"},
-    {"id": "optical", "title": "Optical"},
+    Source("hdmi1", "HDMI 1"),
+    Source("optical", "Optical"),
 ]
 
 PRESETS = [
-    {"id": "movies", "title": "Movies"},
-    {"id": "music", "title": "Music"},
+    Preset("movies", "Movies"),
+    Preset("music", "Music"),
 ]
 
 
@@ -34,22 +35,22 @@ def _make_coordinator(data=None, capabilities=None, sources=None, presets=None):
     coordinator.get_state = MagicMock(return_value=STATE_ON)
     coordinator.get_source_title = MagicMock(
         side_effect=lambda sid: next(
-            (s["title"] for s in (sources or []) if s["id"] == sid), None
+            (s.title for s in (sources or []) if s.id == sid), None
         )
     )
     coordinator.get_source_id = MagicMock(
         side_effect=lambda title: next(
-            (s["id"] for s in (sources or []) if s["title"] == title), None
+            (s.id for s in (sources or []) if s.title == title), None
         )
     )
     coordinator.get_preset_title = MagicMock(
         side_effect=lambda pid: next(
-            (p["title"] for p in (presets or []) if p["id"] == pid), None
+            (p.title for p in (presets or []) if p.id == pid), None
         )
     )
     coordinator.get_preset_id = MagicMock(
         side_effect=lambda title: next(
-            (p["id"] for p in (presets or []) if p["title"] == title), None
+            (p.id for p in (presets or []) if p.title == title), None
         )
     )
     coordinator.async_set_volume = AsyncMock()

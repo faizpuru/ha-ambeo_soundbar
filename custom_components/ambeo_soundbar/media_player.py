@@ -177,9 +177,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available sources."""
-        titles = [
-            entry["title"] for entry in self.coordinator.sources if "title" in entry
-        ]
+        titles = [source.title for source in self.coordinator.sources]
         return sorted(titles)
 
     async def async_select_source(self, source):
@@ -201,9 +199,7 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def sound_mode_list(self):
         """List of available audio presets."""
-        titles = [
-            preset["title"] for preset in self.coordinator.presets if "title" in preset
-        ]
+        titles = [preset.title for preset in self.coordinator.presets]
         return sorted(titles)
 
     async def async_select_sound_mode(self, sound_mode):

@@ -14,7 +14,9 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on."
+      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on.",
+      "unsupported_model": "This soundbar model is not supported.",
+      "unknown": "Unexpected error. Check the logs for details."
     },
     "abort": {
       "already_configured": "Device is already configured"
@@ -37,7 +39,10 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on."
+      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on.",
+      "unsupported_model": "This soundbar model is not supported.",
+      "unknown": "Unexpected error. Check the logs for details.",
+      "different_device": "This host is a different soundbar. Add it as a new device instead."
     }
   }
 }

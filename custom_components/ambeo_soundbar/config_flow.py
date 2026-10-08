@@ -2,14 +2,12 @@
 
 import logging
 
-import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api.exceptions import AmbeoConnectionError
-from .api.factory import AmbeoAPIFactory
+from .api import AmbeoError, AmbeoSoundbar, AmbeoUnsupportedModelError
 from .const import (
     CONFIG_CONCURRENT_REQUESTS,
     CONFIG_CONCURRENT_REQUESTS_DEFAULT,
@@ -29,17 +27,21 @@ async def validate_connection(
     hass: HomeAssistant, host: str, port: int = DEFAULT_PORT
 ) -> tuple[str | None, str | None, str | None]:
     """Validate connection to Ambeo device and return name if successful."""
-    client_session = async_create_clientsession(hass)
+    client_session = async_get_clientsession(hass)
     try:
-        ambeo_api = await AmbeoAPIFactory.create_api(
-            host, port, TIMEOUT, client_session
+        ambeo_api = await AmbeoSoundbar.connect(
+            host, client_session, port=port, timeout=TIMEOUT
         )
-        name = await ambeo_api.get_name()
-        serial = await ambeo_api.get_serial()
-        return name, serial, None
-    except (AmbeoConnectionError, aiohttp.ClientError) as error:
+        return ambeo_api.info.name, ambeo_api.info.serial, None
+    except AmbeoUnsupportedModelError as error:
+        _LOGGER.error("Unsupported device at %s: %s", host, error)
+        return None, None, "unsupported_model"
+    except AmbeoError as error:
         _LOGGER.error("Connection error to %s: %s", host, error)
         return None, None, "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected error connecting to %s", host)
+        return None, None, "unknown"
 
 
 class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
@@ -55,6 +57,8 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
             name, serial, error = await validate_connection(
                 self.hass, user_input[CONFIG_HOST]
             )
+            if error is None and serial and serial != self.config_entry.unique_id:
+                error = "different_device"
             if error is not None:
                 errors["base"] = error
                 return self.display_form(errors, host_default)

@@ -2,12 +2,17 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.ambeo_soundbar.api import (
+    AmbeoConnectionError,
+    AmbeoUnsupportedModelError,
+)
+from custom_components.ambeo_soundbar.config_flow import validate_connection
 from custom_components.ambeo_soundbar.const import (
-    CONFIG_DEBOUNCE_COOLDOWN,
     CONFIG_HOST,
     CONFIG_UPDATE_INTERVAL,
     CONFIG_UPDATE_INTERVAL_DEFAULT,
@@ -156,7 +161,6 @@ async def _setup_entry(hass, options=None):
     entry.add_to_hass(hass)
 
     mock_coordinator = MagicMock()
-    mock_coordinator.support_debounce_mode = MagicMock(return_value=False)
 
     mock_data = MagicMock()
     mock_data.coordinator = mock_coordinator
@@ -206,35 +210,33 @@ async def test_options_flow_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow_with_debounce_support(hass):
-    """Test options flow shows debounce field for supported devices."""
+async def test_options_flow_different_device(hass):
+    """Refuse a host that answers with another serial number."""
     entry = await _setup_entry(hass)
-    entry.runtime_data.coordinator.support_debounce_mode = MagicMock(return_value=True)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    schema_keys = [str(k) for k in result["data_schema"].schema]
-    assert CONFIG_DEBOUNCE_COOLDOWN in schema_keys
-
-
-async def test_options_flow_without_debounce_support(hass):
-    """Test options flow hides debounce field for unsupported devices."""
-    entry = await _setup_entry(hass)
-    entry.runtime_data.coordinator.support_debounce_mode = MagicMock(return_value=False)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with _patch_validate_connection(serial="OTHER"):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
+        )
 
     assert result["type"] == FlowResultType.FORM
-    schema_keys = [str(k) for k in result["data_schema"].schema]
-    assert CONFIG_DEBOUNCE_COOLDOWN not in schema_keys
+    assert result["errors"] == {"base": "different_device"}
 
 
-async def test_options_flow_experimental_warning(hass):
-    """Test options flow shows warning when debounce is already enabled."""
-    entry = await _setup_entry(hass, options={CONFIG_DEBOUNCE_COOLDOWN: 100})
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert "experimental_feature_activated" in result.get("errors", {}).get("base", "")
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (AmbeoUnsupportedModelError("AMBEO Soundbar Ultra"), "unsupported_model"),
+        (AmbeoConnectionError("down"), "cannot_connect"),
+        (KeyError("value"), "unknown"),
+    ],
+)
+async def test_validate_connection_errors(hass, error, expected):
+    """Map connect() errors to config flow error codes."""
+    with patch(
+        "custom_components.ambeo_soundbar.config_flow.AmbeoSoundbar.connect",
+        side_effect=error,
+    ):
+        assert await validate_connection(hass, MOCK_HOST) == (None, None, expected)
