@@ -88,6 +88,8 @@ Go to **Settings > Devices & Services**, find **Ambeo Soundbar**, open the three
 - Verify the soundbar is powered on and reachable on the network
 - Confirm the configured IP address is correct
 - Check Home Assistant logs for error details
+- **Unsupported model**: the device answered but is not an AMBEO Soundbar Max, Plus or Mini
+- **Different device** (options): the new host is another soundbar; add it as a new device instead
 
 ## Contributing
 
