@@ -90,7 +90,6 @@ Go to **Settings > Devices & Services**, find **Ambeo Soundbar**, open the three
 - Check Home Assistant logs for error details
 - **Unsupported model**: the device answered but is not an AMBEO Soundbar Max, Plus or Mini
 - **Different device** (options): the new host is another soundbar; add it as a new device instead
-- **Media player shows `off` instead of `standby`**: since 3.2.0 the standby state is reported as `off` (Home Assistant removed `standby` in 2026.8); update automations that check `state: standby`
 
 ## Contributing
 
