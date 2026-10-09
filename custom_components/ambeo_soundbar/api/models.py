@@ -20,6 +20,8 @@ class Source:
 
     id: str | int
     title: str
+    # Device action path, when it differs from the ID (Plus/Mini only).
+    path: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

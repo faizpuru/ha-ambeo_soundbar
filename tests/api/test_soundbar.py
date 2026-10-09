@@ -46,7 +46,14 @@ def _make(cls, session, **kwargs):
 async def test_connect_popcorn(mock_http, session):
     """Pick the Popcorn implementation and load info, sources and presets."""
     mock_device_info(mock_http, PLUS)
-    mock_rows(mock_http, "ui:/inputs", [{"id": "hdmi1", "title": "HDMI 1"}])
+    mock_rows(
+        mock_http,
+        "ui:/inputs",
+        [
+            {"id": "hdmi1", "title": "HDMI 1"},
+            {"id": "spdif", "title": "Optical", "path": "ui:/inputs/optical"},
+        ],
+    )
     mock_rows(
         mock_http,
         "settings:/popcorn/audio/audioPresetValues",
@@ -59,6 +66,7 @@ async def test_connect_popcorn(mock_http, session):
     assert bar.info == DeviceInfo(PLUS, "Living room", "SN123", "1.2.3")
     assert bar.sources == [
         Source("hdmi1", "HDMI 1"),
+        Source("spdif", "Optical", "ui:/inputs/optical"),
         Source("airplay", "AirPlay"),
         Source("googlecast", "Google Cast"),
     ]
