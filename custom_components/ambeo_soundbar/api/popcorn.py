@@ -220,7 +220,7 @@ class AmbeoPopcorn(AmbeoSoundbar):
         """Fetch all available audio sources."""
         rows = await self._transport.get_rows("ui:/inputs", 0, 10)
         sources = [
-            Source(row["id"], row["title"])
+            Source(row["id"], row["title"], row.get("path"))
             for row in rows
             if "id" in row and "title" in row
         ]
@@ -229,9 +229,12 @@ class AmbeoPopcorn(AmbeoSoundbar):
 
     async def set_source(self, source_id: str) -> None:
         """Set the audio source."""
-        await self._transport.activate(
-            f"ui:/inputs/{source_id}", {"type": "bool_", "bool_": True}
+        # The ID is not always the last segment of the path (spdif -> optical).
+        path = next(
+            (s.path for s in self.sources if s.id == source_id and s.path),
+            f"ui:/inputs/{source_id}",
         )
+        await self._transport.activate(path, {"type": "bool_", "bool_": True})
 
     async def get_current_preset(self) -> str | None:
         """Get the current audio preset ID."""

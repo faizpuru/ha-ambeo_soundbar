@@ -9,6 +9,7 @@ from custom_components.ambeo_soundbar.api import (
     AmbeoPopcorn,
     AmbeoResponseError,
     DeviceInfo,
+    Source,
 )
 from custom_components.ambeo_soundbar.api.transport import AmbeoTransport
 
@@ -176,6 +177,21 @@ async def test_activate(cls, method, args, path, payload):
     await getattr(bar, method)(*args)
     transport.activate.assert_awaited_once_with(path, payload)
     transport.set_value.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("source_id", "path"),
+    [("spdif", "ui:/inputs/optical"), ("hdmiarc", "ui:/inputs/hdmiTv")],
+)
+async def test_popcorn_set_source_uses_row_path(source_id, path):
+    """Activate the path reported by the device, not one built from the ID."""
+    bar, transport = _make(AmbeoPopcorn)
+    bar.sources = [
+        Source("hdmiarc", "HDMI TV", "ui:/inputs/hdmiTv"),
+        Source("spdif", "Optical", "ui:/inputs/optical"),
+    ]
+    await bar.set_source(source_id)
+    transport.activate.assert_awaited_once_with(path, PRESS)
 
 
 @pytest.mark.parametrize("method", ["stand_by", "wake", "reset_expert_settings"])
