@@ -5,9 +5,9 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

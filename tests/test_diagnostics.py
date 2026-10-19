@@ -4,10 +4,10 @@ import json
 from unittest.mock import MagicMock
 
 from homeassistant.components.diagnostics import REDACTED
+from pyambeo import AmbeoPopcorn, StateKey
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ambeo_soundbar import AmbeoData, AmbeoDevice
-from custom_components.ambeo_soundbar.api import AmbeoPopcorn, StateKey
 from custom_components.ambeo_soundbar.const import CONFIG_HOST, DOMAIN
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.diagnostics import (

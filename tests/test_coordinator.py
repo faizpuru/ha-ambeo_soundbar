@@ -7,8 +7,7 @@ import pytest
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from custom_components.ambeo_soundbar.api import (
+from pyambeo import (
     AmbeoConnectionError,
     AmbeoResponseError,
     AmbeoSoundbar,
@@ -17,6 +16,7 @@ from custom_components.ambeo_soundbar.api import (
     Source,
     StateKey,
 )
+
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 
 

@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.const import EntityCategory
+from pyambeo import Capability
 
-from custom_components.ambeo_soundbar.api.const import Capability
 from custom_components.ambeo_soundbar.button import (
     AmbeoReboot,
     ResetExpertSettings,

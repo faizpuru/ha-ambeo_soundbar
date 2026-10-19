@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from pyambeo import AmbeoError, AmbeoSoundbar, PlayerStatus, StateKey
 
-from .api import AmbeoError, AmbeoSoundbar, PlayerStatus, StateKey
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

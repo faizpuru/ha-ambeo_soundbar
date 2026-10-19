@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.ambeo_soundbar.api.const import Capability
+from pyambeo import Capability
+
 from custom_components.ambeo_soundbar.binary_sensor import (
     EcoModeSensor,
     async_setup_entry,

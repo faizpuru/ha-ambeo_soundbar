@@ -5,12 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.ambeo_soundbar.api import (
+from pyambeo import (
     AmbeoConnectionError,
     AmbeoUnsupportedModelError,
 )
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
 from custom_components.ambeo_soundbar.config_flow import validate_connection
 from custom_components.ambeo_soundbar.const import (
     CONFIG_HOST,

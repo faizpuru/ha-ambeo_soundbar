@@ -6,9 +6,9 @@ from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

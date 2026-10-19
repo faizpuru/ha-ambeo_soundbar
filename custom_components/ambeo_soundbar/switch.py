@@ -1,9 +1,9 @@
 """Switch entities for Ambeo Soundbar integration."""
 
 from homeassistant.core import HomeAssistant
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .entity import AmbeoBaseSwitch
 
 
