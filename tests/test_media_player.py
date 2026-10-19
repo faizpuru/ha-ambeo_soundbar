@@ -284,8 +284,27 @@ class TestMediaInfo:
 
     def test_media_position_converts_ms(self):
         """Convert play_time from milliseconds to seconds."""
-        player, _ = _make_player(data={"player_data": {}, "play_time": 30000})
+        player, _ = _make_player(
+            data={
+                "player_data": {"status": {"duration": 240000}},
+                "play_time": 30000,
+                "play_time_updated_at": "now",
+            }
+        )
         assert player.media_position == 30.0
+        assert player.media_position_updated_at == "now"
+
+    def test_media_position_none_without_duration(self):
+        """Hide the running counter of inputs without a duration (HDMI…)."""
+        player, _ = _make_player(
+            data={
+                "player_data": {},
+                "play_time": 249461193,
+                "play_time_updated_at": "now",
+            }
+        )
+        assert player.media_position is None
+        assert player.media_position_updated_at is None
 
     def test_media_position_none_when_missing(self):
         """Return None when play_time is absent from coordinator data."""

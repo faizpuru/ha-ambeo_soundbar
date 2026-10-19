@@ -32,6 +32,8 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     # Event listener settings.
     POLL_TIMEOUT_MS = 30000
     EVENT_LISTENER_RETRY_DELAY = 30  # Seconds to wait before retrying after error.
+    # Max drift between a pushed play time and the extrapolated position.
+    PLAY_TIME_TOLERANCE_MS = 750
 
     def __init__(
         self,
@@ -122,9 +124,24 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         await self._async_call(api_method, value)
         self._optimistic_update(data_key, value)
 
+    def _is_expected_play_time(self, play_time: int) -> bool:
+        """Return True if play_time matches the position extrapolated by HA."""
+        last = self.data.get(StateKey.PLAY_TIME)
+        updated_at = self.data.get("play_time_updated_at")
+        if last is None or updated_at is None:
+            return False
+        elapsed_ms = (dt_util.utcnow() - updated_at).total_seconds() * 1000
+        return abs(play_time - last - elapsed_ms) < self.PLAY_TIME_TOLERANCE_MS
+
     def _apply_event_updates(self, updates: dict[str, Any]):
         """Apply event-driven updates with special handling for player keys."""
         if not self.data:
+            return
+        # The device pushes the play time every second: only keep jumps
+        # (seek, pause, new track), HA extrapolates the position otherwise.
+        if updates.keys() == {StateKey.PLAY_TIME} and self._is_expected_play_time(
+            updates[StateKey.PLAY_TIME]
+        ):
             return
         self.data.update(updates)
         if StateKey.PLAY_TIME in updates:
