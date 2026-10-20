@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pyambeo import Capability
 
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.sensor import (
+    AudioCodecSensor,
     DecoderStatusSensor,
     async_setup_entry,
 )
@@ -83,6 +85,65 @@ class TestDecoderStatusSensor:
         assert entity.extra_state_attributes == {}
 
 
+def _bluetooth_data(uri):
+    return {
+        "decoder_status": {"codec": "pcm", "channels": 2},
+        "player_data": {"mediaRoles": {"mediaData": {"resources": [{"uri": uri}]}}},
+    }
+
+
+class TestAudioCodecSensor:
+    """Tests for the AudioCodecSensor diagnostic sensor entity."""
+
+    @pytest.mark.parametrize(
+        ("codec", "expected"),
+        [
+            ("pcm", "PCM"),
+            ("MPEG-4 AAC", "AAC"),
+            ("Free Lossless Audio Codec (FLAC)", "FLAC"),
+            ("Vorbis (container: Ogg)", "Vorbis"),
+            ("Dolby Digital Plus - Dolby Atmos", "Dolby Digital Plus - Dolby Atmos"),
+            ("Multichannel PCM - Dolby Atmos", "Multichannel PCM - Dolby Atmos"),
+            ("DTS UHD MA", "DTS UHD MA"),
+            ("MPEG-H", "MPEG-H"),
+            ("E-AC-3 (ATSC A/52B) (container: ISO MP4/M4A)", "Dolby Atmos"),
+            ("Opus", "Opus"),
+        ],
+    )
+    def test_native_value_from_decoder(self, codec, expected):
+        """Shorten plain codecs and keep descriptive Dolby/DTS names."""
+        coordinator = _make_coordinator(data={"decoder_status": {"codec": codec}})
+        entity = AudioCodecSensor(coordinator, _make_device())
+        assert entity.native_value == expected
+
+    @pytest.mark.parametrize(
+        ("uri", "expected"),
+        [("bluetoothsbc:00:11:22", "SBC"), ("bluetoothaac:00:11:22", "AAC")],
+    )
+    def test_native_value_bluetooth(self, uri, expected):
+        """Read the Bluetooth codec from the stream URI, not the decoder."""
+        coordinator = _make_coordinator(data=_bluetooth_data(uri))
+        entity = AudioCodecSensor(coordinator, _make_device())
+        assert entity.native_value == expected
+
+    def test_native_value_ignores_other_uris(self):
+        """Use the decoder for non-Bluetooth streams."""
+        coordinator = _make_coordinator(data=_bluetooth_data("HDMI:1"))
+        entity = AudioCodecSensor(coordinator, _make_device())
+        assert entity.native_value == "PCM"
+
+    @pytest.mark.parametrize(
+        "data",
+        [None, {}, {"decoder_status": {"codec": ""}}, {"decoder_status": {}}],
+    )
+    def test_native_value_none_without_codec(self, data):
+        """Return None when no codec is reported."""
+        coordinator = _make_coordinator()
+        coordinator.data = data
+        entity = AudioCodecSensor(coordinator, _make_device())
+        assert entity.native_value is None
+
+
 class TestSensorSetupEntry:
     """Tests for sensor platform setup entry."""
 
@@ -95,6 +156,7 @@ class TestSensorSetupEntry:
         added = []
         await async_setup_entry(MagicMock(), config_entry, added.extend)
         assert any(isinstance(e, DecoderStatusSensor) for e in added)
+        assert any(isinstance(e, AudioCodecSensor) for e in added)
 
     async def test_no_decoder_status_when_not_capable(self):
         """Add no entities when device lacks DECODER_STATUS capability."""

@@ -27,6 +27,7 @@ This integration brings full local control of your AMBEO soundbar into Home Assi
 | Ambeo Logo brightness | ✅ | ✅ | ✅ |
 | Restart | ✅ | ✅ | ✅ |
 | Decoder Status (diagnostic sensor) | ✅ | ✅ | ✅ |
+| Audio Codec (diagnostic sensor) | ❓ | ✅ | ✅ |
 | Voice Enhancement toggle | ❌ | ✅ | ✅ |
 | LED Bar + Codec LED brightness | ❌ | ✅ | ✅ |
 | Bluetooth Pairing | ❌ | ✅ | ✅ |
