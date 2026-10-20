@@ -31,7 +31,7 @@ def _make_coordinator(data=None, capabilities=None, sources=None, presets=None):
         side_effect=lambda cap: cap in (capabilities or [])
     )
     coordinator.get_volume_step = MagicMock(return_value=0.01)
-    coordinator.get_volume_max = MagicMock(return_value=100)
+    coordinator.get_display_volume_max = MagicMock(return_value=100)
     coordinator.get_state = MagicMock(return_value=STATE_ON)
     coordinator.get_source_title = MagicMock(
         side_effect=lambda sid: next(

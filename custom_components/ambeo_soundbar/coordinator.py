@@ -312,9 +312,9 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Check if device has a subwoofer."""
         return await self.api.has_subwoofer()
 
-    def get_volume_max(self) -> int:
-        """Get the maximum native volume value."""
-        return self.api.get_volume_max()
+    def get_display_volume_max(self) -> int:
+        """Get the maximum volume shown by the soundbar."""
+        return self.api.get_display_volume_max()
 
     def get_state(self) -> str | None:
         """Return the effective HA state, accounting for eco mode and player state."""

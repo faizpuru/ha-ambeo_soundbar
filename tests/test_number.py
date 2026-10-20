@@ -27,7 +27,7 @@ def _make_coordinator(
         side_effect=lambda cap: cap in (capabilities or [])
     )
     coordinator.has_subwoofer = AsyncMock(return_value=has_subwoofer)
-    coordinator.get_volume_max = MagicMock(return_value=volume_max)
+    coordinator.get_display_volume_max = MagicMock(return_value=volume_max)
     coordinator.get_range = MagicMock(side_effect=(ranges or {}).get)
     coordinator.async_set_volume = AsyncMock()
     coordinator.async_set_subwoofer_volume = AsyncMock()
@@ -54,12 +54,12 @@ class TestNativeVolume:
         entity = NativeVolume(coordinator, _make_device())
         assert entity.native_value == 50
 
-    def test_native_value_rounds(self):
-        """Round the scaled result to the nearest integer."""
+    def test_native_value_rounds_down(self):
+        """Round the scaled result down, like the Max display."""
         coordinator = _make_coordinator(data={"volume": 35}, volume_max=50)
         entity = NativeVolume(coordinator, _make_device())
-        # 35 * 50 / 100 = 17.5 → 18 (banker's rounding: rounds to even)
-        assert entity.native_value == 18
+        # The Max display rounds down: 35 // 2 = 17.
+        assert entity.native_value == 17
 
     def test_native_value_none_when_no_data(self):
         """Return None when volume key is absent from coordinator data."""
@@ -68,7 +68,7 @@ class TestNativeVolume:
         assert entity.native_value is None
 
     def test_native_max_value(self):
-        """Delegate native_max_value to coordinator.get_volume_max."""
+        """Delegate native_max_value to coordinator.get_display_volume_max."""
         coordinator = _make_coordinator(volume_max=80)
         entity = NativeVolume(coordinator, _make_device())
         assert entity.native_max_value == 80

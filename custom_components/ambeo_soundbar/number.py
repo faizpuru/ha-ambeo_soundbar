@@ -50,24 +50,27 @@ class NativeVolume(AmbeoBaseNumber):
 
     @property
     def native_max_value(self):
-        """Return the maximum native volume value."""
-        return self.coordinator.get_volume_max()
+        """Return the maximum volume shown by the soundbar."""
+        return self.coordinator.get_display_volume_max()
 
     @property
     def native_value(self):
-        """Return the current native volume value."""
+        """Return the volume shown by the soundbar.
+
+        The Max shows half of the device volume, rounded down.
+        """
         if self.coordinator.data and "volume" in self.coordinator.data:
-            return round(
+            return (
                 self.coordinator.data["volume"]
-                * self.coordinator.get_volume_max()
-                / 100
+                * self.coordinator.get_display_volume_max()
+                // 100
             )
         return None
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the native volume."""
+        """Set the volume from the scale shown by the soundbar."""
         await self.coordinator.async_set_volume(
-            round(value * 100 / self.coordinator.get_volume_max())
+            round(value * 100 / self.coordinator.get_display_volume_max())
         )
 
 
