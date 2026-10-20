@@ -13,6 +13,16 @@ from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Display names for service IDs, as shown by the soundbar web app.
+SERVICE_NAMES = {
+    "airplay": "AirPlay",
+    "avs": "Alexa",
+    "googlecast": "Google Cast",
+}
+
+# Play logic of the physical inputs (HDMI, optical…), which are not apps.
+PHYSICAL_INPUT_PLAY_LOGIC = "imx8af:"
+
 
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
@@ -58,11 +68,24 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
                 return default
         return result
 
+    def _get_metadata(self, key):
+        """Return a metaData field from trackRoles, falling back to mediaRoles."""
+        return self._get_player_data(
+            "trackRoles", "mediaData", "metaData", key
+        ) or self._get_player_data("mediaRoles", "mediaData", "metaData", key)
+
+    def _is_physical_input(self):
+        """Return True when playing from a physical input rather than an app."""
+        play_logic = self._get_metadata("playLogicPath") or ""
+        return play_logic.startswith(PHYSICAL_INPUT_PLAY_LOGIC)
+
     @property
     def media_title(self):
         """Title of current playing media."""
-        title = self._get_player_data("trackRoles", "title") or self._get_player_data(
-            "mediaRoles", "title"
+        title = (
+            self._get_player_data("trackRoles", "title")
+            or self._get_player_data("trackRoles", "description")
+            or self._get_player_data("mediaRoles", "title")
         )
         if title:
             self._last_title = title
@@ -133,18 +156,42 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     @property
     def media_artist(self):
         """Return the artist of the current playing media."""
-        return (
-            self._get_player_data("trackRoles", "mediaData", "metaData", "artist")
-            or None
-        )
+        return self._get_metadata("artist") or None
 
     @property
     def media_album_name(self):
         """Return the album name of the current playing media."""
-        return (
-            self._get_player_data("trackRoles", "mediaData", "metaData", "album")
-            or None
+        return self._get_metadata("album") or None
+
+    @property
+    def media_playlist(self):
+        """Return the playlist or context of the current playing media."""
+        playlist = self._get_metadata("playbackSourceId")
+        if not isinstance(playlist, str):
+            return None
+        return playlist.strip() or None
+
+    @property
+    def app_id(self):
+        """Return the ID of the app or service currently playing."""
+        if self._is_physical_input():
+            return None
+        return self._get_metadata("serviceID") or None
+
+    @property
+    def app_name(self):
+        """Return the name of the app or service currently playing."""
+        if self._is_physical_input():
+            return None
+        name = self._get_metadata("externalAppName") or self._get_metadata(
+            "serviceNameOverride"
         )
+        if name:
+            return name
+        service_id = self._get_metadata("serviceID")
+        if not isinstance(service_id, str) or not service_id:
+            return None
+        return SERVICE_NAMES.get(service_id, service_id[:1].upper() + service_id[1:])
 
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
