@@ -282,6 +282,19 @@ class TestMediaInfo:
         player, _ = _make_player(data={"player_data": {}})
         assert player.media_duration is None
 
+    def test_media_position_none_for_live_streams(self):
+        """Hide the running counter of live streams (duration 0 or -1000)."""
+        for duration in (0, -1000):
+            player, _ = _make_player(
+                data={
+                    "player_data": {"status": {"duration": duration}},
+                    "play_time": 249461193,
+                    "play_time_updated_at": "now",
+                }
+            )
+            assert player.media_duration is None
+            assert player.media_position is None
+
     def test_media_position_converts_ms(self):
         """Convert play_time from milliseconds to seconds."""
         player, _ = _make_player(
@@ -340,6 +353,108 @@ class TestMediaInfo:
             }
         )
         assert player.media_album_name == "Album B"
+
+    def test_media_title_from_description(self):
+        """Fall back to the trackRoles description before mediaRoles."""
+        player, _ = _make_player(
+            data={
+                "player_data": {
+                    "trackRoles": {"title": "", "description": "NRJ"},
+                    "mediaRoles": {"title": "Google Cast"},
+                }
+            }
+        )
+        assert player.media_title == "NRJ"
+
+    def test_media_artist_from_media_roles(self):
+        """Fall back to mediaRoles metaData for the artist."""
+        player, _ = _make_player(
+            data={
+                "player_data": {
+                    "trackRoles": {"title": "Song"},
+                    "mediaRoles": {"mediaData": {"metaData": {"artist": "Artist A"}}},
+                }
+            }
+        )
+        assert player.media_artist == "Artist A"
+
+
+def _metadata_player(track_meta=None, media_meta=None):
+    player_data = {}
+    if track_meta is not None:
+        player_data["trackRoles"] = {"mediaData": {"metaData": track_meta}}
+    if media_meta is not None:
+        player_data["mediaRoles"] = {"mediaData": {"metaData": media_meta}}
+    player, _ = _make_player(data={"player_data": player_data})
+    return player
+
+
+class TestAppMetadata:
+    """Tests for app and playlist metadata."""
+
+    def test_spotify(self):
+        """Derive the app name from the service ID and expose the playlist."""
+        player = _metadata_player(
+            {
+                "serviceID": "spotify",
+                "playLogicPath": "spotify:playlogic",
+                "playbackSourceId": "Martin Garrix Radio ",
+                "album": "Album B",
+            }
+        )
+        assert player.app_id == "spotify"
+        assert player.app_name == "Spotify"
+        assert player.media_playlist == "Martin Garrix Radio"
+        assert player.media_album_name == "Album B"
+
+    def test_google_cast_uses_external_app_name(self):
+        """Prefer the casting app name over the service override."""
+        player = _metadata_player(
+            {
+                "serviceNameOverride": "Casting TuneIn Free",
+                "externalAppName": "TuneIn Free",
+            },
+            {"serviceID": "googlecast", "playLogicPath": "googlecastlite:playlogic"},
+        )
+        assert player.app_id == "googlecast"
+        assert player.app_name == "TuneIn Free"
+        assert player.media_playlist is None
+
+    def test_alexa_uses_service_name_override(self):
+        """Use the service override for Alexa skills (TuneIn…)."""
+        player = _metadata_player(
+            {
+                "serviceNameOverride": "TuneIn",
+                "serviceID": "avs",
+                "playLogicPath": "avs:playlogic/Audio",
+            }
+        )
+        assert player.app_name == "TuneIn"
+
+    def test_alexa_without_override(self):
+        """Map known service IDs to their display name."""
+        player = _metadata_player(
+            {
+                "serviceNameOverride": "",
+                "serviceID": "avs",
+                "playLogicPath": "avs:playlogic/Audio",
+            }
+        )
+        assert player.app_name == "Alexa"
+
+    def test_physical_input_has_no_app(self):
+        """Do not report physical inputs (HDMI…) as apps."""
+        meta = {"serviceID": "HDMI", "playLogicPath": "imx8af:playlogic"}
+        player = _metadata_player(meta, meta)
+        assert player.app_id is None
+        assert player.app_name is None
+
+    def test_no_metadata(self):
+        """Return None when nothing is playing."""
+        player, _ = _make_player(data={"player_data": {}})
+        assert player.app_id is None
+        assert player.app_name is None
+        assert player.media_playlist is None
 
 
 class TestSupportedFeatures:
