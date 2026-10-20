@@ -282,6 +282,19 @@ class TestMediaInfo:
         player, _ = _make_player(data={"player_data": {}})
         assert player.media_duration is None
 
+    def test_media_position_none_for_live_streams(self):
+        """Hide the running counter of live streams (duration 0 or -1000)."""
+        for duration in (0, -1000):
+            player, _ = _make_player(
+                data={
+                    "player_data": {"status": {"duration": duration}},
+                    "play_time": 249461193,
+                    "play_time_updated_at": "now",
+                }
+            )
+            assert player.media_duration is None
+            assert player.media_position is None
+
     def test_media_position_converts_ms(self):
         """Convert play_time from milliseconds to seconds."""
         player, _ = _make_player(

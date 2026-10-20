@@ -130,9 +130,14 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def media_duration(self):
-        """Return the duration of the current playing media."""
+        """Return the duration of the current playing media.
+
+        Live streams report a duration of 0 or -1000.
+        """
         duration = self._get_player_data("status", "duration")
-        return duration / 1000 if duration is not None else None
+        if not isinstance(duration, (int, float)) or duration <= 0:
+            return None
+        return duration / 1000
 
     @property
     def media_position(self):
