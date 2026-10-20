@@ -132,12 +132,16 @@ class TestAudioCodecSensor:
         entity = AudioCodecSensor(coordinator, _make_device())
         assert entity.native_value == "PCM"
 
-    @pytest.mark.parametrize(
-        "data",
-        [None, {}, {"decoder_status": {"codec": ""}}, {"decoder_status": {}}],
-    )
-    def test_native_value_none_without_codec(self, data):
-        """Return None when no codec is reported."""
+    @pytest.mark.parametrize("decoder_status", [{}, {"codec": ""}])
+    def test_native_value_no_signal(self, decoder_status):
+        """Report no signal when the decoder receives no audio."""
+        coordinator = _make_coordinator(data={"decoder_status": decoder_status})
+        entity = AudioCodecSensor(coordinator, _make_device())
+        assert entity.native_value == "No signal"
+
+    @pytest.mark.parametrize("data", [None, {}, {"decoder_status": None}])
+    def test_native_value_none_without_decoder(self, data):
+        """Return None when the decoder status is unknown."""
         coordinator = _make_coordinator()
         coordinator.data = data
         entity = AudioCodecSensor(coordinator, _make_device())
