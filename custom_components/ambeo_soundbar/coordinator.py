@@ -322,6 +322,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             return None
         return _HA_STATE_BY_STATUS[self.api.player_status(self.data)]
 
+    def get_audio_codec(self) -> str | None:
+        """Return the codec of the decoded audio, None when there is none."""
+        return self.api.audio_codec(self.data) if self.data else None
+
     def get_range(self, key: StateKey) -> Range | None:
         """Get the bounds of a numeric setting."""
         return self.api.get_range(key)

@@ -15,31 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 # Reported when the decoder is up but receives no audio.
 NO_SIGNAL = "No signal"
 
-# Short names for the plain codecs, as shown by the soundbar web app.
-# Dolby, DTS and MPEG-H names are already descriptive and kept as is.
-SHORT_CODEC_NAMES = (
-    ("pcm", "PCM"),
-    ("vorbis", "Vorbis"),
-    ("mp3", "MP3"),
-    ("flac", "FLAC"),
-    ("aac", "AAC"),
-    ("sbc", "SBC"),
-)
-
-
-def audio_codec_name(codec: str) -> str:
-    """Return the display name of a decoder codec."""
-    lowered = codec.lower()
-    if "dolby" in lowered or "dts" in lowered or "mpeg-h" in lowered:
-        return codec
-    # Tidal Atmos is reported by its container.
-    if lowered.startswith("e-ac-3"):
-        return "Dolby Atmos"
-    for needle, name in SHORT_CODEC_NAMES:
-        if needle in lowered:
-            return name
-    return codec
-
 
 class DecoderStatusSensor(AmbeoBaseEntity, SensorEntity):
     """Diagnostic sensor exposing the audio decoder status."""
@@ -92,22 +67,10 @@ class AudioCodecSensor(AmbeoBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the codec name, NO_SIGNAL when nothing is decoded."""
-        data = self.coordinator.data or {}
-        # Bluetooth bypasses the decoder: the codec is in the stream URI.
-        media_data = ((data.get("player_data") or {}).get("mediaRoles") or {}).get(
-            "mediaData"
-        ) or {}
-        resources = media_data.get("resources") or [{}]
-        uri = resources[0].get("uri") if isinstance(resources[0], dict) else None
-        if isinstance(uri, str) and uri.startswith("bluetooth"):
-            return "SBC" if uri.startswith("bluetoothsbc:") else "AAC"
-        decoder_status = data.get("decoder_status")
-        if not isinstance(decoder_status, dict):
+        data = self.coordinator.data
+        if not data or not isinstance(data.get("decoder_status"), dict):
             return None
-        codec = decoder_status.get("codec")
-        if not isinstance(codec, str) or not codec:
-            return NO_SIGNAL
-        return audio_codec_name(codec)
+        return self.coordinator.get_audio_codec() or NO_SIGNAL
 
 
 async def async_setup_entry(
