@@ -3,9 +3,9 @@
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .entity import AmbeoBaseEntity
 
 AMBEO_MODE_LEVELS: dict[int, str] = {

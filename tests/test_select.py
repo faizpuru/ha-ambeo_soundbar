@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from custom_components.ambeo_soundbar.api.const import Capability
-from custom_components.ambeo_soundbar.api.models import Preset, Source
+from pyambeo import Capability, Preset, Source
+
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.select import (
     AmbeoModeLevel,

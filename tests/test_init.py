@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.ambeo_soundbar import async_unload_entry
-from custom_components.ambeo_soundbar.api import (
+from pyambeo import (
     AmbeoConnectionError,
     AmbeoUnsupportedModelError,
 )
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.ambeo_soundbar import async_unload_entry
 from custom_components.ambeo_soundbar.const import CONFIG_HOST, DOMAIN
 
 

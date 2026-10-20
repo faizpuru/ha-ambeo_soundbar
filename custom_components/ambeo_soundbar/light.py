@@ -5,9 +5,9 @@ import math
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.core import HomeAssistant
 from homeassistant.util.color import brightness_to_value
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight, LightConfig
 

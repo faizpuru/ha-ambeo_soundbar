@@ -123,89 +123,67 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
         await getattr(self.coordinator, self._set_method)(0)
 
 
-class AmbeoBaseSwitch(AmbeoBaseEntity, SwitchEntity):
-    """Base class for Ambeo switch entities."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _data_key: str | None = None
-    _set_method: str | None = None
+class AmbeoValueEntity(AmbeoBaseEntity):
+    """Base class for entities bound to one state value and its setter."""
 
     def __init__(
         self,
         coordinator: AmbeoCoordinator,
         device,
         feature_name: str,
-        data_key: str | None = None,
-        set_method: str | None = None,
+        data_key: str,
+        set_method: str,
         unique_id_suffix: str | None = None,
     ):
-        """Initialize the switch entity."""
+        """Initialize the entity."""
         super().__init__(
             coordinator, device, feature_name, unique_id_suffix or feature_name
         )
-        if data_key:
-            self._data_key = data_key
-        if set_method:
-            self._set_method = set_method
+        self._data_key = data_key
+        self._set_method = set_method
+
+    @property
+    def _value(self):
+        """Return the current state value, or None if unknown."""
+        if self.coordinator.data:
+            return self.coordinator.data.get(self._data_key)
+        return None
+
+    async def _async_set_value(self, value) -> None:
+        """Write the state value through the coordinator."""
+        await getattr(self.coordinator, self._set_method)(value)
+
+
+class AmbeoBaseSwitch(AmbeoValueEntity, SwitchEntity):
+    """Base class for Ambeo switch entities."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
     def is_on(self):
         """Return True if the switch is on."""
-        if (
-            self._data_key
-            and self.coordinator.data
-            and self._data_key in self.coordinator.data
-        ):
-            return self.coordinator.data[self._data_key]
-        return None
+        return self._value
 
     async def async_turn_on(self):
         """Turn on."""
-        if self._set_method:
-            await getattr(self.coordinator, self._set_method)(True)
+        await self._async_set_value(True)
 
     async def async_turn_off(self):
         """Turn off."""
-        if self._set_method:
-            await getattr(self.coordinator, self._set_method)(False)
+        await self._async_set_value(False)
 
 
-class AmbeoBaseNumber(AmbeoBaseEntity, NumberEntity):
+class AmbeoBaseNumber(AmbeoValueEntity, NumberEntity):
     """Base class for Ambeo number entities."""
 
-    _data_key: str | None = None
-    _set_method: str | None = None
-
-    def __init__(
-        self,
-        coordinator: AmbeoCoordinator,
-        device,
-        feature_name,
-        data_key=None,
-        set_method=None,
-        unique_id_suffix: str | None = None,
-    ):
-        """Initialize the number entity."""
-        super().__init__(
-            coordinator, device, feature_name, unique_id_suffix or feature_name
-        )
-        if data_key:
-            self._data_key = data_key
-        if set_method:
-            self._set_method = set_method
+    # Send the value as an integer.
+    _integer = False
 
     @property
     def native_value(self):
         """Return the current value."""
-        if (
-            self._data_key
-            and self.coordinator.data
-            and self._data_key in self.coordinator.data
-        ):
-            return self.coordinator.data[self._data_key]
-        return None
+        return self._value
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
-        if self._set_method:
-            await getattr(self.coordinator, self._set_method)(value)
+        await self._async_set_value(int(value) if self._integer else value)

@@ -3,9 +3,9 @@
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from pyambeo import Capability
 
 from . import AmbeoConfigEntry
-from .api.const import Capability
 from .entity import AmbeoBaseNumber
 
 
@@ -100,6 +100,7 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
     _attr_native_min_value = 0
     _attr_native_max_value = 3
     _attr_native_unit_of_measurement = "Level"
+    _integer = True
 
     def __init__(self, coordinator, device):
         """Initialize the voice enhancement level number entity."""
@@ -111,10 +112,6 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
             "async_set_voice_enhancement_level",
         )
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Set the voice enhancement level."""
-        await self.coordinator.async_set_voice_enhancement_level(int(value))
-
 
 class CenterVolume(AmbeoBaseNumber):
     """Number entity for the center channel volume."""
@@ -125,6 +122,7 @@ class CenterVolume(AmbeoBaseNumber):
     _attr_native_max_value = 6
     _attr_native_unit_of_measurement = "dB"
     _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
+    _integer = True
 
     def __init__(self, coordinator, device):
         """Initialize the center volume number entity."""
@@ -136,10 +134,6 @@ class CenterVolume(AmbeoBaseNumber):
             "async_set_center_volume",
         )
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Set the center volume."""
-        await self.coordinator.async_set_center_volume(int(value))
-
 
 class _SpeakerLevel(AmbeoBaseNumber):
     """Base for speaker level numbers (dB, -12 to 12, CONFIG category)."""
@@ -150,11 +144,7 @@ class _SpeakerLevel(AmbeoBaseNumber):
     _attr_native_unit_of_measurement = "dB"
     _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
     _attr_entity_category = EntityCategory.CONFIG
-
-    async def async_set_native_value(self, value: float) -> None:
-        if not self._set_method:
-            raise ValueError(f"{self.__class__.__name__} has no set method configured")
-        await getattr(self.coordinator, self._set_method)(int(value))
+    _integer = True
 
 
 class CenterSpeakerLevel(_SpeakerLevel):

@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from pyambeo import AmbeoError, AmbeoSoundbar, AmbeoUnsupportedModelError
 
-from .api import AmbeoError, AmbeoSoundbar, AmbeoUnsupportedModelError
 from .const import (
     CONFIG_CONCURRENT_REQUESTS,
     CONFIG_CONCURRENT_REQUESTS_DEFAULT,

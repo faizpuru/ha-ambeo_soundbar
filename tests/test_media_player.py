@@ -3,9 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PLAYING
+from pyambeo import Capability, Preset, Source
 
-from custom_components.ambeo_soundbar.api.const import Capability
-from custom_components.ambeo_soundbar.api.models import Preset, Source
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.media_player import (
     AmbeoMediaPlayer,
