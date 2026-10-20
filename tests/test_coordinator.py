@@ -1,12 +1,14 @@
 """Tests for the Ambeo Soundbar coordinator."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 from pyambeo import (
     AmbeoConnectionError,
     AmbeoResponseError,
@@ -94,6 +96,34 @@ async def test_event_listener_applies_updates(hass, api):
     assert coordinator.data["volume"] == 30
     assert coordinator.data["muted"] is False
     assert "play_time_updated_at" in coordinator.data
+
+
+@pytest.mark.parametrize(
+    ("play_time", "notified"),
+    [
+        (11000, False),  # 1 s later, as extrapolated by HA.
+        (60000, True),  # Seek.
+        (10000, True),  # Paused.
+    ],
+)
+async def test_play_time_event_only_notifies_jumps(hass, api, play_time, notified):
+    """Ignore pushed play times that match the extrapolated position."""
+    coordinator = AmbeoCoordinator(hass, api)
+    updated_at = dt_util.utcnow() - timedelta(seconds=1)
+    coordinator.data = {
+        StateKey.PLAY_TIME: 10000,
+        "play_time_updated_at": updated_at,
+    }
+    coordinator.async_set_updated_data = MagicMock()
+
+    coordinator._apply_event_updates({StateKey.PLAY_TIME: play_time})
+
+    assert coordinator.async_set_updated_data.called is notified
+    if notified:
+        assert coordinator.data[StateKey.PLAY_TIME] == play_time
+        assert coordinator.data["play_time_updated_at"] > updated_at
+    else:
+        assert coordinator.data[StateKey.PLAY_TIME] == 10000
 
 
 async def test_command_error(hass, api):

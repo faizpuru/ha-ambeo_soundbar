@@ -113,18 +113,22 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     @property
     def media_position(self):
-        """Return the current playback position in seconds."""
-        if self.coordinator.data and "play_time" in self.coordinator.data:
-            play_time = self.coordinator.data["play_time"]
-            return play_time / 1000 if play_time is not None else None
-        return None
+        """Return the current playback position in seconds.
+
+        Inputs without a duration (HDMI, optical, …) report a running
+        counter rather than a track position, so it is not exposed.
+        """
+        if self.media_duration is None or not self.coordinator.data:
+            return None
+        play_time = self.coordinator.data.get("play_time")
+        return play_time / 1000 if play_time is not None else None
 
     @property
     def media_position_updated_at(self):
         """Return the time at which the media position was last updated."""
-        if self.coordinator.data:
-            return self.coordinator.data.get("play_time_updated_at")
-        return None
+        if self.media_position is None:
+            return None
+        return self.coordinator.data.get("play_time_updated_at")
 
     @property
     def media_artist(self):
