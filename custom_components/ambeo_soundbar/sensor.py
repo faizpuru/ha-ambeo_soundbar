@@ -12,6 +12,9 @@ from .entity import AmbeoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Reported when the decoder is up but receives no audio.
+NO_SIGNAL = "No signal"
+
 
 class DecoderStatusSensor(AmbeoBaseEntity, SensorEntity):
     """Diagnostic sensor exposing the audio decoder status."""
@@ -52,6 +55,24 @@ class DecoderStatusSensor(AmbeoBaseEntity, SensorEntity):
         }
 
 
+class AudioCodecSensor(AmbeoBaseEntity, SensorEntity):
+    """Diagnostic sensor exposing the codec of the incoming audio."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, device):
+        """Initialize the audio codec sensor."""
+        super().__init__(coordinator, device, "Audio Codec", "audio_codec")
+
+    @property
+    def native_value(self):
+        """Return the codec name, NO_SIGNAL when nothing is decoded."""
+        data = self.coordinator.data
+        if not data or not isinstance(data.get("decoder_status"), dict):
+            return None
+        return self.coordinator.get_audio_codec() or NO_SIGNAL
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
@@ -62,4 +83,9 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
 
     if coordinator.has_capability(Capability.DECODER_STATUS):
-        async_add_entities([DecoderStatusSensor(coordinator, device)])
+        async_add_entities(
+            [
+                DecoderStatusSensor(coordinator, device),
+                AudioCodecSensor(coordinator, device),
+            ]
+        )

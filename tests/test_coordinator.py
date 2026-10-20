@@ -15,6 +15,7 @@ from pyambeo import (
     AmbeoSoundbar,
     PlayerStatus,
     Preset,
+    Range,
     Source,
     StateKey,
 )
@@ -73,6 +74,18 @@ async def test_get_state(hass, api):
     assert coordinator.get_state() is None
     coordinator.data = {"state": "networkStandby"}
     assert coordinator.get_state() == MediaPlayerState.OFF
+
+
+async def test_get_audio_codec_and_range(hass, api):
+    """Delegate the codec name and setting bounds to the API."""
+    api.audio_codec = MagicMock(return_value="PCM")
+    api.get_range = MagicMock(return_value=Range(-3, 6))
+    coordinator = AmbeoCoordinator(hass, api)
+    assert coordinator.get_audio_codec() is None
+    coordinator.data = {"decoder_status": {"codec": "pcm"}}
+    assert coordinator.get_audio_codec() == "PCM"
+    api.audio_codec.assert_called_once_with(coordinator.data)
+    assert coordinator.get_range(StateKey.CENTER_VOLUME) == Range(-3, 6)
 
 
 async def test_event_listener_applies_updates(hass, api):

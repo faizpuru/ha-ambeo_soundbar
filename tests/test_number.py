@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyambeo import Capability
+import pytest
+from pyambeo import Capability, Range, StateKey
 
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.number import (
@@ -18,7 +19,7 @@ from custom_components.ambeo_soundbar.number import (
 
 
 def _make_coordinator(
-    data=None, capabilities=None, has_subwoofer=False, volume_max=100
+    data=None, capabilities=None, has_subwoofer=False, volume_max=100, ranges=None
 ):
     coordinator = MagicMock(spec=AmbeoCoordinator)
     coordinator.data = data if data is not None else {}
@@ -26,9 +27,8 @@ def _make_coordinator(
         side_effect=lambda cap: cap in (capabilities or [])
     )
     coordinator.has_subwoofer = AsyncMock(return_value=has_subwoofer)
-    coordinator.get_volume_max = MagicMock(return_value=volume_max)
-    coordinator.get_subwoofer_min_value = MagicMock(return_value=-10)
-    coordinator.get_subwoofer_max_value = MagicMock(return_value=10)
+    coordinator.get_display_volume_max = MagicMock(return_value=volume_max)
+    coordinator.get_range = MagicMock(side_effect=(ranges or {}).get)
     coordinator.async_set_volume = AsyncMock()
     coordinator.async_set_subwoofer_volume = AsyncMock()
     coordinator.async_set_voice_enhancement_level = AsyncMock()
@@ -54,12 +54,12 @@ class TestNativeVolume:
         entity = NativeVolume(coordinator, _make_device())
         assert entity.native_value == 50
 
-    def test_native_value_rounds(self):
-        """Round the scaled result to the nearest integer."""
+    def test_native_value_rounds_down(self):
+        """Round the scaled result down, like the Max display."""
         coordinator = _make_coordinator(data={"volume": 35}, volume_max=50)
         entity = NativeVolume(coordinator, _make_device())
-        # 35 * 50 / 100 = 17.5 → 18 (banker's rounding: rounds to even)
-        assert entity.native_value == 18
+        # The Max display rounds down: 35 // 2 = 17.
+        assert entity.native_value == 17
 
     def test_native_value_none_when_no_data(self):
         """Return None when volume key is absent from coordinator data."""
@@ -68,7 +68,7 @@ class TestNativeVolume:
         assert entity.native_value is None
 
     def test_native_max_value(self):
-        """Delegate native_max_value to coordinator.get_volume_max."""
+        """Delegate native_max_value to coordinator.get_display_volume_max."""
         coordinator = _make_coordinator(volume_max=80)
         entity = NativeVolume(coordinator, _make_device())
         assert entity.native_max_value == 80
@@ -92,17 +92,12 @@ class TestNativeVolume:
 class TestSubWooferVolume:
     """Tests for the SubWooferVolume number entity."""
 
-    def test_native_min_value(self):
-        """Delegate native_min_value to coordinator.get_subwoofer_min_value."""
+    def test_default_range(self):
+        """Use the known bounds when the soundbar does not report them."""
         coordinator = _make_coordinator()
         entity = SubWooferVolume(coordinator, _make_device())
-        assert entity.native_min_value == -10
-
-    def test_native_max_value(self):
-        """Delegate native_max_value to coordinator.get_subwoofer_max_value."""
-        coordinator = _make_coordinator()
-        entity = SubWooferVolume(coordinator, _make_device())
-        assert entity.native_max_value == 10
+        assert (entity.native_min_value, entity.native_max_value) == (-10, 10)
+        assert entity.native_unit_of_measurement == "dB"
 
     def test_native_value_from_data(self):
         """Return the subwoofer_volume value from coordinator data."""
@@ -162,6 +157,38 @@ class TestSpeakerLevels:
         entity = UpFiringLevel(coordinator, _make_device())
         await entity.async_set_native_value(0.0)
         coordinator.async_set_up_firing_level.assert_awaited_once_with(0)
+
+
+@pytest.mark.parametrize(
+    ("cls", "key"),
+    [
+        (SubWooferVolume, StateKey.SUBWOOFER_VOLUME),
+        (VoiceEnhancementLevel, StateKey.VOICE_ENHANCEMENT_LEVEL),
+        (CenterVolume, StateKey.CENTER_VOLUME),
+        (CenterSpeakerLevel, StateKey.CENTER_SPEAKER_LEVEL),
+        (SideFiringLevel, StateKey.SIDE_FIRING_LEVEL),
+        (UpFiringLevel, StateKey.UP_FIRING_LEVEL),
+    ],
+)
+def test_range_from_soundbar(cls, key):
+    """Apply the bounds reported by the soundbar."""
+    coordinator = _make_coordinator(ranges={key: Range(-6, 9, 0.5, "dB")})
+    entity = cls(coordinator, _make_device())
+    assert entity.native_min_value == -6
+    assert entity.native_max_value == 9
+    assert entity.native_step == 0.5
+    assert entity.native_unit_of_measurement == "dB"
+    coordinator.get_range.assert_called_once_with(key)
+
+
+def test_range_keeps_unit_when_not_reported():
+    """Keep the entity unit when the soundbar reports none."""
+    coordinator = _make_coordinator(
+        ranges={StateKey.VOICE_ENHANCEMENT_LEVEL: Range(0, 5)}
+    )
+    entity = VoiceEnhancementLevel(coordinator, _make_device())
+    assert entity.native_max_value == 5
+    assert entity.native_unit_of_measurement == "Level"
 
 
 class TestNumberSetupEntry:

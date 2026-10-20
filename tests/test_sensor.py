@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pyambeo import Capability
 
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.sensor import (
+    AudioCodecSensor,
     DecoderStatusSensor,
     async_setup_entry,
 )
@@ -83,6 +85,33 @@ class TestDecoderStatusSensor:
         assert entity.extra_state_attributes == {}
 
 
+class TestAudioCodecSensor:
+    """Tests for the AudioCodecSensor diagnostic sensor entity."""
+
+    def _entity(self, data, codec=None):
+        coordinator = _make_coordinator(data=data)
+        coordinator.get_audio_codec = MagicMock(return_value=codec)
+        return AudioCodecSensor(coordinator, _make_device())
+
+    def test_native_value_from_api(self):
+        """Return the codec named by the API."""
+        entity = self._entity({"decoder_status": {"codec": "pcm"}}, "PCM")
+        assert entity.native_value == "PCM"
+
+    @pytest.mark.parametrize("decoder_status", [{}, {"decoder_status": 0}])
+    def test_native_value_no_signal(self, decoder_status):
+        """Report no signal when the decoder receives no audio."""
+        entity = self._entity({"decoder_status": decoder_status})
+        assert entity.native_value == "No signal"
+
+    @pytest.mark.parametrize("data", [None, {}, {"decoder_status": None}])
+    def test_native_value_none_without_decoder(self, data):
+        """Return None when the decoder status is unknown."""
+        entity = self._entity(data, "PCM")
+        entity.coordinator.data = data
+        assert entity.native_value is None
+
+
 class TestSensorSetupEntry:
     """Tests for sensor platform setup entry."""
 
@@ -95,6 +124,7 @@ class TestSensorSetupEntry:
         added = []
         await async_setup_entry(MagicMock(), config_entry, added.extend)
         assert any(isinstance(e, DecoderStatusSensor) for e in added)
+        assert any(isinstance(e, AudioCodecSensor) for e in added)
 
     async def test_no_decoder_status_when_not_capable(self):
         """Add no entities when device lacks DECODER_STATUS capability."""
