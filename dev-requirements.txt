@@ -3,4 +3,4 @@ pre-commit
 pytest-homeassistant-custom-component
 pytest-cov
 aioresponses
-pyambeo==0.2.2
+pyambeo==0.3.0

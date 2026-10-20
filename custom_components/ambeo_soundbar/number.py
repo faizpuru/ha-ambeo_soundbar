@@ -3,10 +3,31 @@
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from pyambeo import Capability
+from pyambeo import Capability, StateKey
 
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseNumber
+
+
+class _RangedNumber(AmbeoBaseNumber):
+    """Number whose bounds are reported by the soundbar.
+
+    The class attributes are used when the soundbar does not report them.
+    """
+
+    _range_key: StateKey
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the number and apply the bounds of the soundbar."""
+        super().__init__(*args, **kwargs)
+        bounds = self.coordinator.get_range(self._range_key)
+        if bounds is None:
+            return
+        self._attr_native_min_value = bounds.min
+        self._attr_native_max_value = bounds.max
+        self._attr_native_step = bounds.step
+        if bounds.unit:
+            self._attr_native_unit_of_measurement = bounds.unit
 
 
 class NativeVolume(AmbeoBaseNumber):
@@ -50,10 +71,16 @@ class NativeVolume(AmbeoBaseNumber):
         )
 
 
-class SubWooferVolume(AmbeoBaseNumber):
+class SubWooferVolume(_RangedNumber):
     """Number entity for subwoofer volume."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_step = 1
+    _attr_native_min_value = -10
+    _attr_native_max_value = 10
+    _attr_native_unit_of_measurement = "dB"
+    _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
+    _range_key = StateKey.SUBWOOFER_VOLUME
 
     def __init__(self, coordinator, device):
         """Initialize the subwoofer volume number entity."""
@@ -65,33 +92,8 @@ class SubWooferVolume(AmbeoBaseNumber):
             "async_set_subwoofer_volume",
         )
 
-    @property
-    def native_step(self):
-        """Return the step value for the subwoofer volume."""
-        return 1
 
-    @property
-    def native_min_value(self):
-        """Return the minimum value for the subwoofer volume."""
-        return self.coordinator.get_subwoofer_min_value()
-
-    @property
-    def native_max_value(self):
-        """Return the maximum value for the subwoofer volume."""
-        return self.coordinator.get_subwoofer_max_value()
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement for the subwoofer volume."""
-        return "dB"
-
-    @property
-    def device_class(self):
-        """Return the device class for the subwoofer volume."""
-        return NumberDeviceClass.SOUND_PRESSURE
-
-
-class VoiceEnhancementLevel(AmbeoBaseNumber):
+class VoiceEnhancementLevel(_RangedNumber):
     """Number entity for the voice enhancement level."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -101,6 +103,7 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
     _attr_native_max_value = 3
     _attr_native_unit_of_measurement = "Level"
     _integer = True
+    _range_key = StateKey.VOICE_ENHANCEMENT_LEVEL
 
     def __init__(self, coordinator, device):
         """Initialize the voice enhancement level number entity."""
@@ -113,7 +116,7 @@ class VoiceEnhancementLevel(AmbeoBaseNumber):
         )
 
 
-class CenterVolume(AmbeoBaseNumber):
+class CenterVolume(_RangedNumber):
     """Number entity for the center channel volume."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -123,6 +126,7 @@ class CenterVolume(AmbeoBaseNumber):
     _attr_native_unit_of_measurement = "dB"
     _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
     _integer = True
+    _range_key = StateKey.CENTER_VOLUME
 
     def __init__(self, coordinator, device):
         """Initialize the center volume number entity."""
@@ -135,7 +139,7 @@ class CenterVolume(AmbeoBaseNumber):
         )
 
 
-class _SpeakerLevel(AmbeoBaseNumber):
+class _SpeakerLevel(_RangedNumber):
     """Base for speaker level numbers (dB, -12 to 12, CONFIG category)."""
 
     _attr_native_step = 1
@@ -149,6 +153,8 @@ class _SpeakerLevel(AmbeoBaseNumber):
 
 class CenterSpeakerLevel(_SpeakerLevel):
     """Number entity for the center speaker level."""
+
+    _range_key = StateKey.CENTER_SPEAKER_LEVEL
 
     def __init__(self, coordinator, device):
         """Initialize the center speaker level number entity."""
@@ -164,6 +170,8 @@ class CenterSpeakerLevel(_SpeakerLevel):
 class SideFiringLevel(_SpeakerLevel):
     """Number entity for the side-firing speaker level."""
 
+    _range_key = StateKey.SIDE_FIRING_LEVEL
+
     def __init__(self, coordinator, device):
         """Initialize the side-firing speaker level number entity."""
         super().__init__(
@@ -177,6 +185,8 @@ class SideFiringLevel(_SpeakerLevel):
 
 class UpFiringLevel(_SpeakerLevel):
     """Number entity for the up-firing speaker level."""
+
+    _range_key = StateKey.UP_FIRING_LEVEL
 
     def __init__(self, coordinator, device):
         """Initialize the up-firing speaker level number entity."""

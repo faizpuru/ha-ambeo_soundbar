@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from pyambeo import AmbeoError, AmbeoSoundbar, PlayerStatus, StateKey
+from pyambeo import AmbeoError, AmbeoSoundbar, PlayerStatus, Range, StateKey
 
 from .const import DOMAIN
 
@@ -322,13 +322,9 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             return None
         return _HA_STATE_BY_STATUS[self.api.player_status(self.data)]
 
-    def get_subwoofer_min_value(self) -> int:
-        """Get subwoofer minimum value."""
-        return self.api.get_subwoofer_min_value()
-
-    def get_subwoofer_max_value(self) -> int:
-        """Get subwoofer maximum value."""
-        return self.api.get_subwoofer_max_value()
+    def get_range(self, key: StateKey) -> Range | None:
+        """Get the bounds of a numeric setting."""
+        return self.api.get_range(key)
 
     def get_led_bar_brightness_range(self):
         """Get the LED bar brightness range."""
