@@ -205,6 +205,7 @@ async def test_command_error_without_value(hass, api):
         ("async_set_up_firing_level", "set_up_firing_level", "up_firing_level"),
         ("async_set_center_volume", "set_center_volume", "center_volume"),
         ("async_set_ambeo_mode_level", "set_ambeo_mode_level", "ambeo_mode_level"),
+        ("async_set_play_mode", "set_play_mode", "play_mode"),
     ],
 )
 async def test_setters(hass, api, method, api_method, data_key):
@@ -232,6 +233,16 @@ async def test_commands(hass, api, method, api_method):
     coordinator = AmbeoCoordinator(hass, api)
     await getattr(coordinator, method)()
     getattr(api, api_method).assert_awaited_once_with()
+
+
+async def test_media_seek(hass, api):
+    """Seek and move the play time to the new position."""
+    coordinator = AmbeoCoordinator(hass, api)
+    coordinator.data = {StateKey.PLAY_TIME: 80000}
+    await coordinator.async_media_seek(30000)
+    api.seek.assert_awaited_once_with(30000)
+    assert coordinator.data[StateKey.PLAY_TIME] == 30000
+    assert "play_time_updated_at" in coordinator.data
 
 
 async def test_set_volume_and_power(hass, api):

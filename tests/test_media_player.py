@@ -2,8 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+from homeassistant.components.media_player.const import (
+    MediaPlayerEntityFeature,
+    RepeatMode,
+)
 from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PLAYING
-from pyambeo import Capability, Preset, Source
+from pyambeo import Capability, PlayMode, Preset, Source
 
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.media_player import (
@@ -63,6 +68,8 @@ def _make_coordinator(data=None, capabilities=None, sources=None, presets=None):
     coordinator.async_media_pause = AsyncMock()
     coordinator.async_media_next_track = AsyncMock()
     coordinator.async_media_previous_track = AsyncMock()
+    coordinator.async_media_seek = AsyncMock()
+    coordinator.async_set_play_mode = AsyncMock()
     return coordinator
 
 
@@ -478,6 +485,109 @@ class TestSupportedFeatures:
         assert not (features & MediaPlayerEntityFeature.TURN_ON)
         assert not (features & MediaPlayerEntityFeature.TURN_OFF)
 
+    def test_streaming_controls(self):
+        """Announce the controls the stream accepts."""
+        player, _ = _make_player(
+            data={
+                "player_data": {
+                    "status": {"duration": 237520},
+                    "controls": {
+                        "next_": True,
+                        "previous": True,
+                        "seekTime": True,
+                        "playMode": {"shuffle": True, "repeatAll": True},
+                    },
+                }
+            }
+        )
+        features = player.supported_features
+        for feature in (
+            MediaPlayerEntityFeature.NEXT_TRACK,
+            MediaPlayerEntityFeature.PREVIOUS_TRACK,
+            MediaPlayerEntityFeature.SEEK,
+            MediaPlayerEntityFeature.SHUFFLE_SET,
+            MediaPlayerEntityFeature.REPEAT_SET,
+        ):
+            assert features & feature
+
+    def test_physical_input_controls(self):
+        """Keep play and pause only when the stream accepts no other control."""
+        player, _ = _make_player(
+            data={
+                "player_data": {
+                    "controls": {"pause": False, "previous": False, "next_": False}
+                }
+            }
+        )
+        features = player.supported_features
+        assert features & MediaPlayerEntityFeature.PLAY
+        assert features & MediaPlayerEntityFeature.PAUSE
+        for feature in (
+            MediaPlayerEntityFeature.NEXT_TRACK,
+            MediaPlayerEntityFeature.PREVIOUS_TRACK,
+            MediaPlayerEntityFeature.SEEK,
+            MediaPlayerEntityFeature.SHUFFLE_SET,
+            MediaPlayerEntityFeature.REPEAT_SET,
+        ):
+            assert not features & feature
+
+    def test_no_seek_on_live_streams(self):
+        """Do not announce seeking without a track duration."""
+        player, _ = _make_player(
+            data={"player_data": {"status": {}, "controls": {"seekTime": True}}}
+        )
+        assert not player.supported_features & MediaPlayerEntityFeature.SEEK
+
+    @pytest.mark.parametrize("play_mode", [{}, {"shuffle": False}])
+    def test_no_play_mode_when_none_accepted(self, play_mode):
+        """Do not announce shuffle and repeat when no play mode is accepted."""
+        player, _ = _make_player(
+            data={"player_data": {"controls": {"playMode": play_mode}}}
+        )
+        assert not player.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET
+
+
+class TestShuffleRepeat:
+    """Tests for the shuffle and repeat modes."""
+
+    @pytest.mark.parametrize(
+        ("mode", "shuffle", "repeat"),
+        [
+            ("normal", False, RepeatMode.OFF),
+            ("shuffleRepeatAll", True, RepeatMode.ALL),
+            ("repeatOne", False, RepeatMode.ONE),
+            ("unknown", None, None),
+            (None, None, None),
+        ],
+    )
+    def test_state(self, mode, shuffle, repeat):
+        """Split the device play mode into shuffle and repeat."""
+        player, _ = _make_player(data={"play_mode": mode})
+        assert player.shuffle is shuffle
+        assert player.repeat == repeat
+
+    async def test_set_shuffle_keeps_repeat(self):
+        """Combine the new shuffle state with the current repeat mode."""
+        player, coordinator = _make_player(data={"play_mode": "repeatAll"})
+        await player.async_set_shuffle(True)
+        coordinator.async_set_play_mode.assert_awaited_once_with(
+            PlayMode.SHUFFLE_REPEAT_ALL
+        )
+
+    async def test_set_repeat_keeps_shuffle(self):
+        """Combine the new repeat mode with the current shuffle state."""
+        player, coordinator = _make_player(data={"play_mode": "shuffle"})
+        await player.async_set_repeat(RepeatMode.ONE)
+        coordinator.async_set_play_mode.assert_awaited_once_with(
+            PlayMode.SHUFFLE_REPEAT_ONE
+        )
+
+    async def test_set_repeat_from_unknown_mode(self):
+        """Start from no shuffle when the current mode is unknown."""
+        player, coordinator = _make_player(data={})
+        await player.async_set_repeat(RepeatMode.ALL)
+        coordinator.async_set_play_mode.assert_awaited_once_with(PlayMode.REPEAT_ALL)
+
 
 class TestPlayback:
     """Tests for playback control actions."""
@@ -499,6 +609,12 @@ class TestPlayback:
         player, coordinator = _make_player()
         await player.async_media_next_track()
         coordinator.async_media_next_track.assert_awaited_once()
+
+    async def test_media_seek(self):
+        """Seek in milliseconds."""
+        player, coordinator = _make_player()
+        await player.async_media_seek(30.5)
+        coordinator.async_media_seek.assert_awaited_once_with(30500)
 
     async def test_previous_track(self):
         """Delegate previous track to coordinator.async_media_previous_track."""

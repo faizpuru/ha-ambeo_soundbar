@@ -11,7 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from pyambeo import AmbeoError, AmbeoSoundbar, PlayerStatus, Range, StateKey
+from pyambeo import (
+    AmbeoError,
+    AmbeoSoundbar,
+    PlayerStatus,
+    PlayMode,
+    Range,
+    StateKey,
+)
 
 from .const import DOMAIN
 
@@ -190,6 +197,17 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def async_media_previous_track(self):
         """Previous track."""
         await self._async_call("previous")
+
+    async def async_media_seek(self, position_ms: int):
+        """Seek to a position in the current track."""
+        await self._async_call("seek", position_ms)
+        if self.data:
+            self.data["play_time_updated_at"] = dt_util.utcnow()
+        self._optimistic_update(StateKey.PLAY_TIME, position_ms)
+
+    async def async_set_play_mode(self, mode: PlayMode):
+        """Set the shuffle and repeat mode."""
+        await self._async_set("set_play_mode", "play_mode", mode)
 
     async def async_set_led_bar_brightness(self, brightness: int):
         """Set LED bar brightness."""
