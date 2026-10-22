@@ -3,10 +3,13 @@
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.components.media_player.const import (
+    MediaPlayerEntityFeature,
+    RepeatMode,
+)
 from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
-from pyambeo import Capability
+from pyambeo import Capability, PlayMode
 
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseEntity
@@ -22,6 +25,17 @@ SERVICE_NAMES = {
 
 # Play logic of the physical inputs (HDMI, optical…), which are not apps.
 PHYSICAL_INPUT_PLAY_LOGIC = "imx8af:"
+
+# Device play mode for each shuffle and repeat combination.
+PLAY_MODES = {
+    (False, RepeatMode.OFF): PlayMode.NORMAL,
+    (True, RepeatMode.OFF): PlayMode.SHUFFLE,
+    (False, RepeatMode.ONE): PlayMode.REPEAT_ONE,
+    (True, RepeatMode.ONE): PlayMode.SHUFFLE_REPEAT_ONE,
+    (False, RepeatMode.ALL): PlayMode.REPEAT_ALL,
+    (True, RepeatMode.ALL): PlayMode.SHUFFLE_REPEAT_ALL,
+}
+SHUFFLE_REPEAT = {mode: key for key, mode in PLAY_MODES.items()}
 
 
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
@@ -45,9 +59,22 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.SELECT_SOUND_MODE
             | MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
-            | MediaPlayerEntityFeature.NEXT_TRACK
-            | MediaPlayerEntityFeature.PREVIOUS_TRACK
         )
+
+        # The stream announces the other controls it accepts. Play and pause
+        # stay available, as the controls are missing while switching streams.
+        controls = self._get_player_data("controls", default={})
+        if controls.get("next_"):
+            features |= MediaPlayerEntityFeature.NEXT_TRACK
+        if controls.get("previous"):
+            features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+        if controls.get("seekTime") and self.media_duration is not None:
+            features |= MediaPlayerEntityFeature.SEEK
+        if any((controls.get("playMode") or {}).values()):
+            features |= (
+                MediaPlayerEntityFeature.SHUFFLE_SET
+                | MediaPlayerEntityFeature.REPEAT_SET
+            )
 
         if self.coordinator.has_capability(Capability.STANDBY):
             features |= (
@@ -198,6 +225,36 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
             return None
         return SERVICE_NAMES.get(service_id, service_id[:1].upper() + service_id[1:])
 
+    def _shuffle_repeat(self) -> tuple[bool, RepeatMode] | None:
+        """Return the shuffle and repeat state of the device play mode."""
+        if not self.coordinator.data:
+            return None
+        return SHUFFLE_REPEAT.get(self.coordinator.data.get("play_mode"))
+
+    @property
+    def shuffle(self):
+        """Return True if shuffle is enabled."""
+        shuffle_repeat = self._shuffle_repeat()
+        return shuffle_repeat[0] if shuffle_repeat else None
+
+    @property
+    def repeat(self):
+        """Return the repeat mode."""
+        shuffle_repeat = self._shuffle_repeat()
+        return shuffle_repeat[1] if shuffle_repeat else None
+
+    async def async_set_shuffle(self, shuffle):
+        """Enable or disable shuffle, keeping the repeat mode."""
+        repeat = self.repeat or RepeatMode.OFF
+        await self.coordinator.async_set_play_mode(PLAY_MODES[shuffle, repeat])
+
+    async def async_set_repeat(self, repeat):
+        """Set the repeat mode, keeping shuffle."""
+        shuffle = bool(self.shuffle)
+        await self.coordinator.async_set_play_mode(
+            PLAY_MODES[shuffle, RepeatMode(repeat)]
+        )
+
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
         await self.coordinator.async_set_volume(volume * self._max_volume)
@@ -282,6 +339,10 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
         """Go back to the previous track."""
         _LOGGER.debug("Going back to the previous track")
         await self.coordinator.async_media_previous_track()
+
+    async def async_media_seek(self, position):
+        """Seek to a position, in seconds."""
+        await self.coordinator.async_media_seek(int(position * 1000))
 
 
 async def async_setup_entry(
