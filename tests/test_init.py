@@ -1,5 +1,6 @@
 """Tests for the Ambeo Soundbar integration setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,7 +15,12 @@ from pyambeo import (
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ambeo_soundbar import async_unload_entry
-from custom_components.ambeo_soundbar.const import CONFIG_HOST, DOMAIN
+from custom_components.ambeo_soundbar.const import (
+    CONFIG_CONCURRENT_REQUESTS,
+    CONFIG_HOST,
+    CONFIG_UPDATE_INTERVAL,
+    DOMAIN,
+)
 
 
 @pytest.mark.parametrize(
@@ -75,12 +81,49 @@ async def test_setup_and_reload_entry(hass):
         assert hass.states.get("media_player.living_room") is not None
 
         hass.config_entries.async_update_entry(
-            entry, options={CONFIG_HOST: "192.168.1.200"}
+            entry, options={CONFIG_UPDATE_INTERVAL: 20}
         )
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert connect.await_count == 2
+    coordinator = entry.runtime_data.coordinator
+    assert coordinator.update_interval == timedelta(seconds=20)
+
+
+async def test_migrate_entry(hass):
+    """Move the host to data and the polling settings to options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="SN123456",
+        data={CONFIG_HOST: "192.168.1.100", CONFIG_UPDATE_INTERVAL: 10},
+        options={CONFIG_HOST: "192.168.1.200", CONFIG_CONCURRENT_REQUESTS: 1},
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ambeo_soundbar.AmbeoSoundbar.connect",
+        AsyncMock(return_value=_mock_api()),
+    ) as connect:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entry.data == {CONFIG_HOST: "192.168.1.200"}
+    assert entry.options == {CONFIG_UPDATE_INTERVAL: 10, CONFIG_CONCURRENT_REQUESTS: 1}
     assert connect.await_args.args[0] == "192.168.1.200"
+
+
+async def test_migrate_entry_from_future_version(hass):
+    """Refuse to downgrade an entry created by a newer version."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, version=2, data={CONFIG_HOST: "192.168.1.100"}
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_setup_entry_without_serial(hass):

@@ -4,12 +4,19 @@
       "user": {
         "title": "Se connecter à la barre de son Ambeo",
         "data": {
-          "host": "Hôte",
-          "update_interval": "Intervalle de mise à jour (secondes)"
+          "host": "Hôte"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
-          "update_interval": "Fréquence d'interrogation de la barre de son pour les mises à jour (par défaut : 30)"
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)"
+        }
+      },
+      "reconfigure": {
+        "title": "Changer l'hôte de la barre de son",
+        "data": {
+          "host": "Hôte"
+        },
+        "data_description": {
+          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)"
         }
       }
     },
@@ -20,7 +27,9 @@
     },
     "abort": {
       "already_configured": "L'appareil est déjà configuré",
-      "no_serial": "La barre de son n'a pas fourni de numéro de série, elle ne peut donc pas être identifiée."
+      "no_serial": "La barre de son n'a pas fourni de numéro de série, elle ne peut donc pas être identifiée.",
+      "reconfigure_successful": "L'hôte de la barre de son a été mis à jour.",
+      "different_device": "Cet hôte correspond à une autre barre de son. Ajoutez-la plutôt comme nouvel appareil."
     }
   },
   "options": {
@@ -28,22 +37,14 @@
       "init": {
         "title": "Paramètres de la barre de son Ambeo",
         "data": {
-          "host": "Hôte",
           "update_interval": "Intervalle de mise à jour (secondes)",
           "concurrent_requests": "Requêtes simultanées maximum"
         },
         "data_description": {
-          "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)",
           "update_interval": "Fréquence d'interrogation de la barre de son pour les mises à jour (par défaut : 30)",
           "concurrent_requests": "Nombre maximum de requêtes HTTP simultanées envoyées à la barre de son lors d'un cycle de polling. Des valeurs plus faibles réduisent la charge sur le serveur embarqué de l'appareil (par défaut : 3)."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "Échec de la connexion à la barre de son Ambeo. Veuillez vérifier l'hôte et vous assurer que la barre de son est allumée.",
-      "unsupported_model": "Ce modèle de barre de son n'est pas pris en charge.",
-      "unknown": "Erreur inattendue. Consultez les journaux pour plus de détails.",
-      "different_device": "Cet hôte correspond à une autre barre de son. Ajoutez-la plutôt comme nouvel appareil."
     }
   },
   "exceptions": {

@@ -4,12 +4,19 @@
       "user": {
         "title": "Connect to Ambeo Soundbar",
         "data": {
-          "host": "Host",
-          "update_interval": "Update interval (seconds)"
+          "host": "Host"
         },
         "data_description": {
-          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
-          "update_interval": "How often to poll the soundbar for updates (default: 30s)"
+          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)"
+        }
+      },
+      "reconfigure": {
+        "title": "Change the soundbar host",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)"
         }
       }
     },
@@ -20,7 +27,9 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "no_serial": "The soundbar did not report a serial number, so it cannot be identified."
+      "no_serial": "The soundbar did not report a serial number, so it cannot be identified.",
+      "reconfigure_successful": "The soundbar host has been updated.",
+      "different_device": "This host is a different soundbar. Add it as a new device instead."
     }
   },
   "options": {
@@ -28,22 +37,14 @@
       "init": {
         "title": "Ambeo Soundbar Settings",
         "data": {
-          "host": "Host",
           "update_interval": "Update interval (seconds)",
           "concurrent_requests": "Max concurrent requests"
         },
         "data_description": {
-          "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)",
           "update_interval": "How often to poll the soundbar for updates (default: 30s)",
           "concurrent_requests": "Maximum number of simultaneous HTTP requests sent to the soundbar during a poll cycle. Lower values reduce load on the device's embedded server (default: 3)."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to the Ambeo Soundbar. Please verify the host and ensure the soundbar is powered on.",
-      "unsupported_model": "This soundbar model is not supported.",
-      "unknown": "Unexpected error. Check the logs for details.",
-      "different_device": "This host is a different soundbar. Add it as a new device instead."
     }
   },
   "exceptions": {

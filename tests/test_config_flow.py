@@ -1,6 +1,6 @@
 """Tests for the Ambeo Soundbar config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant import config_entries
@@ -8,14 +8,14 @@ from homeassistant.data_entry_flow import FlowResultType
 from pyambeo import (
     AmbeoConnectionError,
     AmbeoUnsupportedModelError,
+    DeviceInfo,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.ambeo_soundbar.config_flow import validate_connection
 from custom_components.ambeo_soundbar.const import (
+    CONFIG_CONCURRENT_REQUESTS,
     CONFIG_HOST,
     CONFIG_UPDATE_INTERVAL,
-    CONFIG_UPDATE_INTERVAL_DEFAULT,
     DOMAIN,
 )
 
@@ -23,74 +23,102 @@ MOCK_HOST = "192.168.1.100"
 MOCK_NAME = "Ambeo Soundbar Plus"
 MOCK_SERIAL = "SN123456"
 
+ERRORS = [
+    (AmbeoConnectionError("down"), "cannot_connect"),
+    (AmbeoUnsupportedModelError("AMBEO Soundbar Ultra"), "unsupported_model"),
+    (KeyError("value"), "unknown"),
+]
 
-def _patch_validate_connection(name=MOCK_NAME, serial=MOCK_SERIAL, error=None):
-    """Patch validate_connection to return given values."""
+
+def _patch_connect(name=MOCK_NAME, serial=MOCK_SERIAL, side_effect=None):
+    """Patch AmbeoSoundbar.connect to return a soundbar with the given info."""
+    api = MagicMock()
+    api.info = DeviceInfo("AMBEO Soundbar Plus", name, serial, "1.0.134")
     return patch(
-        "custom_components.ambeo_soundbar.config_flow.validate_connection",
-        return_value=(name, serial, error),
+        "custom_components.ambeo_soundbar.config_flow.AmbeoSoundbar.connect",
+        AsyncMock(return_value=api, side_effect=side_effect),
     )
 
 
-def _patch_setup_entry():
+@pytest.fixture
+def mock_setup_entry():
     """Patch async_setup_entry to avoid full integration setup."""
-    return patch(
-        "custom_components.ambeo_soundbar.async_setup_entry",
-        return_value=True,
+    with patch(
+        "custom_components.ambeo_soundbar.async_setup_entry", return_value=True
+    ) as setup_entry:
+        yield setup_entry
+
+
+def _add_entry(hass):
+    """Add a configured soundbar entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        data={CONFIG_HOST: MOCK_HOST},
+        unique_id=MOCK_SERIAL,
+        minor_version=2,
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 # ---------------------------------------------------------------------------
-# Config flow tests
+# User flow tests
 # ---------------------------------------------------------------------------
 
 
-async def test_user_step_shows_form(hass):
-    """Test that the user step shows the setup form."""
+async def test_user_step_success(hass, mock_setup_entry):
+    """Create the entry with the host only."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-
-async def test_user_step_success(hass):
-    """Test successful config flow from user step."""
-    with _patch_validate_connection(), _patch_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    with _patch_connect():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST},
+            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_NAME
-    assert result["data"][CONFIG_HOST] == MOCK_HOST
+    assert result["data"] == {CONFIG_HOST: MOCK_HOST}
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
-@pytest.mark.parametrize("error", ["cannot_connect", "unsupported_model", "unknown"])
-async def test_user_step_error_recovers(hass, error):
-    """Test config flow shows an error, then creates the entry on retry."""
-    with _patch_validate_connection(name=None, serial=None, error=error):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+async def test_user_step_fallback_title(hass, mock_setup_entry):
+    """Use a fallback title when the soundbar reports no name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with _patch_connect(name=None):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST},
+            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Ambeo Soundbar"
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+@pytest.mark.parametrize(("side_effect", "error"), ERRORS)
+async def test_user_step_error_recovers(hass, mock_setup_entry, side_effect, error):
+    """Show an error, then create the entry on retry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with _patch_connect(side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
         )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    with _patch_validate_connection(), _patch_setup_entry():
+    with _patch_connect():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST},
+            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -98,14 +126,13 @@ async def test_user_step_error_recovers(hass, error):
 
 
 async def test_user_step_no_serial(hass):
-    """Test config flow aborts when the device reports no serial number."""
-    with _patch_validate_connection(serial=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    """Abort when the soundbar reports no serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with _patch_connect(serial=None):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST},
+            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
         )
 
     assert result["type"] == FlowResultType.ABORT
@@ -113,57 +140,81 @@ async def test_user_step_no_serial(hass):
 
 
 async def test_user_step_already_configured(hass):
-    """Test config flow aborts when device is already configured."""
-    with _patch_validate_connection(), _patch_setup_entry():
-        # First setup
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
-        )
+    """Abort when the soundbar is already configured."""
+    _add_entry(hass)
 
-    with _patch_validate_connection():
-        # Second attempt with same serial
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with _patch_connect():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONFIG_HOST: MOCK_HOST}
+            result["flow_id"], {CONFIG_HOST: "192.168.1.200"}
         )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_step_fallback_title(hass):
-    """Test that config flow uses fallback title when name is None."""
-    with _patch_validate_connection(name=None), _patch_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+# ---------------------------------------------------------------------------
+# Reconfigure flow tests
+# ---------------------------------------------------------------------------
+
+
+async def test_reconfigure_success(hass, mock_setup_entry):
+    """Update the host of the same soundbar."""
+    entry = _add_entry(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with _patch_connect():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST},
+            result["flow_id"], {CONFIG_HOST: "192.168.1.200"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Ambeo Soundbar"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONFIG_HOST: "192.168.1.200"}
 
 
-async def test_user_step_custom_update_interval(hass):
-    """Test that a custom update interval is stored in data."""
-    with _patch_validate_connection(), _patch_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+@pytest.mark.parametrize(("side_effect", "error"), ERRORS)
+async def test_reconfigure_error_recovers(hass, mock_setup_entry, side_effect, error):
+    """Show an error, then update the host on retry."""
+    entry = _add_entry(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with _patch_connect(side_effect=side_effect):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: MOCK_HOST, CONFIG_UPDATE_INTERVAL: 30},
+            result["flow_id"], {CONFIG_HOST: "192.168.1.200"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONFIG_UPDATE_INTERVAL] == 30
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with _patch_connect():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONFIG_HOST: "192.168.1.200"}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONFIG_HOST: "192.168.1.200"}
+
+
+async def test_reconfigure_different_device(hass):
+    """Refuse a host that answers with another serial number."""
+    entry = _add_entry(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with _patch_connect(serial="OTHER"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONFIG_HOST: "192.168.1.200"}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+    assert entry.data == {CONFIG_HOST: MOCK_HOST}
 
 
 # ---------------------------------------------------------------------------
@@ -171,113 +222,22 @@ async def test_user_step_custom_update_interval(hass):
 # ---------------------------------------------------------------------------
 
 
-async def _setup_entry(hass, options=None):
-    """Create a config entry with mocked runtime_data and return it."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        data={
-            CONFIG_HOST: MOCK_HOST,
-            CONFIG_UPDATE_INTERVAL: CONFIG_UPDATE_INTERVAL_DEFAULT,
-        },
-        options=options or {},
-        unique_id=MOCK_SERIAL,
-    )
-    entry.add_to_hass(hass)
-
-    mock_coordinator = MagicMock()
-
-    mock_data = MagicMock()
-    mock_data.coordinator = mock_coordinator
-    entry.runtime_data = mock_data
-
-    return entry
-
-
-async def test_options_flow_shows_form(hass):
-    """Test that the options flow shows the settings form."""
-    entry = await _setup_entry(hass)
+async def test_options_flow(hass, mock_setup_entry):
+    """Store the polling settings in options."""
+    entry = _add_entry(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-
-async def test_options_flow_success(hass):
-    """Test successful options flow update."""
-    entry = await _setup_entry(hass)
-
-    with _patch_validate_connection():
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
-        )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONFIG_UPDATE_INTERVAL: 20.0, CONFIG_CONCURRENT_REQUESTS: 1.0},
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONFIG_HOST] == "192.168.1.200"
-    assert result["data"][CONFIG_UPDATE_INTERVAL] == 20
-
-
-async def test_options_flow_cannot_connect(hass):
-    """Test options flow shows an error, then saves on retry."""
-    entry = await _setup_entry(hass)
-
-    with _patch_validate_connection(name=None, serial=None, error="cannot_connect"):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: "bad-host", CONFIG_UPDATE_INTERVAL: 10},
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with _patch_validate_connection():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-
-
-async def test_options_flow_different_device(hass):
-    """Refuse a host that answers with another serial number."""
-    entry = await _setup_entry(hass)
-
-    with _patch_validate_connection(serial="OTHER"):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "different_device"}
-
-    with _patch_validate_connection():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-
-
-@pytest.mark.parametrize(
-    ("error", "expected"),
-    [
-        (AmbeoUnsupportedModelError("AMBEO Soundbar Ultra"), "unsupported_model"),
-        (AmbeoConnectionError("down"), "cannot_connect"),
-        (KeyError("value"), "unknown"),
-    ],
-)
-async def test_validate_connection_errors(hass, error, expected):
-    """Map connect() errors to config flow error codes."""
-    with patch(
-        "custom_components.ambeo_soundbar.config_flow.AmbeoSoundbar.connect",
-        side_effect=error,
-    ):
-        assert await validate_connection(hass, MOCK_HOST) == (None, None, expected)
+    assert entry.options == {
+        CONFIG_UPDATE_INTERVAL: 20,
+        CONFIG_CONCURRENT_REQUESTS: 1,
+    }
+    assert entry.data == {CONFIG_HOST: MOCK_HOST}

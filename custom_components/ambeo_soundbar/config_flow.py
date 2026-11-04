@@ -6,6 +6,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+)
 from pyambeo import AmbeoError, AmbeoSoundbar, AmbeoUnsupportedModelError
 
 from .const import (
@@ -44,62 +50,62 @@ async def validate_connection(
         return None, None, "unknown"
 
 
+def _host_schema(default: str) -> vol.Schema:
+    """Build the schema asking for the soundbar host."""
+    return vol.Schema({vol.Required(CONFIG_HOST, default=default): TextSelector()})
+
+
 class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options configuration for Ambeo Soundbar integration."""
 
     async def async_step_init(self, user_input=None):
         """Handle the initial step of the options flow."""
-        errors = {}
-        host_default = self.config_entry.options.get(
-            CONFIG_HOST, self.config_entry.data.get(CONFIG_HOST)
-        )
         if user_input is not None:
-            name, serial, error = await validate_connection(
-                self.hass, user_input[CONFIG_HOST]
+            return self.async_create_entry(
+                data={key: int(value) for key, value in user_input.items()}
             )
-            if error is None and serial and serial != self.config_entry.unique_id:
-                error = "different_device"
-            if error is not None:
-                errors["base"] = error
-                return self.display_form(errors, host_default)
-            else:
-                return self.async_create_entry(data=user_input)
 
-        return self.display_form(errors, host_default)
-
-    def display_form(self, errors, host_default):
-        """Build and display the options form."""
-        update_interval_default = self.config_entry.options.get(
-            CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
-        )
-
-        schema: dict = {
-            vol.Optional(CONFIG_HOST, default=host_default): str,
-            vol.Optional(CONFIG_UPDATE_INTERVAL, default=update_interval_default): int,
-            vol.Optional(
-                CONFIG_CONCURRENT_REQUESTS,
-                default=self.config_entry.options.get(
-                    CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT
+        options = self.config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONFIG_UPDATE_INTERVAL,
+                    default=options.get(
+                        CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=5,
+                        max=3600,
+                        unit_of_measurement="s",
+                        mode=NumberSelectorMode.BOX,
+                    )
                 ),
-            ): int,
-        }
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+                vol.Required(
+                    CONFIG_CONCURRENT_REQUESTS,
+                    default=options.get(
+                        CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=10, mode=NumberSelectorMode.BOX)
+                ),
+            }
         )
+        return self.async_show_form(step_id="init", data_schema=schema)
 
 
 class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Manage the configuration flow for Ambeo Soundbar integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input=None):
         """Handle a configuration initiated by the user."""
         errors = {}
 
         if user_input is not None:
-            host = user_input.get(CONFIG_HOST)
+            host = user_input[CONFIG_HOST]
             name, serial, error = await validate_connection(self.hass, host)
             if error:
                 errors["base"] = error
@@ -109,20 +115,36 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=name or "Ambeo Soundbar", data=user_input
+                    title=name or "Ambeo Soundbar", data={CONFIG_HOST: host}
                 )
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONFIG_HOST, default=CONFIG_HOST_DEFAULT): str,
-                vol.Optional(
-                    CONFIG_UPDATE_INTERVAL, default=CONFIG_UPDATE_INTERVAL_DEFAULT
-                ): int,
-            }
+        return self.async_show_form(
+            step_id="user",
+            data_schema=_host_schema(CONFIG_HOST_DEFAULT),
+            errors=errors,
         )
 
+    async def async_step_reconfigure(self, user_input=None):
+        """Change the host of an existing soundbar."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONFIG_HOST]
+            _, serial, error = await validate_connection(self.hass, host)
+            if error:
+                errors["base"] = error
+            else:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONFIG_HOST: host}
+                )
+
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="reconfigure",
+            data_schema=_host_schema(entry.data[CONFIG_HOST]),
+            errors=errors,
         )
 
     @staticmethod
