@@ -64,11 +64,6 @@ async def _async_entry_updated(
     _LOGGER.info("Successfully updated configuration entries")
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Ambeo Soundbar integration."""
-    return True
-
-
 async def async_migrate_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Keep the connection settings in data and the other settings in options."""
     if entry.version > 1:
