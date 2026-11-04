@@ -53,8 +53,9 @@ async def test_update_data_failure(hass, api):
     """Raise UpdateFailed on API errors."""
     api.fetch_state.side_effect = AmbeoConnectionError("down")
     coordinator = AmbeoCoordinator(hass, api)
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(UpdateFailed) as err:
         await coordinator._async_update_data()
+    assert err.value.translation_key == "update_failed"
 
 
 async def test_lookups(hass, api):
@@ -144,8 +145,9 @@ async def test_command_error(hass, api):
     api.set_night_mode = AsyncMock(side_effect=AmbeoResponseError("HTTP 500", 500))
     coordinator = AmbeoCoordinator(hass, api)
     coordinator.data = {"night_mode": False}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await coordinator.async_set_night_mode(True)
+    assert err.value.translation_key == "command_failed"
     assert coordinator.data["night_mode"] is False
 
 

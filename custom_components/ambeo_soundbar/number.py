@@ -44,10 +44,9 @@ class NativeVolume(AmbeoBaseNumber):
         super().__init__(
             coordinator,
             device,
-            "Volume (native)",
+            "native_volume",
             "volume",
             "async_set_volume",
-            unique_id_suffix="Native Volume",
         )
 
     @property
@@ -92,7 +91,7 @@ class SubWooferVolume(_RangedNumber):
         super().__init__(
             coordinator,
             device,
-            "Subwoofer Volume",
+            "subwoofer_volume",
             "subwoofer_volume",
             "async_set_subwoofer_volume",
         )
@@ -115,7 +114,7 @@ class VoiceEnhancementLevel(_RangedNumber):
         super().__init__(
             coordinator,
             device,
-            "Voice Enhancement Level",
+            "voice_enhancement_level",
             "voice_enhancement_level",
             "async_set_voice_enhancement_level",
         )
@@ -138,7 +137,7 @@ class CenterVolume(_RangedNumber):
         super().__init__(
             coordinator,
             device,
-            "Center Volume",
+            "center_volume",
             "center_volume",
             "async_set_center_volume",
         )
@@ -166,9 +165,10 @@ class CenterSpeakerLevel(_SpeakerLevel):
         super().__init__(
             coordinator,
             device,
-            "Speaker Level - Center",
+            "center_speaker_level",
             "center_speaker_level",
             "async_set_center_speaker_level",
+            unique_id_suffix="Speaker Level - Center",
         )
 
 
@@ -182,9 +182,10 @@ class SideFiringLevel(_SpeakerLevel):
         super().__init__(
             coordinator,
             device,
-            "Speaker Level - Side Firing",
+            "side_firing_level",
             "side_firing_level",
             "async_set_side_firing_level",
+            unique_id_suffix="Speaker Level - Side Firing",
         )
 
 
@@ -198,9 +199,10 @@ class UpFiringLevel(_SpeakerLevel):
         super().__init__(
             coordinator,
             device,
-            "Speaker Level - Up Firing",
+            "up_firing_level",
             "up_firing_level",
             "async_set_up_firing_level",
+            unique_id_suffix="Speaker Level - Up Firing",
         )
 
 

@@ -15,7 +15,7 @@ class NightMode(AmbeoBaseSwitch):
     def __init__(self, coordinator, device):
         """Initialize the night mode switch."""
         super().__init__(
-            coordinator, device, "Night Mode", "night_mode", "async_set_night_mode"
+            coordinator, device, "night_mode", "night_mode", "async_set_night_mode"
         )
 
 
@@ -25,7 +25,7 @@ class AmbeoMode(AmbeoBaseSwitch):
     def __init__(self, coordinator, device):
         """Initialize the Ambeo mode switch."""
         super().__init__(
-            coordinator, device, "Ambeo Mode", "ambeo_mode", "async_set_ambeo_mode"
+            coordinator, device, "ambeo_mode", "ambeo_mode", "async_set_ambeo_mode"
         )
 
 
@@ -37,7 +37,7 @@ class SoundFeedback(AmbeoBaseSwitch):
         super().__init__(
             coordinator,
             device,
-            "Sound Feedback",
+            "sound_feedback",
             "sound_feedback",
             "async_set_sound_feedback",
         )
@@ -51,7 +51,7 @@ class VoiceEnhancementMode(AmbeoBaseSwitch):
         super().__init__(
             coordinator,
             device,
-            "Voice Enhancement",
+            "voice_enhancement",
             "voice_enhancement",
             "async_set_voice_enhancement",
         )
@@ -65,7 +65,7 @@ class SubWooferStatus(AmbeoBaseSwitch):
         super().__init__(
             coordinator,
             device,
-            "Subwoofer Status",
+            "subwoofer_status",
             "subwoofer_status",
             "async_set_subwoofer_status",
         )
@@ -79,7 +79,7 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
         super().__init__(
             coordinator,
             device,
-            "Bluetooth Pairing",
+            "bluetooth_pairing",
             "bluetooth_pairing",
             "async_set_bluetooth_pairing_state",
             unique_id_suffix="Ambeo Bluetooth Pairing",

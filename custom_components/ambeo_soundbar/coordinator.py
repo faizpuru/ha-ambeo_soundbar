@@ -72,7 +72,11 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         try:
             data: dict[str, Any] = await self.api.fetch_state(self._concurrent_requests)
         except AmbeoError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         if StateKey.PLAY_TIME in data:
             data["play_time_updated_at"] = dt_util.utcnow()
         _LOGGER.debug("Data updated successfully: %s", data)
@@ -124,7 +128,11 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         try:
             await getattr(self.api, api_method)(*args)
         except AmbeoError as err:
-            raise HomeAssistantError(f"Error calling {api_method}: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": api_method, "error": str(err)},
+            ) from err
 
     async def _async_set(self, api_method: str, data_key: str, value: Any) -> None:
         """Call an API setter and apply an optimistic update."""

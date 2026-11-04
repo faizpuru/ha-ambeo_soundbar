@@ -25,7 +25,7 @@ class LEDBar(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "LED Bar",
+            "led_bar",
             "led_bar",
             LightConfig(
                 brightness_scale=coordinator.get_led_bar_brightness_range(),
@@ -44,7 +44,7 @@ class CodecLED(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Codec LED",
+            "codec_led",
             "codec_led",
             LightConfig(
                 brightness_scale=coordinator.get_codec_led_brightness_range(),
@@ -63,7 +63,7 @@ class AmbeoMaxLogo(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Logo",
+            "logo",
             "ambeo_max_logo",
             LightConfig(
                 brightness_scale=coordinator.get_logo_brightness_range(),
@@ -82,7 +82,7 @@ class AmbeoMaxDisplay(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Display",
+            "display",
             "ambeo_max_display",
             LightConfig(
                 brightness_scale=coordinator.get_display_brightness_range(),
@@ -101,7 +101,7 @@ class AmbeoLogo(BaseLight):
         super().__init__(
             coordinator,
             device,
-            "Logo",
+            "logo",
             "ambeo_logo",
             LightConfig(
                 brightness_scale=coordinator.get_logo_brightness_range(),

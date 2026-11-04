@@ -45,6 +45,8 @@ SHUFFLE_REPEAT = {mode: key for key, mode in PLAY_MODES.items()}
 class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
     """Representation of an Ambeo device as a media player entity."""
 
+    _attr_name = None
+
     def __init__(self, coordinator, device):
         """Initialize the Ambeo media player entity."""
         super().__init__(coordinator, device, None, "player")

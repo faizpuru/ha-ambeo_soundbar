@@ -108,9 +108,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> boo
             host, session, port=DEFAULT_PORT, timeout=TIMEOUT
         )
     except AmbeoUnsupportedModelError as ex:
-        raise ConfigEntryError(f"Unsupported device at {host}: {ex}") from ex
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"host": host, "error": str(ex)},
+        ) from ex
     except AmbeoError as ex:
-        raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host, "error": str(ex)},
+        ) from ex
 
     info = ambeo_api.info
     serial = info.serial or entry.entry_id

@@ -22,7 +22,7 @@ class EcoModeSensor(AmbeoBaseEntity, BinarySensorEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the Eco Mode sensor."""
-        super().__init__(coordinator, device, "Eco Mode", "eco_mode")
+        super().__init__(coordinator, device, "eco_mode", "eco_mode")
 
     @property
     def is_on(self):
