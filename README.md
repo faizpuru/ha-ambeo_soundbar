@@ -52,7 +52,7 @@ This integration uses standard Home Assistant platforms — no custom services. 
 
 ## Installation
 
-**Prerequisites:** Home Assistant 2024.1+, soundbar and HA on the same local network.
+**Prerequisites:** Home Assistant 2024.11+, soundbar and HA on the same local network.
 
 ### HACS (Recommended)
 

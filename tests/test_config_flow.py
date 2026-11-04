@@ -72,9 +72,10 @@ async def test_user_step_success(hass):
     assert result["data"][CONFIG_HOST] == MOCK_HOST
 
 
-async def test_user_step_cannot_connect(hass):
-    """Test config flow shows error when connection fails."""
-    with _patch_validate_connection(name=None, serial=None, error="cannot_connect"):
+@pytest.mark.parametrize("error", ["cannot_connect", "unsupported_model", "unknown"])
+async def test_user_step_error_recovers(hass, error):
+    """Test config flow shows an error, then creates the entry on retry."""
+    with _patch_validate_connection(name=None, serial=None, error=error):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -84,7 +85,31 @@ async def test_user_step_cannot_connect(hass):
         )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
+
+    with _patch_validate_connection(), _patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONFIG_HOST: MOCK_HOST},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+async def test_user_step_no_serial(hass):
+    """Test config flow aborts when the device reports no serial number."""
+    with _patch_validate_connection(serial=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONFIG_HOST: MOCK_HOST},
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_serial"
 
 
 async def test_user_step_already_configured(hass):
@@ -196,7 +221,7 @@ async def test_options_flow_success(hass):
 
 
 async def test_options_flow_cannot_connect(hass):
-    """Test options flow shows error when connection fails."""
+    """Test options flow shows an error, then saves on retry."""
     entry = await _setup_entry(hass)
 
     with _patch_validate_connection(name=None, serial=None, error="cannot_connect"):
@@ -208,6 +233,14 @@ async def test_options_flow_cannot_connect(hass):
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_validate_connection():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_different_device(hass):
@@ -223,6 +256,14 @@ async def test_options_flow_different_device(hass):
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "different_device"}
+
+    with _patch_validate_connection():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {CONFIG_HOST: "192.168.1.200", CONFIG_UPDATE_INTERVAL: 20},
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

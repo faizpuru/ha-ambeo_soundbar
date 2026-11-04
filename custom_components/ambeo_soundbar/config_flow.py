@@ -103,6 +103,8 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name, serial, error = await validate_connection(self.hass, host)
             if error:
                 errors["base"] = error
+            elif not serial:
+                return self.async_abort(reason="no_serial")
             else:
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()

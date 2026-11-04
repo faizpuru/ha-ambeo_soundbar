@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 
     info = ambeo_api.info
-    serial = info.serial or "unknown_serial"
+    serial = info.serial or entry.entry_id
     name = info.name
     model = info.model
     version = info.firmware_version

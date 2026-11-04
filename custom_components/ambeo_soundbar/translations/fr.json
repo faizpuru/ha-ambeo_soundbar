@@ -19,7 +19,8 @@
       "unknown": "Erreur inattendue. Consultez les journaux pour plus de détails."
     },
     "abort": {
-      "already_configured": "L'appareil est déjà configuré"
+      "already_configured": "L'appareil est déjà configuré",
+      "no_serial": "La barre de son n'a pas fourni de numéro de série, elle ne peut donc pas être identifiée."
     }
   },
   "options": {
