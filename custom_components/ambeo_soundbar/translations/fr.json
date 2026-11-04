@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Se connecter à la barre de son Ambeo",
@@ -9,6 +10,10 @@
         "data_description": {
           "host": "Nom d'hôte ou adresse IP de la barre de son Ambeo (ex. ambeo.local ou 192.168.1.x)"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "Barre de son Ambeo découverte",
+        "description": "Voulez-vous ajouter {name} ({host}) ?"
       },
       "reconfigure": {
         "title": "Changer l'hôte de la barre de son",
@@ -29,7 +34,10 @@
       "already_configured": "L'appareil est déjà configuré",
       "no_serial": "La barre de son n'a pas fourni de numéro de série, elle ne peut donc pas être identifiée.",
       "reconfigure_successful": "L'hôte de la barre de son a été mis à jour.",
-      "different_device": "Cet hôte correspond à une autre barre de son. Ajoutez-la plutôt comme nouvel appareil."
+      "different_device": "Cet hôte correspond à une autre barre de son. Ajoutez-la plutôt comme nouvel appareil.",
+      "cannot_connect": "Échec de la connexion à la barre de son Ambeo.",
+      "unsupported_model": "Ce modèle de barre de son n'est pas pris en charge.",
+      "unknown": "Erreur inattendue. Consultez les journaux pour plus de détails."
     }
   },
   "options": {

@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Connect to Ambeo Soundbar",
@@ -9,6 +10,10 @@
         "data_description": {
           "host": "Hostname or IP address of the Ambeo Soundbar (e.g., ambeo.local or 192.168.1.x)"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Ambeo Soundbar",
+        "description": "Do you want to add {name} ({host})?"
       },
       "reconfigure": {
         "title": "Change the soundbar host",
@@ -29,7 +34,10 @@
       "already_configured": "Device is already configured",
       "no_serial": "The soundbar did not report a serial number, so it cannot be identified.",
       "reconfigure_successful": "The soundbar host has been updated.",
-      "different_device": "This host is a different soundbar. Add it as a new device instead."
+      "different_device": "This host is a different soundbar. Add it as a new device instead.",
+      "cannot_connect": "Failed to connect to the Ambeo Soundbar.",
+      "unsupported_model": "This soundbar model is not supported.",
+      "unknown": "Unexpected error. Check the logs for details."
     }
   },
   "options": {
