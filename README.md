@@ -52,7 +52,7 @@ This integration uses standard Home Assistant platforms — no custom services. 
 
 ## Installation
 
-**Prerequisites:** Home Assistant 2024.1+, soundbar and HA on the same local network.
+**Prerequisites:** Home Assistant 2024.11+, soundbar and HA on the same local network.
 
 ### HACS (Recommended)
 
@@ -68,17 +68,24 @@ Copy the `custom_components/ambeo_soundbar` folder into your HA config directory
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ambeo_soundbar)
 
-Go to **Settings > Devices & Services > Add Integration**, search for "Ambeo Soundbar", and enter the soundbar's IP address or hostname (default: `ambeo.local`).
+Go to **Settings > Devices & Services > Add Integration** and search for "Ambeo Soundbar". Setup asks for one parameter:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Host | `ambeo.local` | IP address or hostname of the soundbar. You can find the IP address in your router. |
 
 ## Configuration
 
+Go to **Settings > Devices & Services > Ambeo Soundbar > Configure** to change these options at any time:
+
 | Option | Default | Description |
 |--------|---------|-------------|
-| Host | `ambeo.local` | IP address or hostname |
-| Update Interval | `30s` | Polling interval |
-| Concurrent Requests | `3` | Max simultaneous API requests |
+| Update interval | `30` s | How often the soundbar is polled. The soundbar also pushes most changes as they happen. |
+| Max concurrent requests | `3` | Maximum number of simultaneous requests sent to the soundbar during a poll. Lower it if the soundbar becomes unresponsive. |
 
-Options can be changed anytime via **Settings > Devices & Services > Ambeo Soundbar > Configure**.
+### Changing the host
+
+If the soundbar gets a new IP address, open the three-dot menu of the integration entry and select **Reconfigure**. The new host must answer with the same soundbar.
 
 ## Removal
 
@@ -90,7 +97,7 @@ Go to **Settings > Devices & Services**, find **Ambeo Soundbar**, open the three
 - Confirm the configured IP address is correct
 - Check Home Assistant logs for error details
 - **Unsupported model**: the device answered but is not an AMBEO Soundbar Max, Plus or Mini
-- **Different device** (options): the new host is another soundbar; add it as a new device instead
+- **Different device** (reconfigure): the new host is another soundbar; add it as a new device instead
 
 ## Contributing
 

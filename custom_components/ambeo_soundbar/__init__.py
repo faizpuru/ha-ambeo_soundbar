@@ -69,19 +69,37 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
+    """Keep the connection settings in data and the other settings in options."""
+    if entry.version > 1:
+        return False
+
+    if entry.minor_version < 2:
+        data = {CONFIG_HOST: entry.options.get(CONFIG_HOST, entry.data[CONFIG_HOST])}
+        options = {
+            key: value
+            for key, value in {**entry.data, **entry.options}.items()
+            if key in (CONFIG_UPDATE_INTERVAL, CONFIG_CONCURRENT_REQUESTS)
+        }
+        hass.config_entries.async_update_entry(
+            entry, data=data, options=options, minor_version=2
+        )
+        _LOGGER.debug("Migrated config entry to version 1.2")
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Set up Ambeo Soundbar from a config entry."""
     _LOGGER.debug("Starting configuration of ambeo entry")
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
 
-    host = entry.options.get(CONFIG_HOST, entry.data.get(CONFIG_HOST))
+    host = entry.data[CONFIG_HOST]
     update_interval = entry.options.get(
-        CONFIG_UPDATE_INTERVAL,
-        entry.data.get(CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT),
+        CONFIG_UPDATE_INTERVAL, CONFIG_UPDATE_INTERVAL_DEFAULT
     )
     concurrent_requests = entry.options.get(
-        CONFIG_CONCURRENT_REQUESTS,
-        entry.data.get(CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT),
+        CONFIG_CONCURRENT_REQUESTS, CONFIG_CONCURRENT_REQUESTS_DEFAULT
     )
     session = async_get_clientsession(hass)
 
@@ -95,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
 
     info = ambeo_api.info
-    serial = info.serial or "unknown_serial"
+    serial = info.serial or entry.entry_id
     name = info.name
     model = info.model
     version = info.firmware_version

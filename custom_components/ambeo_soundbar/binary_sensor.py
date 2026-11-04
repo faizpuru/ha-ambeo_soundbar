@@ -10,6 +10,8 @@ from pyambeo import Capability
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

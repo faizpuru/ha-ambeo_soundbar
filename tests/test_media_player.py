@@ -8,6 +8,7 @@ from homeassistant.components.media_player.const import (
     RepeatMode,
 )
 from homeassistant.const import STATE_IDLE, STATE_ON, STATE_PLAYING
+from homeassistant.exceptions import ServiceValidationError
 from pyambeo import Capability, PlayMode, Preset, Source
 
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
@@ -171,16 +172,13 @@ class TestSource:
         await player.async_select_source("Optical")
         coordinator.async_select_source.assert_awaited_once_with("optical")
 
-    async def test_select_source_unknown_does_nothing(self):
-        """Do nothing when the source title cannot be resolved to an ID."""
+    @pytest.mark.parametrize("source", ["ARC", None])
+    async def test_select_source_unknown_raises(self, source):
+        """Raise a validation error when the source title cannot be resolved."""
         player, coordinator = _make_player(sources=SOURCES)
-        await player.async_select_source("ARC")
-        coordinator.async_select_source.assert_not_awaited()
-
-    async def test_select_source_none_does_nothing(self):
-        """Do nothing when source is None."""
-        player, coordinator = _make_player(sources=SOURCES)
-        await player.async_select_source(None)
+        with pytest.raises(ServiceValidationError) as err:
+            await player.async_select_source(source)
+        assert err.value.translation_key == "invalid_source"
         coordinator.async_select_source.assert_not_awaited()
 
 
@@ -208,16 +206,13 @@ class TestSoundMode:
         await player.async_select_sound_mode("Music")
         coordinator.async_select_sound_mode.assert_awaited_once_with("music")
 
-    async def test_select_sound_mode_unknown_does_nothing(self):
-        """Do nothing when the preset title cannot be resolved to an ID."""
+    @pytest.mark.parametrize("sound_mode", ["Jazz", None])
+    async def test_select_sound_mode_unknown_raises(self, sound_mode):
+        """Raise a validation error when the preset title cannot be resolved."""
         player, coordinator = _make_player(presets=PRESETS)
-        await player.async_select_sound_mode("Jazz")
-        coordinator.async_select_sound_mode.assert_not_awaited()
-
-    async def test_select_sound_mode_none_does_nothing(self):
-        """Do nothing when sound_mode is None."""
-        player, coordinator = _make_player(presets=PRESETS)
-        await player.async_select_sound_mode(None)
+        with pytest.raises(ServiceValidationError) as err:
+            await player.async_select_sound_mode(sound_mode)
+        assert err.value.translation_key == "invalid_sound_mode"
         coordinator.async_select_sound_mode.assert_not_awaited()
 
 

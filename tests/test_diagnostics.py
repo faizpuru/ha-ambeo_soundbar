@@ -8,7 +8,11 @@ from pyambeo import AmbeoPopcorn, StateKey
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ambeo_soundbar import AmbeoData, AmbeoDevice
-from custom_components.ambeo_soundbar.const import CONFIG_HOST, DOMAIN
+from custom_components.ambeo_soundbar.const import (
+    CONFIG_HOST,
+    CONFIG_UPDATE_INTERVAL,
+    DOMAIN,
+)
 from custom_components.ambeo_soundbar.coordinator import AmbeoCoordinator
 from custom_components.ambeo_soundbar.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -21,7 +25,7 @@ async def test_diagnostics(hass):
         domain=DOMAIN,
         title="Living room",
         data={CONFIG_HOST: "192.168.1.100"},
-        options={CONFIG_HOST: "192.168.1.101"},
+        options={CONFIG_UPDATE_INTERVAL: 20},
         unique_id="SN123",
     )
     coordinator = MagicMock(spec=AmbeoCoordinator)
@@ -39,7 +43,7 @@ async def test_diagnostics(hass):
     assert diagnostics["device"]["host"] == REDACTED
     assert diagnostics["device"]["model"] == "AMBEO Soundbar Plus"
     assert diagnostics["config"]["data"][CONFIG_HOST] == REDACTED
-    assert diagnostics["config"]["options"][CONFIG_HOST] == REDACTED
+    assert diagnostics["config"]["options"] == {CONFIG_UPDATE_INTERVAL: 20}
     features = diagnostics["capabilities"]["supported_features"]
     assert features == sorted(AmbeoPopcorn.capabilities)
     assert diagnostics["current_state"] == {"volume": 20, "muted": False}

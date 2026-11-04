@@ -11,6 +11,8 @@ from . import AmbeoConfigEntry
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight, LightConfig
 
+PARALLEL_UPDATES = 1
+
 DEFAULT_BRIGHTNESS = 50
 DEFAULT_BRIGHTNESS_AMBEO_MAX = 128
 
