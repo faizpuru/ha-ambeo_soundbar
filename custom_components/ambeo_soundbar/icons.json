@@ -1,0 +1,96 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "eco_mode": {
+        "default": "mdi:leaf",
+        "state": {
+          "off": "mdi:leaf-off"
+        }
+      }
+    },
+    "button": {
+      "reset_expert_settings": {
+        "default": "mdi:restore"
+      }
+    },
+    "light": {
+      "led_bar": {
+        "default": "mdi:led-strip-variant",
+        "state": {
+          "off": "mdi:led-strip-variant-off"
+        }
+      },
+      "codec_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "off": "mdi:led-off"
+        }
+      },
+      "display": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
+      }
+    },
+    "number": {
+      "native_volume": {
+        "default": "mdi:volume-high"
+      },
+      "voice_enhancement_level": {
+        "default": "mdi:account-voice"
+      }
+    },
+    "select": {
+      "ambeo_mode_level": {
+        "default": "mdi:surround-sound"
+      },
+      "source": {
+        "default": "mdi:import"
+      },
+      "sound_mode": {
+        "default": "mdi:equalizer"
+      }
+    },
+    "sensor": {
+      "decoder_status": {
+        "default": "mdi:speaker-multiple"
+      },
+      "audio_codec": {
+        "default": "mdi:waveform"
+      }
+    },
+    "switch": {
+      "night_mode": {
+        "default": "mdi:weather-night"
+      },
+      "ambeo_mode": {
+        "default": "mdi:surround-sound"
+      },
+      "sound_feedback": {
+        "default": "mdi:bell-ring",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
+      "voice_enhancement": {
+        "default": "mdi:account-voice",
+        "state": {
+          "off": "mdi:account-voice-off"
+        }
+      },
+      "subwoofer_status": {
+        "default": "mdi:speaker",
+        "state": {
+          "off": "mdi:speaker-off"
+        }
+      },
+      "bluetooth_pairing": {
+        "default": "mdi:bluetooth-connect",
+        "state": {
+          "off": "mdi:bluetooth"
+        }
+      }
+    }
+  }
+}

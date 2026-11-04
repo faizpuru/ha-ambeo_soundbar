@@ -24,16 +24,17 @@ from custom_components.ambeo_soundbar.const import (
 
 
 @pytest.mark.parametrize(
-    ("error", "state"),
+    ("error", "state", "reason"),
     [
-        (AmbeoConnectionError("down"), ConfigEntryState.SETUP_RETRY),
+        (AmbeoConnectionError("down"), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
         (
             AmbeoUnsupportedModelError("AMBEO Soundbar Ultra"),
             ConfigEntryState.SETUP_ERROR,
+            "unsupported_model",
         ),
     ],
 )
-async def test_setup_entry_errors(hass, error, state):
+async def test_setup_entry_errors(hass, error, state, reason):
     """Retry on connection errors, fail permanently on unsupported models."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONFIG_HOST: "192.168.1.100"})
     entry.add_to_hass(hass)
@@ -43,6 +44,7 @@ async def test_setup_entry_errors(hass, error, state):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert entry.state is state
+    assert entry.error_reason_translation_key == reason
 
 
 def _mock_api(serial="SN123456"):

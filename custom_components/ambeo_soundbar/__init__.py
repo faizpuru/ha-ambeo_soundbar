@@ -64,11 +64,6 @@ async def _async_entry_updated(
     _LOGGER.info("Successfully updated configuration entries")
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Ambeo Soundbar integration."""
-    return True
-
-
 async def async_migrate_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> bool:
     """Keep the connection settings in data and the other settings in options."""
     if entry.version > 1:
@@ -108,9 +103,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmbeoConfigEntry) -> boo
             host, session, port=DEFAULT_PORT, timeout=TIMEOUT
         )
     except AmbeoUnsupportedModelError as ex:
-        raise ConfigEntryError(f"Unsupported device at {host}: {ex}") from ex
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"host": host, "error": str(ex)},
+        ) from ex
     except AmbeoError as ex:
-        raise ConfigEntryNotReady(f"Could not connect to {host}: {ex}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host, "error": str(ex)},
+        ) from ex
 
     info = ambeo_api.info
     serial = info.serial or entry.entry_id

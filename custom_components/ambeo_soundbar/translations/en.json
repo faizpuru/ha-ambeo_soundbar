@@ -55,12 +55,115 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "eco_mode": {
+        "name": "Eco Mode"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Restart"
+      },
+      "reset_expert_settings": {
+        "name": "Reset Expert Settings"
+      }
+    },
+    "light": {
+      "led_bar": {
+        "name": "LED Bar"
+      },
+      "codec_led": {
+        "name": "Codec LED"
+      },
+      "logo": {
+        "name": "Logo"
+      },
+      "display": {
+        "name": "Display"
+      }
+    },
+    "number": {
+      "native_volume": {
+        "name": "Volume (native)"
+      },
+      "subwoofer_volume": {
+        "name": "Subwoofer Volume"
+      },
+      "voice_enhancement_level": {
+        "name": "Voice Enhancement Level"
+      },
+      "center_volume": {
+        "name": "Center Volume"
+      },
+      "center_speaker_level": {
+        "name": "Speaker Level - Center"
+      },
+      "side_firing_level": {
+        "name": "Speaker Level - Side Firing"
+      },
+      "up_firing_level": {
+        "name": "Speaker Level - Up Firing"
+      }
+    },
+    "select": {
+      "ambeo_mode_level": {
+        "name": "Ambeo Mode"
+      },
+      "source": {
+        "name": "Source"
+      },
+      "sound_mode": {
+        "name": "Sound Mode"
+      }
+    },
+    "sensor": {
+      "decoder_status": {
+        "name": "Decoder Status"
+      },
+      "audio_codec": {
+        "name": "Audio Codec"
+      }
+    },
+    "switch": {
+      "night_mode": {
+        "name": "Night Mode"
+      },
+      "ambeo_mode": {
+        "name": "Ambeo Mode"
+      },
+      "sound_feedback": {
+        "name": "Sound Feedback"
+      },
+      "voice_enhancement": {
+        "name": "Voice Enhancement"
+      },
+      "subwoofer_status": {
+        "name": "Subwoofer Status"
+      },
+      "bluetooth_pairing": {
+        "name": "Bluetooth Pairing"
+      }
+    }
+  },
   "exceptions": {
     "invalid_source": {
       "message": "Unknown source: {source}"
     },
     "invalid_sound_mode": {
       "message": "Unknown sound mode: {sound_mode}"
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the soundbar at {host}: {error}"
+    },
+    "unsupported_model": {
+      "message": "The soundbar at {host} is not supported: {error}"
+    },
+    "update_failed": {
+      "message": "Error communicating with the soundbar: {error}"
+    },
+    "command_failed": {
+      "message": "The soundbar rejected the command {command}: {error}"
     }
   }
 }

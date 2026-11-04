@@ -26,7 +26,7 @@ class DecoderStatusSensor(AmbeoBaseEntity, SensorEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the decoder status sensor."""
-        super().__init__(coordinator, device, "Decoder Status", "decoder_status")
+        super().__init__(coordinator, device, "decoder_status", "decoder_status")
 
     @property
     def native_value(self):
@@ -64,7 +64,7 @@ class AudioCodecSensor(AmbeoBaseEntity, SensorEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the audio codec sensor."""
-        super().__init__(coordinator, device, "Audio Codec", "audio_codec")
+        super().__init__(coordinator, device, "audio_codec", "audio_codec")
 
     @property
     def native_value(self):

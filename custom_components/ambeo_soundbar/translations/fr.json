@@ -55,12 +55,115 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "eco_mode": {
+        "name": "Mode éco"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Redémarrer"
+      },
+      "reset_expert_settings": {
+        "name": "Réinitialiser les réglages experts"
+      }
+    },
+    "light": {
+      "led_bar": {
+        "name": "Barre LED"
+      },
+      "codec_led": {
+        "name": "LED du codec"
+      },
+      "logo": {
+        "name": "Logo"
+      },
+      "display": {
+        "name": "Écran"
+      }
+    },
+    "number": {
+      "native_volume": {
+        "name": "Volume (natif)"
+      },
+      "subwoofer_volume": {
+        "name": "Volume du caisson de basses"
+      },
+      "voice_enhancement_level": {
+        "name": "Niveau d'amélioration de la voix"
+      },
+      "center_volume": {
+        "name": "Volume central"
+      },
+      "center_speaker_level": {
+        "name": "Niveau des haut-parleurs - Centre"
+      },
+      "side_firing_level": {
+        "name": "Niveau des haut-parleurs - Latéraux"
+      },
+      "up_firing_level": {
+        "name": "Niveau des haut-parleurs - Vers le haut"
+      }
+    },
+    "select": {
+      "ambeo_mode_level": {
+        "name": "Mode Ambeo"
+      },
+      "source": {
+        "name": "Source"
+      },
+      "sound_mode": {
+        "name": "Mode sonore"
+      }
+    },
+    "sensor": {
+      "decoder_status": {
+        "name": "État du décodeur"
+      },
+      "audio_codec": {
+        "name": "Codec audio"
+      }
+    },
+    "switch": {
+      "night_mode": {
+        "name": "Mode nuit"
+      },
+      "ambeo_mode": {
+        "name": "Mode Ambeo"
+      },
+      "sound_feedback": {
+        "name": "Retour sonore"
+      },
+      "voice_enhancement": {
+        "name": "Amélioration de la voix"
+      },
+      "subwoofer_status": {
+        "name": "Caisson de basses"
+      },
+      "bluetooth_pairing": {
+        "name": "Appairage Bluetooth"
+      }
+    }
+  },
   "exceptions": {
     "invalid_source": {
       "message": "Source inconnue : {source}"
     },
     "invalid_sound_mode": {
       "message": "Mode sonore inconnu : {sound_mode}"
+    },
+    "cannot_connect": {
+      "message": "Impossible de se connecter à la barre de son {host} : {error}"
+    },
+    "unsupported_model": {
+      "message": "La barre de son {host} n'est pas prise en charge : {error}"
+    },
+    "update_failed": {
+      "message": "Erreur de communication avec la barre de son : {error}"
+    },
+    "command_failed": {
+      "message": "La barre de son a refusé la commande {command} : {error}"
     }
   }
 }

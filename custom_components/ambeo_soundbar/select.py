@@ -27,7 +27,7 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the Ambeo mode level select entity."""
-        super().__init__(coordinator, device, "Ambeo Mode", "ambeo_mode_level")
+        super().__init__(coordinator, device, "ambeo_mode_level", "ambeo_mode_level")
 
     @property
     def current_option(self) -> str | None:
@@ -57,7 +57,7 @@ class SourceSelect(AmbeoBaseEntity, SelectEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the source select entity."""
-        super().__init__(coordinator, device, "Source", "source")
+        super().__init__(coordinator, device, "source", "source")
         self._attr_options = sorted(s.title for s in coordinator.sources)
 
     @property
@@ -83,7 +83,7 @@ class SoundModeSelect(AmbeoBaseEntity, SelectEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the sound mode select entity."""
-        super().__init__(coordinator, device, "Sound Mode", "sound_mode")
+        super().__init__(coordinator, device, "sound_mode", "sound_mode")
         self._attr_options = sorted(p.title for p in coordinator.presets)
 
     @property

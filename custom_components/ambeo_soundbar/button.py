@@ -16,7 +16,7 @@ class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
 
     def __init__(self, coordinator, device):
         """Initialize the reboot button."""
-        super().__init__(coordinator, device, "Restart", "ambeo_reboot")
+        super().__init__(coordinator, device, "restart", "ambeo_reboot")
 
     async def async_press(self) -> None:
         """Handle the button press."""
@@ -39,7 +39,7 @@ class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
     def __init__(self, coordinator, device):
         """Initialize the reset expert settings button."""
         super().__init__(
-            coordinator, device, "Reset Expert Settings", "reset_expert_settings"
+            coordinator, device, "reset_expert_settings", "reset_expert_settings"
         )
 
     async def async_press(self) -> None:

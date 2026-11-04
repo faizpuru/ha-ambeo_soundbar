@@ -43,12 +43,12 @@ class AmbeoBaseEntity(CoordinatorEntity["AmbeoCoordinator"]):
         self,
         coordinator: AmbeoCoordinator,
         device: AmbeoDevice,
-        name_suffix: str | None,
+        translation_key: str | None,
         unique_id_suffix: str,
     ):
         """Initialize the base entity."""
         super().__init__(coordinator)
-        self._attr_name = name_suffix
+        self._attr_translation_key = translation_key
         self._attr_unique_id = (
             f"{device.serial}_{unique_id_suffix.lower().replace(' ', '_')}"
         )
@@ -71,12 +71,12 @@ class BaseLight(AmbeoBaseEntity, LightEntity):
         self,
         coordinator: AmbeoCoordinator,
         device: AmbeoDevice,
-        name_suffix: str,
+        translation_key: str,
         unique_id_suffix: str,
         config: LightConfig,
     ):
         """Initialize the light entity."""
-        super().__init__(coordinator, device, name_suffix, unique_id_suffix)
+        super().__init__(coordinator, device, translation_key, unique_id_suffix)
         self._brightness_scale = config.brightness_scale
         self._data_key = config.data_key
         self._set_method = config.set_method
@@ -130,14 +130,14 @@ class AmbeoValueEntity(AmbeoBaseEntity):
         self,
         coordinator: AmbeoCoordinator,
         device,
-        feature_name: str,
+        translation_key: str,
         data_key: str,
         set_method: str,
         unique_id_suffix: str | None = None,
     ):
         """Initialize the entity."""
         super().__init__(
-            coordinator, device, feature_name, unique_id_suffix or feature_name
+            coordinator, device, translation_key, unique_id_suffix or translation_key
         )
         self._data_key = data_key
         self._set_method = set_method
