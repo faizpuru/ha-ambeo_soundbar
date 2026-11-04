@@ -68,7 +68,9 @@ Copy the `custom_components/ambeo_soundbar` folder into your HA config directory
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ambeo_soundbar)
 
-Go to **Settings > Devices & Services > Add Integration** and search for "Ambeo Soundbar". Setup asks for one parameter:
+The soundbar is discovered automatically on the local network: it shows up under **Settings > Devices & Services**, where you only have to confirm it.
+
+To add it by hand, go to **Settings > Devices & Services > Add Integration** and search for "Ambeo Soundbar". Setup asks for one parameter:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -85,7 +87,7 @@ Go to **Settings > Devices & Services > Ambeo Soundbar > Configure** to change t
 
 ### Changing the host
 
-If the soundbar gets a new IP address, open the three-dot menu of the integration entry and select **Reconfigure**. The new host must answer with the same soundbar.
+If the soundbar gets a new IP address, Home Assistant picks it up from discovery. You can also open the three-dot menu of the integration entry and select **Reconfigure**. The new host must answer with the same soundbar.
 
 ## Removal
 

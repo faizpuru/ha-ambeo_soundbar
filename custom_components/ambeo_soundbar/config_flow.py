@@ -1,6 +1,9 @@
 """Config flow for Ambeo Soundbar integration."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -25,6 +28,9 @@ from .const import (
     DOMAIN,
     TIMEOUT,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,6 +128,40 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_host_schema(CONFIG_HOST_DEFAULT),
             errors=errors,
+        )
+
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
+        """Handle a soundbar discovered over zeroconf."""
+        serial = discovery_info.properties.get("serial")
+        if not serial:
+            return self.async_abort(reason="no_serial")
+
+        host = discovery_info.host
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONFIG_HOST: host})
+
+        name, _, error = await validate_connection(self.hass, host)
+        if error:
+            return self.async_abort(reason=error)
+
+        self._discovered_host = host
+        self._discovered_name = name or "Ambeo Soundbar"
+        self.context["title_placeholders"] = {"name": self._discovered_name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(self, user_input=None):
+        """Confirm the setup of a discovered soundbar."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_name, data={CONFIG_HOST: self._discovered_host}
+            )
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "name": self._discovered_name,
+                "host": self._discovered_host,
+            },
         )
 
     async def async_step_reconfigure(self, user_input=None):

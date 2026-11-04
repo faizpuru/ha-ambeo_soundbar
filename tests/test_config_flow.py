@@ -1,10 +1,12 @@
 """Tests for the Ambeo Soundbar config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pyambeo import (
     AmbeoConnectionError,
     AmbeoUnsupportedModelError,
@@ -153,6 +155,92 @@ async def test_user_step_already_configured(hass):
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+# ---------------------------------------------------------------------------
+# Zeroconf flow tests
+# ---------------------------------------------------------------------------
+
+
+def _zeroconf_info(host=MOCK_HOST, serial=MOCK_SERIAL):
+    """Build the zeroconf announce of a soundbar."""
+    properties = {"name": MOCK_NAME, "manufacturer": "Sennheiser", "ip": host}
+    if serial:
+        properties["serial"] = serial
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=80,
+        hostname="ambeo.local.",
+        type="_sennheiser._tcp.local.",
+        name="ambeosoundbarplus-1234._sennheiser._tcp.local.",
+        properties=properties,
+    )
+
+
+@pytest.mark.parametrize(
+    ("name", "title"), [(MOCK_NAME, MOCK_NAME), (None, "Ambeo Soundbar")]
+)
+async def test_zeroconf_success(hass, mock_setup_entry, name, title):
+    """Create the entry once the discovered soundbar is confirmed."""
+    with _patch_connect(name=name):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_zeroconf_info(),
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"] == {"name": title, "host": MOCK_HOST}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == title
+    assert result["data"] == {CONFIG_HOST: MOCK_HOST}
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+async def test_zeroconf_updates_host(hass, mock_setup_entry):
+    """Update the host of a configured soundbar announced on a new address."""
+    entry = _add_entry(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zeroconf_info(host="192.168.1.200"),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONFIG_HOST: "192.168.1.200"}
+
+
+async def test_zeroconf_no_serial(hass):
+    """Abort when the announce has no serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_zeroconf_info(serial=None),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_serial"
+
+
+@pytest.mark.parametrize(("side_effect", "error"), ERRORS)
+async def test_zeroconf_error(hass, side_effect, error):
+    """Abort when the discovered soundbar cannot be used."""
+    with _patch_connect(side_effect=side_effect):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_zeroconf_info(),
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == error
 
 
 # ---------------------------------------------------------------------------
