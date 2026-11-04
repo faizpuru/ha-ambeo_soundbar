@@ -9,10 +9,14 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from pyambeo import Capability, PlayMode
 
 from . import AmbeoConfigEntry
+from .const import DOMAIN
 from .entity import AmbeoBaseEntity
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -295,10 +299,14 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Select source."""
-        if source is not None:
-            source_id = self.coordinator.get_source_id(source)
-            if source_id is not None:
-                await self.coordinator.async_select_source(source_id)
+        source_id = self.coordinator.get_source_id(source)
+        if source_id is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={"source": str(source)},
+            )
+        await self.coordinator.async_select_source(source_id)
 
     @property
     def sound_mode(self):
@@ -317,10 +325,14 @@ class AmbeoMediaPlayer(AmbeoBaseEntity, MediaPlayerEntity):
 
     async def async_select_sound_mode(self, sound_mode):
         """Switch the sound mode of the entity."""
-        if sound_mode is not None:
-            preset_id = self.coordinator.get_preset_id(sound_mode)
-            if preset_id is not None:
-                await self.coordinator.async_select_sound_mode(preset_id)
+        preset_id = self.coordinator.get_preset_id(sound_mode)
+        if preset_id is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": str(sound_mode)},
+            )
+        await self.coordinator.async_select_sound_mode(preset_id)
 
     async def async_media_play(self):
         """Start playback."""

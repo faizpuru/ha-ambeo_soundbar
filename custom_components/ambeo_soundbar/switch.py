@@ -6,6 +6,8 @@ from pyambeo import Capability
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseSwitch
 
+PARALLEL_UPDATES = 1
+
 
 class NightMode(AmbeoBaseSwitch):
     """Switch entity for night mode."""

@@ -45,5 +45,13 @@
       "unknown": "Erreur inattendue. Consultez les journaux pour plus de détails.",
       "different_device": "Cet hôte correspond à une autre barre de son. Ajoutez-la plutôt comme nouvel appareil."
     }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Source inconnue : {source}"
+    },
+    "invalid_sound_mode": {
+      "message": "Mode sonore inconnu : {sound_mode}"
+    }
   }
 }

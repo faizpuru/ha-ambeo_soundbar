@@ -45,5 +45,13 @@
       "unknown": "Unexpected error. Check the logs for details.",
       "different_device": "This host is a different soundbar. Add it as a new device instead."
     }
+  },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Unknown source: {source}"
+    },
+    "invalid_sound_mode": {
+      "message": "Unknown sound mode: {sound_mode}"
+    }
   }
 }

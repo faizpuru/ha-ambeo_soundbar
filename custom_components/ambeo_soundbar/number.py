@@ -8,6 +8,8 @@ from pyambeo import Capability, StateKey
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseNumber
 
+PARALLEL_UPDATES = 1
+
 
 class _RangedNumber(AmbeoBaseNumber):
     """Number whose bounds are reported by the soundbar.

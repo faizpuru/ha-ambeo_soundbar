@@ -8,6 +8,8 @@ from pyambeo import Capability
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseEntity
 
+PARALLEL_UPDATES = 1
+
 
 class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
     """Button to reboot the device."""

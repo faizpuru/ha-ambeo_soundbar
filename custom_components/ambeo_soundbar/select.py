@@ -8,6 +8,8 @@ from pyambeo import Capability
 from . import AmbeoConfigEntry
 from .entity import AmbeoBaseEntity
 
+PARALLEL_UPDATES = 1
+
 AMBEO_MODE_LEVELS: dict[int, str] = {
     1: "Light",
     2: "Regular",
