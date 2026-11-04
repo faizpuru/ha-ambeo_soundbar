@@ -50,6 +50,73 @@ This integration uses standard Home Assistant platforms — no custom services. 
 - **`light`**: `turn_on/off` (LED brightness controls)
 - **`button`**: `press` (Restart, Reset Expert Settings)
 
+## Use cases
+
+- Turn Night Mode on in the evening, so dialogue stays clear without waking the house.
+- Switch the soundbar to the TV input and the Movie sound mode when the TV turns on.
+- Pause playback or lower the volume when the doorbell rings or a call comes in.
+- Control volume, mute, source and playback from dashboards and voice assistants, like any media player.
+- Keep an eye on the incoming audio format with the Audio Codec and Decoder Status sensors.
+
+## Examples
+
+Replace `living_room` with the name of your soundbar in the entity IDs. Source and sound mode names are the ones of your soundbar, as listed by its media player (for instance `HDMI TV`, `Optical`, `Movie` or `Music`). Renamed inputs appear under their custom name.
+
+### Night Mode in the evening
+
+```yaml
+automation:
+  - alias: "Soundbar night mode"
+    triggers:
+      - trigger: time
+        at: "21:30:00"
+        id: "on"
+      - trigger: time
+        at: "08:00:00"
+        id: "off"
+    actions:
+      - action: "switch.turn_{{ trigger.id }}"
+        target:
+          entity_id: switch.living_room_night_mode
+```
+
+### Follow the TV
+
+```yaml
+automation:
+  - alias: "Soundbar follows the TV"
+    triggers:
+      - trigger: state
+        entity_id: media_player.tv
+        to: "on"
+    actions:
+      - action: media_player.select_source
+        target:
+          entity_id: media_player.living_room
+        data:
+          source: "HDMI TV"
+      - action: media_player.select_sound_mode
+        target:
+          entity_id: media_player.living_room
+        data:
+          sound_mode: "Movie"
+```
+
+### Pause when the doorbell rings
+
+```yaml
+automation:
+  - alias: "Pause the soundbar on doorbell"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.doorbell
+        to: "on"
+    actions:
+      - action: media_player.media_pause
+        target:
+          entity_id: media_player.living_room
+```
+
 ## Installation
 
 **Prerequisites:** Home Assistant 2024.11+, soundbar and HA on the same local network.
@@ -88,6 +155,25 @@ Go to **Settings > Devices & Services > Ambeo Soundbar > Configure** to change t
 ### Changing the host
 
 If the soundbar gets a new IP address, Home Assistant picks it up from discovery. You can also open the three-dot menu of the integration entry and select **Reconfigure**. The new host must answer with the same soundbar.
+
+## Data updates
+
+The integration talks to the soundbar over its local HTTP API, without any cloud service.
+
+- The soundbar pushes its changes (volume, mute, source, playback, settings) as they happen, including those made with the remote or the Sennheiser app.
+- On top of that, every setting is polled at the update interval (30 s by default, see [Configuration](#configuration)), to catch anything the pushed changes miss.
+- Changes made from Home Assistant show up right away, then are confirmed by the soundbar.
+- When the soundbar cannot be reached, its entities become unavailable until it answers again.
+
+## Known limitations
+
+- AirPlay and Google Cast show up as the source while in use, but cannot be selected: start the stream from your phone or app.
+- Next, previous, seek, shuffle and repeat only show up when the current stream supports them, so not on HDMI, optical or AUX.
+- Inputs renamed on the soundbar keep their old name in Home Assistant until the integration is reloaded.
+- Ambeo Max: the display shows half of the volume (0–50) while the media player uses 0–100 %. The **Volume (native)** entity follows the display scale.
+- Only the settings listed in [Features](#features) are available. Other settings of the Sennheiser app (lip sync, Dolby options, firmware updates…) are not exposed yet.
+- Automatic discovery is confirmed on the Plus. If a Max or Mini does not show up, add it by host.
+- After an IP address change, discovery can take a few minutes: the soundbar does not always answer network queries that ask for many services at once. Use **Reconfigure** to update the host right away.
 
 ## Removal
 
