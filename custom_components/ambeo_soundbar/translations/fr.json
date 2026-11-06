@@ -69,6 +69,11 @@
         "name": "Réinitialiser les réglages experts"
       }
     },
+    "image": {
+      "product_picture": {
+        "name": "Photo"
+      }
+    },
     "light": {
       "led_bar": {
         "name": "Barre LED"

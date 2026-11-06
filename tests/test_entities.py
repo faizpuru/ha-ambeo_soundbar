@@ -18,6 +18,7 @@ EXPECTED_ENTITIES = [
         "Reset Expert Settings",
     ),
     ("button.living_room_restart", "SN123456_ambeo_reboot", "Restart"),
+    ("image.living_room_picture", "SN123456_product_picture", "Picture"),
     ("light.living_room_codec_led", "SN123456_codec_led", "Codec LED"),
     ("light.living_room_display", "SN123456_ambeo_max_display", "Display"),
     ("light.living_room_led_bar", "SN123456_led_bar", "LED Bar"),
@@ -90,6 +91,9 @@ def _mock_api():
     api.get_range.return_value = None
     api.get_volume_step.return_value = 0.01
     api.get_display_volume_max.return_value = 100
+    api.fetch_image_url = AsyncMock(
+        return_value="http://192.168.1.100:80/assets/images/Soundbar_M_black.png"
+    )
     for method in (
         "get_led_bar_brightness_range",
         "get_codec_led_brightness_range",

@@ -341,6 +341,10 @@ class AmbeoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Check if device has a subwoofer."""
         return await self.api.has_subwoofer()
 
+    async def fetch_image_url(self) -> str | None:
+        """Return the URL of the product picture served by the soundbar."""
+        return await self.api.fetch_image_url()
+
     def get_display_volume_max(self) -> int:
         """Get the maximum volume shown by the soundbar."""
         return self.api.get_display_volume_max()
