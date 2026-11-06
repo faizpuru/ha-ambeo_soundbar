@@ -1,13 +1,15 @@
 """Light entities for Ambeo Soundbar integration."""
 
 import math
+from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value
 from pyambeo import Capability
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
 from .coordinator import AmbeoCoordinator
 from .entity import BaseLight, LightConfig
 
@@ -20,7 +22,7 @@ DEFAULT_BRIGHTNESS_AMBEO_MAX = 128
 class LEDBar(BaseLight):
     """Light entity for the LED bar."""
 
-    def __init__(self, coordinator: AmbeoCoordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the LED bar light."""
         super().__init__(
             coordinator,
@@ -39,7 +41,7 @@ class LEDBar(BaseLight):
 class CodecLED(BaseLight):
     """Light entity for the codec LED."""
 
-    def __init__(self, coordinator: AmbeoCoordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the codec LED light."""
         super().__init__(
             coordinator,
@@ -58,7 +60,7 @@ class CodecLED(BaseLight):
 class AmbeoMaxLogo(BaseLight):
     """Light entity for the Ambeo Max logo."""
 
-    def __init__(self, coordinator: AmbeoCoordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Ambeo Max logo light."""
         super().__init__(
             coordinator,
@@ -77,7 +79,7 @@ class AmbeoMaxLogo(BaseLight):
 class AmbeoMaxDisplay(BaseLight):
     """Light entity for the Ambeo Max display."""
 
-    def __init__(self, coordinator: AmbeoCoordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Ambeo Max display light."""
         super().__init__(
             coordinator,
@@ -96,7 +98,7 @@ class AmbeoMaxDisplay(BaseLight):
 class AmbeoLogo(BaseLight):
     """Special light with on/off state separate from brightness."""
 
-    def __init__(self, coordinator: AmbeoCoordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Ambeo logo light."""
         super().__init__(
             coordinator,
@@ -112,16 +114,16 @@ class AmbeoLogo(BaseLight):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Check if the Ambeo Logo light is on."""
         if self.coordinator.data:
-            return (
+            return bool(
                 self.coordinator.data.get("logo_state", False)
                 and self.coordinator.data.get("logo_brightness", 0) > 0
             )
         return False
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Ambeo Logo light with specified brightness, if provided."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = math.floor(
@@ -137,7 +139,7 @@ class AmbeoLogo(BaseLight):
         if not logo_state:
             await self.coordinator.async_change_logo_state(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Ambeo Logo light."""
         await self.coordinator.async_change_logo_state(False)
 
@@ -145,12 +147,12 @@ class AmbeoLogo(BaseLight):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up lights from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device
-    entities = []
+    entities: list[BaseLight] = []
     if coordinator.has_capability(Capability.AMBEO_LOGO):
         entities.append(AmbeoLogo(coordinator, ambeo_device))
     if coordinator.has_capability(Capability.LED_BAR):

@@ -4,9 +4,9 @@ import asyncio
 import contextlib
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components.media_player import MediaPlayerState
+from homeassistant.components.media_player.const import MediaPlayerState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -33,7 +33,7 @@ _HA_STATE_BY_STATUS = {
 }
 
 
-class AmbeoCoordinator(DataUpdateCoordinator):
+class AmbeoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to manage fetching Ambeo data."""
 
     # Event listener settings.
@@ -48,7 +48,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         api: AmbeoSoundbar,
         update_interval_seconds: int = 30,
         concurrent_requests: int = 3,
-    ):
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -59,7 +59,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         self.api = api
         self.sources = api.sources
         self.presets = api.presets
-        self._event_listener_task: asyncio.Task | None = None
+        self._event_listener_task: asyncio.Task[None] | None = None
         self._concurrent_requests = concurrent_requests
         # Lookup dicts for O(1) source/preset resolution.
         self._source_title_by_id = {s.id: s.title for s in self.sources}
@@ -70,7 +70,10 @@ class AmbeoCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
         try:
-            data: dict[str, Any] = await self.api.fetch_state(self._concurrent_requests)
+            # StateKey is a StrEnum, so the keys are plain strings too.
+            data = cast(
+                dict[str, Any], await self.api.fetch_state(self._concurrent_requests)
+            )
         except AmbeoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -108,7 +111,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                     retry_delay=self.EVENT_LISTENER_RETRY_DELAY,
                 ):
                     _LOGGER.debug("Event updates: %r", updates)
-                    self._apply_event_updates(updates)
+                    self._apply_event_updates(cast(dict[str, Any], updates))
             except Exception as e:  # noqa: BLE001
                 _LOGGER.debug(
                     "Event listener error: %s, retrying in %ds",
@@ -117,7 +120,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
                 )
                 await asyncio.sleep(self.EVENT_LISTENER_RETRY_DELAY)
 
-    def _optimistic_update(self, key: str, value: Any):
+    def _optimistic_update(self, key: str, value: Any) -> None:
         """Apply an optimistic state update and notify listeners."""
         if self.data:
             self.data[key] = value
@@ -146,9 +149,9 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         if last is None or updated_at is None:
             return False
         elapsed_ms = (dt_util.utcnow() - updated_at).total_seconds() * 1000
-        return abs(play_time - last - elapsed_ms) < self.PLAY_TIME_TOLERANCE_MS
+        return bool(abs(play_time - last - elapsed_ms) < self.PLAY_TIME_TOLERANCE_MS)
 
-    def _apply_event_updates(self, updates: dict[str, Any]):
+    def _apply_event_updates(self, updates: dict[str, Any]) -> None:
         """Apply event-driven updates with special handling for player keys."""
         if not self.data:
             return
@@ -163,133 +166,133 @@ class AmbeoCoordinator(DataUpdateCoordinator):
             self.data["play_time_updated_at"] = dt_util.utcnow()
         self.async_set_updated_data(self.data)
 
-    async def async_set_volume(self, volume: float):
+    async def async_set_volume(self, volume: float) -> None:
         """Set volume."""
         await self._async_call("set_volume", volume)
         self._optimistic_update("volume", int(volume))
 
-    async def async_set_mute(self, mute: bool):
+    async def async_set_mute(self, mute: bool) -> None:
         """Set mute."""
         await self._async_set("set_mute", "muted", mute)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         await self._async_call("wake")
         self._optimistic_update("state", "online")
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         await self._async_call("stand_by")
         self._optimistic_update("state", "networkStandby")
 
-    async def async_select_source(self, source_id: str):
+    async def async_select_source(self, source_id: str | int) -> None:
         """Select source."""
         await self._async_set("set_source", "current_source", source_id)
 
-    async def async_select_sound_mode(self, preset_id: str):
+    async def async_select_sound_mode(self, preset_id: str | int) -> None:
         """Select sound mode."""
         await self._async_set("set_preset", "current_preset", preset_id)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Play."""
         await self._async_call("play")
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Pause."""
         await self._async_call("pause")
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Next track."""
         await self._async_call("next")
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Previous track."""
         await self._async_call("previous")
 
-    async def async_media_seek(self, position_ms: int):
+    async def async_media_seek(self, position_ms: int) -> None:
         """Seek to a position in the current track."""
         await self._async_call("seek", position_ms)
         if self.data:
             self.data["play_time_updated_at"] = dt_util.utcnow()
         self._optimistic_update(StateKey.PLAY_TIME, position_ms)
 
-    async def async_set_play_mode(self, mode: PlayMode):
+    async def async_set_play_mode(self, mode: PlayMode) -> None:
         """Set the shuffle and repeat mode."""
         await self._async_set("set_play_mode", "play_mode", mode)
 
-    async def async_set_led_bar_brightness(self, brightness: int):
+    async def async_set_led_bar_brightness(self, brightness: int) -> None:
         """Set LED bar brightness."""
         await self._async_set(
             "set_led_bar_brightness", "led_bar_brightness", brightness
         )
 
-    async def async_set_codec_led_brightness(self, brightness: int):
+    async def async_set_codec_led_brightness(self, brightness: int) -> None:
         """Set codec LED brightness."""
         await self._async_set(
             "set_codec_led_brightness", "codec_led_brightness", brightness
         )
 
-    async def async_set_logo_brightness(self, brightness: int):
+    async def async_set_logo_brightness(self, brightness: int) -> None:
         """Set logo brightness."""
         await self._async_set("set_logo_brightness", "logo_brightness", brightness)
 
-    async def async_change_logo_state(self, state: bool):
+    async def async_change_logo_state(self, state: bool) -> None:
         """Change logo state."""
         await self._async_set("change_logo_state", "logo_state", state)
 
-    async def async_set_display_brightness(self, brightness: int):
+    async def async_set_display_brightness(self, brightness: int) -> None:
         """Set display brightness."""
         await self._async_set(
             "set_display_brightness", "display_brightness", brightness
         )
 
-    async def async_set_night_mode(self, mode: bool):
+    async def async_set_night_mode(self, mode: bool) -> None:
         """Set night mode."""
         await self._async_set("set_night_mode", "night_mode", mode)
 
-    async def async_set_ambeo_mode(self, mode: bool):
+    async def async_set_ambeo_mode(self, mode: bool) -> None:
         """Set ambeo mode."""
         await self._async_set("set_ambeo_mode", "ambeo_mode", mode)
 
-    async def async_set_sound_feedback(self, state: bool):
+    async def async_set_sound_feedback(self, state: bool) -> None:
         """Set sound feedback."""
         await self._async_set("set_sound_feedback", "sound_feedback", state)
 
-    async def async_set_voice_enhancement(self, mode: bool):
+    async def async_set_voice_enhancement(self, mode: bool) -> None:
         """Set voice enhancement."""
         await self._async_set("set_voice_enhancement", "voice_enhancement", mode)
 
-    async def async_set_bluetooth_pairing_state(self, state: bool):
+    async def async_set_bluetooth_pairing_state(self, state: bool) -> None:
         """Set bluetooth pairing state."""
         await self._async_set("set_bluetooth_pairing_state", "bluetooth_pairing", state)
 
-    async def async_set_subwoofer_status(self, status: bool):
+    async def async_set_subwoofer_status(self, status: bool) -> None:
         """Set subwoofer status."""
         await self._async_set("set_subwoofer_status", "subwoofer_status", status)
 
-    async def async_set_subwoofer_volume(self, volume: float):
+    async def async_set_subwoofer_volume(self, volume: float) -> None:
         """Set subwoofer volume."""
         await self._async_set("set_subwoofer_volume", "subwoofer_volume", volume)
 
-    async def async_set_voice_enhancement_level(self, level: int):
+    async def async_set_voice_enhancement_level(self, level: int) -> None:
         """Set voice enhancement level."""
         await self._async_set(
             "set_voice_enhancement_level", "voice_enhancement_level", level
         )
 
-    async def async_set_center_speaker_level(self, level: int):
+    async def async_set_center_speaker_level(self, level: int) -> None:
         """Set center speaker level."""
         await self._async_set("set_center_speaker_level", "center_speaker_level", level)
 
-    async def async_set_side_firing_level(self, level: int):
+    async def async_set_side_firing_level(self, level: int) -> None:
         """Set side firing level."""
         await self._async_set("set_side_firing_level", "side_firing_level", level)
 
-    async def async_set_up_firing_level(self, level: int):
+    async def async_set_up_firing_level(self, level: int) -> None:
         """Set up firing level."""
         await self._async_set("set_up_firing_level", "up_firing_level", level)
 
-    async def async_set_center_volume(self, volume: float):
+    async def async_set_center_volume(self, volume: float) -> None:
         """Set center volume."""
         await self._async_set("set_center_volume", "center_volume", volume)
 
@@ -297,31 +300,31 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Set the Ambeo mode level."""
         await self._async_set("set_ambeo_mode_level", "ambeo_mode_level", level)
 
-    async def async_reboot(self):
+    async def async_reboot(self) -> None:
         """Reboot the device."""
         await self._async_call("reboot")
         # No state update needed for reboot.
 
-    async def async_reset_expert_settings(self):
+    async def async_reset_expert_settings(self) -> None:
         """Reset expert settings."""
         await self._async_call("reset_expert_settings")
         # Trigger a full refresh to get reset values.
         await self.async_request_refresh()
 
     # Lookup helpers.
-    def get_source_title(self, source_id) -> str | None:
+    def get_source_title(self, source_id: str | int) -> str | None:
         """Return the display title for a source ID."""
         return self._source_title_by_id.get(source_id)
 
-    def get_source_id(self, title: str):
+    def get_source_id(self, title: str) -> str | int | None:
         """Return the source ID for a display title."""
         return self._source_id_by_title.get(title)
 
-    def get_preset_title(self, preset_id) -> str | None:
+    def get_preset_title(self, preset_id: str | int) -> str | None:
         """Return the display title for a preset ID."""
         return self._preset_title_by_id.get(preset_id)
 
-    def get_preset_id(self, title: str):
+    def get_preset_id(self, title: str) -> str | int | None:
         """Return the preset ID for a display title."""
         return self._preset_id_by_title.get(title)
 
@@ -342,7 +345,7 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Get the maximum volume shown by the soundbar."""
         return self.api.get_display_volume_max()
 
-    def get_state(self) -> str | None:
+    def get_state(self) -> MediaPlayerState | None:
         """Return the effective HA state, accounting for eco mode and player state."""
         if not self.data:
             return None
@@ -356,18 +359,18 @@ class AmbeoCoordinator(DataUpdateCoordinator):
         """Get the bounds of a numeric setting."""
         return self.api.get_range(key)
 
-    def get_led_bar_brightness_range(self):
+    def get_led_bar_brightness_range(self) -> tuple[int, int]:
         """Get the LED bar brightness range."""
         return self.api.get_led_bar_brightness_range()
 
-    def get_codec_led_brightness_range(self):
+    def get_codec_led_brightness_range(self) -> tuple[int, int]:
         """Get the codec LED brightness range."""
         return self.api.get_codec_led_brightness_range()
 
-    def get_logo_brightness_range(self):
+    def get_logo_brightness_range(self) -> tuple[int, int]:
         """Get the logo brightness range."""
         return self.api.get_logo_brightness_range()
 
-    def get_display_brightness_range(self):
+    def get_display_brightness_range(self) -> tuple[int, int]:
         """Get the display brightness range."""
         return self.api.get_display_brightness_range()

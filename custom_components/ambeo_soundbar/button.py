@@ -3,9 +3,11 @@
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyambeo import Capability
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
+from .coordinator import AmbeoCoordinator
 from .entity import AmbeoBaseEntity
 
 PARALLEL_UPDATES = 1
@@ -14,7 +16,7 @@ PARALLEL_UPDATES = 1
 class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
     """Button to reboot the device."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the reboot button."""
         super().__init__(coordinator, device, "restart", "ambeo_reboot")
 
@@ -36,7 +38,7 @@ class AmbeoReboot(AmbeoBaseEntity, ButtonEntity):
 class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
     """Button to reset expert audio settings."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the reset expert settings button."""
         super().__init__(
             coordinator, device, "reset_expert_settings", "reset_expert_settings"
@@ -55,8 +57,8 @@ class ResetExpertSettings(AmbeoBaseEntity, ButtonEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the button entities from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device

@@ -5,9 +5,11 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyambeo import Capability
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
+from .coordinator import AmbeoCoordinator
 from .entity import AmbeoBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -20,23 +22,23 @@ class EcoModeSensor(AmbeoBaseEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Eco Mode sensor."""
         super().__init__(coordinator, device, "eco_mode", "eco_mode")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the current value of the sensor."""
         if self.coordinator.data and "eco_mode" in self.coordinator.data:
-            return self.coordinator.data["eco_mode"]
+            return bool(self.coordinator.data["eco_mode"])
         return None
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the sensor entities from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device

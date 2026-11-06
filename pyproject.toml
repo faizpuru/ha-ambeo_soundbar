@@ -29,3 +29,16 @@ known-first-party = ["custom_components.ambeo_soundbar"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.mypy]
+python_version = "3.13"
+packages = ["custom_components.ambeo_soundbar"]
+explicit_package_bases = true
+strict = true
+warn_unreachable = true
+local_partial_types = true
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-self",
+    "truthy-iterable",
+]

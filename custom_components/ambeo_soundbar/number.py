@@ -1,11 +1,15 @@
 """Number entities for Ambeo Soundbar integration."""
 
+from typing import Any
+
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyambeo import Capability, StateKey
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
+from .coordinator import AmbeoCoordinator
 from .entity import AmbeoBaseNumber
 
 PARALLEL_UPDATES = 1
@@ -19,7 +23,7 @@ class _RangedNumber(AmbeoBaseNumber):
 
     _range_key: StateKey
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the number and apply the bounds of the soundbar."""
         super().__init__(*args, **kwargs)
         bounds = self.coordinator.get_range(self._range_key)
@@ -39,7 +43,7 @@ class NativeVolume(AmbeoBaseNumber):
     _attr_native_min_value = 0
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the native volume number entity."""
         super().__init__(
             coordinator,
@@ -50,18 +54,18 @@ class NativeVolume(AmbeoBaseNumber):
         )
 
     @property
-    def native_max_value(self):
+    def native_max_value(self) -> float:
         """Return the maximum volume shown by the soundbar."""
         return self.coordinator.get_display_volume_max()
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the volume shown by the soundbar.
 
         The Max shows half of the device volume, rounded down.
         """
         if self.coordinator.data and "volume" in self.coordinator.data:
-            return (
+            return int(
                 self.coordinator.data["volume"]
                 * self.coordinator.get_display_volume_max()
                 // 100
@@ -86,7 +90,7 @@ class SubWooferVolume(_RangedNumber):
     _attr_device_class = NumberDeviceClass.SOUND_PRESSURE
     _range_key = StateKey.SUBWOOFER_VOLUME
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the subwoofer volume number entity."""
         super().__init__(
             coordinator,
@@ -109,7 +113,7 @@ class VoiceEnhancementLevel(_RangedNumber):
     _integer = True
     _range_key = StateKey.VOICE_ENHANCEMENT_LEVEL
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the voice enhancement level number entity."""
         super().__init__(
             coordinator,
@@ -132,7 +136,7 @@ class CenterVolume(_RangedNumber):
     _integer = True
     _range_key = StateKey.CENTER_VOLUME
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the center volume number entity."""
         super().__init__(
             coordinator,
@@ -160,7 +164,7 @@ class CenterSpeakerLevel(_SpeakerLevel):
 
     _range_key = StateKey.CENTER_SPEAKER_LEVEL
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the center speaker level number entity."""
         super().__init__(
             coordinator,
@@ -177,7 +181,7 @@ class SideFiringLevel(_SpeakerLevel):
 
     _range_key = StateKey.SIDE_FIRING_LEVEL
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the side-firing speaker level number entity."""
         super().__init__(
             coordinator,
@@ -194,7 +198,7 @@ class UpFiringLevel(_SpeakerLevel):
 
     _range_key = StateKey.UP_FIRING_LEVEL
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the up-firing speaker level number entity."""
         super().__init__(
             coordinator,
@@ -209,12 +213,12 @@ class UpFiringLevel(_SpeakerLevel):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the number entities from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device
-    entities = []
+    entities: list[AmbeoBaseNumber] = []
     if coordinator.has_capability(Capability.NATIVE_VOLUME):
         entities.append(NativeVolume(coordinator, ambeo_device))
     if (

@@ -40,7 +40,16 @@ class AmbeoData:
 class AmbeoDevice:
     """Represent an Ambeo Soundbar device."""
 
-    def __init__(self, serial, name, manufacturer, model, version, host, port):
+    def __init__(
+        self,
+        serial: str,
+        name: str | None,
+        manufacturer: str,
+        model: str,
+        version: str | None,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize an Ambeo device."""
         self._serial = serial
         self.name = name
@@ -51,7 +60,7 @@ class AmbeoDevice:
         self.port = port
 
     @property
-    def serial(self):
+    def serial(self) -> str:
         """Return the serial number of the device."""
         return self._serial
 

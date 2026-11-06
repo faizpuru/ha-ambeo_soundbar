@@ -1,9 +1,11 @@
 """Switch entities for Ambeo Soundbar integration."""
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyambeo import Capability
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
+from .coordinator import AmbeoCoordinator
 from .entity import AmbeoBaseSwitch
 
 PARALLEL_UPDATES = 1
@@ -12,7 +14,7 @@ PARALLEL_UPDATES = 1
 class NightMode(AmbeoBaseSwitch):
     """Switch entity for night mode."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the night mode switch."""
         super().__init__(
             coordinator, device, "night_mode", "night_mode", "async_set_night_mode"
@@ -22,7 +24,7 @@ class NightMode(AmbeoBaseSwitch):
 class AmbeoMode(AmbeoBaseSwitch):
     """Switch entity for Ambeo mode."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Ambeo mode switch."""
         super().__init__(
             coordinator, device, "ambeo_mode", "ambeo_mode", "async_set_ambeo_mode"
@@ -32,7 +34,7 @@ class AmbeoMode(AmbeoBaseSwitch):
 class SoundFeedback(AmbeoBaseSwitch):
     """Switch entity for sound feedback."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the sound feedback switch."""
         super().__init__(
             coordinator,
@@ -46,7 +48,7 @@ class SoundFeedback(AmbeoBaseSwitch):
 class VoiceEnhancementMode(AmbeoBaseSwitch):
     """Switch entity for voice enhancement mode."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the voice enhancement mode switch."""
         super().__init__(
             coordinator,
@@ -60,7 +62,7 @@ class VoiceEnhancementMode(AmbeoBaseSwitch):
 class SubWooferStatus(AmbeoBaseSwitch):
     """Switch entity for subwoofer status."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the subwoofer status switch."""
         super().__init__(
             coordinator,
@@ -74,7 +76,7 @@ class SubWooferStatus(AmbeoBaseSwitch):
 class AmbeoBluetoothPairing(AmbeoBaseSwitch):
     """Switch entity for Ambeo Bluetooth pairing mode."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Bluetooth pairing switch."""
         super().__init__(
             coordinator,
@@ -89,8 +91,8 @@ class AmbeoBluetoothPairing(AmbeoBaseSwitch):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
-):
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the switch entities from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device

@@ -3,9 +3,11 @@
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from pyambeo import Capability
 
-from . import AmbeoConfigEntry
+from . import AmbeoConfigEntry, AmbeoDevice
+from .coordinator import AmbeoCoordinator
 from .entity import AmbeoBaseEntity
 
 PARALLEL_UPDATES = 1
@@ -25,7 +27,7 @@ class AmbeoModeLevel(AmbeoBaseEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = [_AMBEO_OFF, *AMBEO_MODE_LEVELS.values()]
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the Ambeo mode level select entity."""
         super().__init__(coordinator, device, "ambeo_mode_level", "ambeo_mode_level")
 
@@ -55,7 +57,7 @@ class SourceSelect(AmbeoBaseEntity, SelectEntity):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the source select entity."""
         super().__init__(coordinator, device, "source", "source")
         self._attr_options = sorted(s.title for s in coordinator.sources)
@@ -81,7 +83,7 @@ class SoundModeSelect(AmbeoBaseEntity, SelectEntity):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator: AmbeoCoordinator, device: AmbeoDevice) -> None:
         """Initialize the sound mode select entity."""
         super().__init__(coordinator, device, "sound_mode", "sound_mode")
         self._attr_options = sorted(p.title for p in coordinator.presets)
@@ -105,12 +107,12 @@ class SoundModeSelect(AmbeoBaseEntity, SelectEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AmbeoConfigEntry,
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities from a config entry."""
     coordinator = config_entry.runtime_data.coordinator
     ambeo_device = config_entry.runtime_data.device
-    entities = []
+    entities: list[AmbeoBaseEntity] = []
     if coordinator.has_capability(Capability.AMBEO_MODE_LEVEL):
         entities.append(AmbeoModeLevel(coordinator, ambeo_device))
     if coordinator.sources:
