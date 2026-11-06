@@ -120,7 +120,7 @@ automation:
 
 ## Installation
 
-**Prerequisites:** Home Assistant 2024.11+, soundbar and HA on the same local network.
+**Prerequisites:** Home Assistant 2025.3+, soundbar and HA on the same local network.
 
 ### HACS (Recommended)
 
