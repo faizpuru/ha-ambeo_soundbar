@@ -28,6 +28,7 @@ This integration brings full local control of your AMBEO soundbar into Home Assi
 | Restart | ✅ | ✅ | ✅ |
 | Decoder Status (diagnostic sensor) | ✅ | ✅ | ✅ |
 | Audio Codec (diagnostic sensor) | ❓ | ✅ | ✅ |
+| Product picture (diagnostic image) | ❓ | ✅ | ❓ |
 | Voice Enhancement toggle | ❌ | ✅ | ✅ |
 | LED Bar + Codec LED brightness | ❌ | ✅ | ✅ |
 | Bluetooth Pairing | ❌ | ✅ | ✅ |
@@ -163,6 +164,7 @@ The integration talks to the soundbar over its local HTTP API, without any cloud
 - The soundbar pushes its changes (volume, mute, source, playback, settings) as they happen, including those made with the remote or the Sennheiser app.
 - On top of that, every setting is polled at the update interval (30 s by default, see [Configuration](#configuration)), to catch anything the pushed changes miss.
 - Changes made from Home Assistant show up right away, then are confirmed by the soundbar.
+- The product picture is read once at startup, from the soundbar itself, and never refreshed.
 - When the soundbar cannot be reached, its entities become unavailable until it answers again.
 
 ## Known limitations

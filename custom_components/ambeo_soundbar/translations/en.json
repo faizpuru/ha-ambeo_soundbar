@@ -69,6 +69,11 @@
         "name": "Reset Expert Settings"
       }
     },
+    "image": {
+      "product_picture": {
+        "name": "Picture"
+      }
+    },
     "light": {
       "led_bar": {
         "name": "LED Bar"

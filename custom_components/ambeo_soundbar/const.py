@@ -4,6 +4,7 @@ DOMAIN = "ambeo_soundbar"
 PLATFORMS = [
     "binary_sensor",
     "button",
+    "image",
     "light",
     "media_player",
     "number",
