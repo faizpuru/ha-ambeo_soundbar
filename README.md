@@ -29,6 +29,7 @@ This integration brings full local control of your AMBEO soundbar into Home Assi
 | Decoder Status (diagnostic sensor) | ✅ | ✅ | ✅ |
 | Audio Codec (diagnostic sensor) | ❓ | ✅ | ✅ |
 | Product picture (diagnostic image) | ❓ | ✅ | ❓ |
+| Firmware update (version and download progress) | ❓ | ✅ | ❓ |
 | Voice Enhancement toggle | ❌ | ✅ | ✅ |
 | LED Bar + Codec LED brightness | ❌ | ✅ | ✅ |
 | Bluetooth Pairing | ❌ | ✅ | ✅ |
@@ -173,7 +174,8 @@ The integration talks to the soundbar over its local HTTP API, without any cloud
 - Next, previous, seek, shuffle and repeat only show up when the current stream supports them, so not on HDMI, optical or AUX.
 - Inputs renamed on the soundbar keep their old name in Home Assistant until the integration is reloaded.
 - Ambeo Max: the display shows half of the volume (0–50) while the media player uses 0–100 %. The **Volume (native)** entity follows the display scale.
-- Only the settings listed in [Features](#features) are available. Other settings of the Sennheiser app (lip sync, Dolby options, firmware updates…) are not exposed yet.
+- Only the settings listed in [Features](#features) are available. Other settings of the Sennheiser app (lip sync, Dolby options…) are not exposed yet.
+- The **Firmware** entity shows when an update is available and its download progress, but cannot install it: start the update from the Sennheiser app.
 - Automatic discovery is confirmed on the Plus. If a Max or Mini does not show up, add it by host.
 - After an IP address change, discovery can take a few minutes: the soundbar does not always answer network queries that ask for many services at once. Use **Reconfigure** to update the host right away.
 

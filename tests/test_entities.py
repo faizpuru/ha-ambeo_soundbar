@@ -75,6 +75,7 @@ EXPECTED_ENTITIES = [
         "SN123456_voice_enhancement",
         "Voice Enhancement",
     ),
+    ("update.living_room_firmware", "SN123456_firmware", "Firmware"),
 ]
 
 

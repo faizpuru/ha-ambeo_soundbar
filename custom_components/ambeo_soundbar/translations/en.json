@@ -127,7 +127,10 @@
         "name": "Decoder Status"
       },
       "audio_codec": {
-        "name": "Audio Codec"
+        "name": "Audio Codec",
+        "state": {
+          "no_signal": "No signal"
+        }
       }
     },
     "switch": {
@@ -148,6 +151,11 @@
       },
       "bluetooth_pairing": {
         "name": "Bluetooth Pairing"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   },
