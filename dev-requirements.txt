@@ -4,3 +4,4 @@ pytest-homeassistant-custom-component
 pytest-cov
 aioresponses
 pyambeo==0.5.0
+mypy

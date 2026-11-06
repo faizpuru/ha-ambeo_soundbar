@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -61,10 +66,12 @@ def _host_schema(default: str) -> vol.Schema:
     return vol.Schema({vol.Required(CONFIG_HOST, default=default): TextSelector()})
 
 
-class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
+class AmbeoOptionsFlowHandler(OptionsFlow):
     """Handle options configuration for Ambeo Soundbar integration."""
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step of the options flow."""
         if user_input is not None:
             return self.async_create_entry(
@@ -100,15 +107,17 @@ class AmbeoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=schema)
 
 
-class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AmbeoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Manage the configuration flow for Ambeo Soundbar integration."""
 
     VERSION = 1
     MINOR_VERSION = 2
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a configuration initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             host = user_input[CONFIG_HOST]
@@ -130,7 +139,9 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a soundbar discovered over zeroconf."""
         serial = discovery_info.properties.get("serial")
         if not serial:
@@ -149,7 +160,9 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._discovered_name}
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm the setup of a discovered soundbar."""
         if user_input is not None:
             return self.async_create_entry(
@@ -164,9 +177,11 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(self, user_input=None):
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Change the host of an existing soundbar."""
-        errors = {}
+        errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
 
         if user_input is not None:
@@ -188,6 +203,6 @@ class AmbeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> AmbeoOptionsFlowHandler:
         """Get the options flow for this handler."""
         return AmbeoOptionsFlowHandler()
