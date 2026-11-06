@@ -18,8 +18,8 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-# Reported when the decoder is up but receives no audio.
-NO_SIGNAL = "No signal"
+# Reported when the decoder is up but receives no audio, translated by state.
+NO_SIGNAL = "no_signal"
 
 
 class DecoderStatusSensor(AmbeoBaseEntity, SensorEntity):

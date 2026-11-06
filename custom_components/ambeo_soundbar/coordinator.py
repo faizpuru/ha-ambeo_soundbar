@@ -355,6 +355,14 @@ class AmbeoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return None
         return _HA_STATE_BY_STATUS[self.api.player_status(self.data)]
 
+    def get_latest_firmware_version(self) -> str | None:
+        """Return the firmware version the soundbar can update to."""
+        return self.api.latest_firmware_version(self.data) if self.data else None
+
+    def get_firmware_update_progress(self) -> int | None:
+        """Return the download progress of a firmware update, None when idle."""
+        return self.api.firmware_update_progress(self.data) if self.data else None
+
     def get_audio_codec(self) -> str | None:
         """Return the codec of the decoded audio, None when there is none."""
         return self.api.audio_codec(self.data) if self.data else None

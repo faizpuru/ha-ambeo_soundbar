@@ -102,7 +102,7 @@ class TestAudioCodecSensor:
     def test_native_value_no_signal(self, decoder_status):
         """Report no signal when the decoder receives no audio."""
         entity = self._entity({"decoder_status": decoder_status})
-        assert entity.native_value == "No signal"
+        assert entity.native_value == "no_signal"
 
     @pytest.mark.parametrize("data", [None, {}, {"decoder_status": None}])
     def test_native_value_none_without_decoder(self, data):

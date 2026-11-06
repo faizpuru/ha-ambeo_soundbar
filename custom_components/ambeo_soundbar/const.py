@@ -11,6 +11,7 @@ PLATFORMS = [
     "select",
     "sensor",
     "switch",
+    "update",
 ]
 VERSION = "1.1.0"
 MANUFACTURER = "Sennheiser"
